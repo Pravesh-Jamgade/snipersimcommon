@@ -14,7 +14,17 @@
         #include <unistd.h>
 namespace cache_helper
 {   
-    
+
+class PathStore
+{
+    static std::map<IntPtr, String> pathStore;
+    public:
+    bool find(IntPtr eip)
+    {
+        return pathStore.find(eip)!= pathStore.end();
+    }
+};
+
 class Sampling
 {
     public:
@@ -46,12 +56,44 @@ class Sampling
 
 };
 
-class StrideInfo
+class Misc
 {
     public:
-    StrideInfo()
+    static void pathAppend(String& path, String name, bool isTLB=0)// tlb flag not needed anymore as i am not logging its access
     {
+        String next = "->";
+        String wait = "*";// waiting to know if accessed block is null or not. which implies miss/hit.
+        
+        path += name;
+        // if(isTLB){
+        //     path = path + name + wait;
+        // }
+        // else{
+        //     path = path+name+next;
+        // }
+    }
 
+    static void stateAppend(bool state, String& path)
+    {
+        String Hit, Miss;
+        Hit=" (H)->"; Miss=" (M)->";
+        path += state?Hit:Miss;
+    }
+
+    static void separatorAppend(String& path)
+    {
+        String sep = "#";
+        path+=sep;
+    }
+
+    static String collectPaths(String& path1, String& path2)
+    {
+        separatorAppend(path1);
+        separatorAppend(path2);
+        String space = ",";
+        String open = "[";
+        String close = "]";
+        return open+ path1 + space + path2 +close;
     }
 };
 
@@ -67,6 +109,7 @@ class StrideInfo
     }
     uint32_t typeCount[2] = {0};
     std::vector<uint32_t> stride;
+    std::vector<String> paths;
     String tag;
     UInt32 total_access;
     String name;
@@ -89,6 +132,7 @@ class StrideTable
     typedef std::map<String, DataInfo*> Add2Data;
     // eip to access info
     std::map<String, Add2Data> table;
+
 
     UInt32 last=0;
     int total, reeip, readdr;
@@ -134,13 +178,12 @@ class StrideTable
 
         std::stringstream ss;
         String hindex, haddr, htag;
-        ss<< std::hex << index; ss >> hindex;
-        ss<< std::hex << addr; ss >> haddr;
-        ss<< std::hex  << tag; ss >> htag;
+        ss << std::hex << index; ss >> hindex; ss.clear();
+        ss << std::hex << addr; ss >> haddr; ss.clear();
+        ss << std::hex << tag; ss >> htag;
 
-        printf("index=%ld, addr=%ld, tag=%ld -- ", index, addr, tag);
-        // printf("hindex=%s, haddr=%s, htag=%s\n", hindex.c_str(), haddr.c_str(), htag.c_str());
-        std::cout<<hindex<<" "<<haddr<<" "<<htag<<std::endl;
+        // std::cout<<hindex<<" "<<haddr<<" "<<htag<<" "<<name<<" "<<eip<<std::endl ;
+
         // iteratros
         std::map<String, Add2Data>::iterator it;
         Add2Data:: iterator ot;
@@ -200,9 +243,10 @@ class CacheHelper
     Sampling sampling;
 
     // member function
-    void strideTableUpdate(bool access, IntPtr eip, IntPtr addr, IntPtr tag, UInt32 set_index, String name)
+    void strideTableUpdate(bool access, IntPtr eip, IntPtr addr, IntPtr tag, UInt32 set_index, String name, IntPtr origEip)
     {
-        
+        char* p=&name[0];
+        printf("%ld = %s\n", origEip,p);
 
         stride_table.lookupAndUpdate(access, eip, addr, tag, set_index, name);
         sampling.count();

@@ -5,6 +5,7 @@
 
 #include <cstddef>
 #include <functional>
+#include <fixed_types.h>
 
 class HitWhere
 {
@@ -47,5 +48,5 @@ namespace std
 
 const char * HitWhereString(HitWhere::where_t where);
 bool HitWhereIsValid(HitWhere::where_t where);
-
+String Hit2WhereString(HitWhere::where_t where);
 #endif /* __HIT_WHERE */

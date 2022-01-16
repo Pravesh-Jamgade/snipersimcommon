@@ -1,6 +1,7 @@
 #include "simulator.h"
 #include "cache.h"
 #include "log.h"
+#include "cache_helper.h"
 
 // Cache class
 // constructors/destructors
@@ -82,7 +83,7 @@ Cache::invalidateSingleLine(IntPtr addr)
 
 CacheBlockInfo*
 Cache::accessSingleLine(IntPtr addr, access_t access_type,
-      Byte* buff, UInt32 bytes, SubsecondTime now, bool update_replacement, IntPtr eip)
+      Byte* buff, UInt32 bytes, SubsecondTime now, bool update_replacement, IntPtr eip, String path)
 {
    //assert((buff == NULL) == (bytes == 0));
    IntPtr tag;
@@ -95,9 +96,10 @@ Cache::accessSingleLine(IntPtr addr, access_t access_type,
    CacheSet* set = m_sets[set_index];
    CacheBlockInfo* cache_block_info = set->find(tag, &line_index);
 
-   if (cache_block_info == NULL)
+   if (cache_block_info == NULL){
       return NULL;
-
+   }
+     
    if (access_type == LOAD)
    {
       // NOTE: assumes error occurs in memory. If we want to model bus errors, insert the error into buff instead
@@ -116,7 +118,7 @@ Cache::accessSingleLine(IntPtr addr, access_t access_type,
    }
 
    // [UPDATE]
-   if( (eip != -1) && (access_type == LOAD || access_type == STORE)) {
+   if( eip != -1 && (access_type == LOAD || access_type == STORE)) {
 
       IntPtr eip_tag;
       UInt32 eip_set_index;
@@ -127,9 +129,8 @@ Cache::accessSingleLine(IntPtr addr, access_t access_type,
       IntPtr index = eip & 0xfffff; // use lsb 20 bits for indexing, possible all instructions are in few blocks
       IntPtr blockBasedStride = addr >> m_log_blocksize & block_mask; // as we want to calculate stride beyond a single block
       IntPtr setBasedStride = addr >> m_log_blocksize & set_mask;
-      std::cout<<"mlogblocksize="<<m_log_blocksize<<" == mblocksize="<<m_blocksize<<std::endl;
 
-      cache_helper.strideTableUpdate(access_type==LOAD?1:0, index, blockBasedStride, eip_tag, eip_set_index, getName());
+      cache_helper.strideTableUpdate(access_type==LOAD?1:0, index, blockBasedStride, eip_tag, eip_set_index, path, eip);
    }
    
    return cache_block_info;

@@ -278,19 +278,21 @@ namespace ParametricDramDirectoryMSI
          ShmemPerfModel* m_shmem_perf_model;
 
          //[UPDATE]
-         IntPtr eip=-1;
+         IntPtr eip;
+         String name;
+
          // Core-interfacing stuff
          void accessCache(
                Core::mem_op_t mem_op_type,
                IntPtr ca_address, UInt32 offset,
-               Byte* data_buf, UInt32 data_length, bool update_replacement);
+               Byte* data_buf, UInt32 data_length, bool update_replacement, String path);
          bool operationPermissibleinCache(
                IntPtr address, Core::mem_op_t mem_op_type, CacheBlockInfo **cache_block_info = NULL);
 
          void copyDataFromNextLevel(Core::mem_op_t mem_op_type, IntPtr address, bool modeled, SubsecondTime t_start);
          void trainPrefetcher(IntPtr address, bool cache_hit, bool prefetch_hit, bool prefetch_own, SubsecondTime t_issue);
-         void Prefetch(SubsecondTime t_start);
-         void doPrefetch(IntPtr prefetch_address, SubsecondTime t_start);
+         void Prefetch(SubsecondTime t_start, IntPtr eip, String& path);
+         void doPrefetch(IntPtr prefetch_address, SubsecondTime t_start, IntPtr eip, String& path);
 
          // Cache meta-data operations
          SharedCacheBlockInfo* getCacheBlockInfo(IntPtr address);
@@ -300,7 +302,8 @@ namespace ParametricDramDirectoryMSI
 
          // Cache data operations
          void invalidateCacheBlock(IntPtr address);
-         void retrieveCacheBlock(IntPtr address, Byte* data_buf, ShmemPerfModel::Thread_t thread_num, bool update_replacement);
+         void retrieveCacheBlock(IntPtr address, Byte* data_buf, ShmemPerfModel::Thread_t thread_num, 
+         bool update_replacement, String path="");
 
 
          SharedCacheBlockInfo* insertCacheBlock(IntPtr address, CacheState::cstate_t cstate, Byte* data_buf, core_id_t requester, ShmemPerfModel::Thread_t thread_num);
@@ -308,7 +311,9 @@ namespace ParametricDramDirectoryMSI
          void writeCacheBlock(IntPtr address, UInt32 offset, Byte* data_buf, UInt32 data_length, ShmemPerfModel::Thread_t thread_num);
 
          // Handle Request from previous level cache
-         HitWhere::where_t processShmemReqFromPrevCache(CacheCntlr* requester, Core::mem_op_t mem_op_type, IntPtr address, bool modeled, bool count, Prefetch::prefetch_type_t isPrefetch, SubsecondTime t_issue, bool have_write_lock);
+         HitWhere::where_t processShmemReqFromPrevCache(CacheCntlr* requester, Core::mem_op_t mem_op_type, 
+         IntPtr address, bool modeled, bool count, Prefetch::prefetch_type_t isPrefetch,
+         SubsecondTime t_issue, bool have_write_lock, String& path);
 
          // Process Request from L1 Cache
          boost::tuple<HitWhere::where_t, SubsecondTime> accessDRAM(Core::mem_op_t mem_op_type, IntPtr address, bool isPrefetch, Byte* data_buf);
@@ -382,7 +387,7 @@ namespace ParametricDramDirectoryMSI
                IntPtr ca_address, UInt32 offset,
                Byte* data_buf, UInt32 data_length,
                bool modeled,
-               bool count, IntPtr eip);
+               bool count, IntPtr eip, String& path);
          void updateHits(Core::mem_op_t mem_op_type, UInt64 hits);
 
          // Notify next level cache of so it can update its sharing set
@@ -410,6 +415,29 @@ namespace ParametricDramDirectoryMSI
 
          friend class CacheCntlrList;
          friend class MemoryManager;
+
+        //
+        void setEIP(IntPtr eip)
+        {
+           this->eip = eip;
+        }
+
+        IntPtr getEIP()
+        {
+           return this->eip;
+        }
+
+        void setName(String name)
+        {
+           this->name = name;
+        }
+
+        void pathAppend(String& path)
+        {
+           String next = "->";
+           path = path + next + this->name;
+        }
+
    };
 
 }

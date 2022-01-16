@@ -363,6 +363,7 @@ Core::initiateMemoryAccess(MemComponent::component_t mem_component,
       if (m_cheetah_manager)
          m_cheetah_manager->access(mem_op_type, curr_addr_aligned);
 
+     
       HitWhere::where_t this_hit_where = getMemoryManager()->coreInitiateMemoryAccess(
                mem_component,
                lock_signal,

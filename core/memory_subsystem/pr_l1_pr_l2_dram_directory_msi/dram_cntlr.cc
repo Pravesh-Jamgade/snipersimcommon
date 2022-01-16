@@ -136,4 +136,14 @@ DramCntlr::printDramAccessCount()
    }
 }
 
+void DramCntlr::setEIP(IntPtr eip)
+{
+   this->eip = eip;
+}
+
+IntPtr DramCntlr::getEIP()
+{
+   return this->eip;
+}
+
 }

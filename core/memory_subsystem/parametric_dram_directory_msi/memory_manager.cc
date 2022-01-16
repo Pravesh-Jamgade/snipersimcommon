@@ -288,6 +288,10 @@ MemoryManager::MemoryManager(Core* core,
          getShmemPerfModel(),
          i == (UInt32)m_last_level_cache
       );
+      //[update]
+      cache_cntlr->setEIP(-1);
+      cache_cntlr->setName(cache_names[(MemComponent::component_t)i]);
+
       m_cache_cntlrs[(MemComponent::component_t)i] = cache_cntlr;
       setCacheCntlrAt(getCore()->getId(), (MemComponent::component_t)i, cache_cntlr);
    }
@@ -427,10 +431,21 @@ MemoryManager::coreInitiateMemoryAccess(
    LOG_ASSERT_ERROR(mem_component <= m_last_level_cache,
       "Error: invalid mem_component (%d) for coreInitiateMemoryAccess", mem_component);
 
+   String path;
+
+   for(UInt32 i = MemComponent::FIRST_LEVEL_CACHE; i <= (UInt32)m_last_level_cache; ++i) {
+      m_cache_cntlrs[(MemComponent::component_t)i]->setEIP(eip);
+   }
+
+   if(m_dram_cache!=NULL)
+      m_dram_cache->setEIP(eip);
+   if(m_dram_cntlr!=NULL)
+      m_dram_cntlr->setEIP(eip);
+
    if (mem_component == MemComponent::L1_ICACHE && m_itlb)
-      accessTLB(m_itlb, address, true, modeled);
+      accessTLB(m_itlb, address, true, modeled, eip, path);
    else if (mem_component == MemComponent::L1_DCACHE && m_dtlb)
-      accessTLB(m_dtlb, address, false, modeled);
+      accessTLB(m_dtlb, address, false, modeled, eip, path);
 
    return m_cache_cntlrs[mem_component]->processMemOpFromCore(
          lock_signal,
@@ -438,7 +453,7 @@ MemoryManager::coreInitiateMemoryAccess(
          address, offset,
          data_buf, data_length,
          modeled == Core::MEM_MODELED_NONE || modeled == Core::MEM_MODELED_COUNT ? false : true,
-         modeled == Core::MEM_MODELED_NONE ? false : true,  eip);
+         modeled == Core::MEM_MODELED_NONE ? false : true,  eip, path);
 }
 
 void
@@ -594,9 +609,14 @@ MYLOG("bcast msg");
 }
 
 void
-MemoryManager::accessTLB(TLB * tlb, IntPtr address, bool isIfetch, Core::MemModeled modeled)
+MemoryManager::accessTLB(TLB * tlb, IntPtr address, bool isIfetch, Core::MemModeled modeled, IntPtr eip, String& path)
 {
+
    bool hit = tlb->lookup(address, getShmemPerfModel()->getElapsedTime(ShmemPerfModel::_USER_THREAD));
+
+   cache_helper::Misc::pathAppend(path, tlb->name);
+   cache_helper::Misc::stateAppend(hit, path);
+   
    if (hit == false
        && !(modeled == Core::MEM_MODELED_NONE || modeled == Core::MEM_MODELED_COUNT)
        && m_tlb_miss_penalty.getLatency() != SubsecondTime::Zero()

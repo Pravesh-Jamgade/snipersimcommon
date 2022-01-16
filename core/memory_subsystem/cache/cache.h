@@ -62,7 +62,8 @@ class Cache : public CacheBase
       
       // [ORIGINAL]
       CacheBlockInfo* accessSingleLine(IntPtr addr,
-            access_t access_type, Byte* buff, UInt32 bytes, SubsecondTime now, bool update_replacement, IntPtr eip=0);
+            access_t access_type, Byte* buff, UInt32 bytes, SubsecondTime now, bool update_replacement, 
+            IntPtr eip=-1, String path="");
       
       void insertSingleLine(IntPtr addr, Byte* fill_buff,
             bool* eviction, IntPtr* evict_addr,

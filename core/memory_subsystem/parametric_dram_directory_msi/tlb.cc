@@ -1,5 +1,6 @@
 #include "tlb.h"
 #include "stats.h"
+#include "cache_helper.h"
 
 namespace ParametricDramDirectoryMSI
 {
@@ -11,6 +12,7 @@ TLB::TLB(String name, String cfgname, core_id_t core_id, UInt32 num_entries, UIn
    , m_next_level(next_level)
    , m_access(0)
    , m_miss(0)
+   , name(name)
 {
    LOG_ASSERT_ERROR((num_entries / associativity) * associativity == num_entries, "Invalid TLB configuration: num_entries(%d) must be a multiple of the associativity(%d)", num_entries, associativity);
 
@@ -21,12 +23,14 @@ TLB::TLB(String name, String cfgname, core_id_t core_id, UInt32 num_entries, UIn
 bool
 TLB::lookup(IntPtr address, SubsecondTime now, bool allocate_on_miss)
 {
+  
    bool hit = m_cache.accessSingleLine(address, Cache::LOAD, NULL, 0, now, true);
 
    m_access++;
 
-   if (hit)
+   if (hit){
       return true;
+   }
 
    m_miss++;
 

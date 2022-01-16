@@ -60,7 +60,7 @@ namespace ParametricDramDirectoryMSI
          // Global map of all caches on all cores (within this process!)
          static CacheCntlrMap m_all_cache_cntlrs;
 
-         void accessTLB(TLB * tlb, IntPtr address, bool isIfetch, Core::MemModeled modeled);
+         void accessTLB(TLB * tlb, IntPtr address, bool isIfetch, Core::MemModeled modeled, IntPtr eip, String& path);
 
       public:
          MemoryManager(Core* core, Network* network, ShmemPerfModel* shmem_perf_model);
