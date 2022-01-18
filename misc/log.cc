@@ -309,10 +309,10 @@ void Log::log(ErrorState err, const char* source_file, SInt32 source_line, const
    char *p = message;
 
    // This is ugly, but it just prints the time stamp, core number, source file/line
-   // if (core_id != INVALID_CORE_ID) // valid core id
-   //    p += sprintf(p, "%-10llu [%5d]  [%2i]%s[%s:%4d]  ", (long long unsigned int) getTimestamp(), tid, core_id, (sim_thread ? "* " : "  "), source_file, source_line);
-   // else // who knows
-   //    p += sprintf(p, "%-10llu [%5d]  [  ]  [%s:%4d]  ", (long long unsigned int) getTimestamp(), tid, source_file, source_line);
+   if (core_id != INVALID_CORE_ID) // valid core id
+      p += sprintf(p, "%-10llu [%5d]  [%2i]%s[%s:%4d]  ", (long long unsigned int) getTimestamp(), tid, core_id, (sim_thread ? "* " : "  "), source_file, source_line);
+   else // who knows
+      p += sprintf(p, "%-10llu [%5d]  [  ]  [%s:%4d]  ", (long long unsigned int) getTimestamp(), tid, source_file, source_line);
 
    switch (err)
    {
@@ -367,59 +367,4 @@ void Log::log(ErrorState err, const char* source_file, SInt32 source_line, const
    default:
       break;
    }
-}
-
-
-void Log::log(const char *format, ...)
-{
-   core_id_t core_id;
-   bool sim_thread;
-   discoverCore(&core_id, &sim_thread);
-
-   FILE *file;
-   Lock *lock;
-
-   getFile(core_id, sim_thread, &file, &lock);
-   int tid = syscall(__NR_gettid);
-
-
-   char message[512];
-   char *p = message;
-
-  
-      //  // This is ugly, but it just prints the time stamp, core number, source file/line
-      // if (core_id != INVALID_CORE_ID) // valid core id
-      //    p += sprintf(p, "%-10llu [%5d]  [%2i]%s[%s:%4d]  ", (long long unsigned int) getTimestamp(), tid, core_id, (sim_thread ? "* " : "  "), source_file, source_line);
-      // else // who knows
-      //    p += sprintf(p, "%-10llu [%5d]  [  ]  [%s:%4d]  ", (long long unsigned int) getTimestamp(), tid, source_file, source_line);
-  
-   // switch (err)
-   // {
-   // case None:
-   // default:
-   //    break;
-
-   // case Warning:
-   //    p += sprintf(p, "*WARNING* ");
-   //    break;
-
-   // case Error:
-   //    p += sprintf(p, "*ERROR* ");
-   //    break;
-   // };
-
-   va_list args;
-   va_start(args, format);
-   p += vsprintf(p, format, args);
-   va_end(args);
-
-   // p += sprintf(p, "\n");
-
-   lock->acquire();
-
-   fputs(message, file);
-   fflush(file);
-
-   lock->release();
-
 }

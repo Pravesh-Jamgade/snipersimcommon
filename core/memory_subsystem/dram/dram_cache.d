@@ -23,9 +23,7 @@
  /mnt/B/sniper/common/core/core.h \
  /mnt/B/sniper/common/network/packet_type.h \
  /mnt/B/sniper/common/core/bbv_count.h /mnt/B/sniper/common/misc/cpuid.h \
- /mnt/B/sniper/common/helpers/cache_helper.h \
  /mnt/B/sniper/common/fault_injection/fault_injection.h \
- /mnt/B/sniper/common/helpers/test.h \
  /mnt/B/sniper/common/performance_model/contention_model.h \
  /mnt/B/sniper/common/system/simulator.h \
  /mnt/B/sniper/common/misc/config.h \

@@ -27,7 +27,6 @@ class Log
       };
 
       void log(ErrorState err, const char *source_file, SInt32 source_line, const char* format, ...);
-      void log( const char *format, ...);
 
       bool isEnabled(const char* module);
       bool isLoggingEnabled() const { return _anyLoggingEnabled; }
@@ -106,13 +105,6 @@ class Log
          }                                                              \
       }                                                                 \
    }                                                                    \
-
-
-// [UPDATE]
-#define _LOG_PRINT_CUSTOM(err, ...)                                            \
-   {                                                                    \
-      Log::getSingleton()->log( __VA_ARGS__); \
-   }   
 
 #define _LOG_PRINT(err, ...)                                            \
    {                                                                    \
