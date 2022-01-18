@@ -291,8 +291,8 @@ namespace ParametricDramDirectoryMSI
 
          void copyDataFromNextLevel(Core::mem_op_t mem_op_type, IntPtr address, bool modeled, SubsecondTime t_start);
          void trainPrefetcher(IntPtr address, bool cache_hit, bool prefetch_hit, bool prefetch_own, SubsecondTime t_issue);
-         void Prefetch(SubsecondTime t_start, IntPtr eip, String& path);
-         void doPrefetch(IntPtr prefetch_address, SubsecondTime t_start, IntPtr eip, String& path);
+         void Prefetch(SubsecondTime t_start);
+         void doPrefetch(IntPtr prefetch_address, SubsecondTime t_start);
 
          // Cache meta-data operations
          SharedCacheBlockInfo* getCacheBlockInfo(IntPtr address);

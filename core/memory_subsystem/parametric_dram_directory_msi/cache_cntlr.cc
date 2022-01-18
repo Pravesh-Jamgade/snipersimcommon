@@ -645,7 +645,7 @@ MYLOG("access done");
    // Call Prefetch on next-level caches (but not for atomic instructions as that causes a locking mess)
    if (lock_signal != Core::LOCK && modeled)
    {
-      Prefetch(t_start, eip, path);
+      Prefetch(t_start);
    }
 
    if (Sim()->getConfig()->getCacheEfficiencyCallbacks().notify_access_func)
@@ -747,7 +747,7 @@ CacheCntlr::trainPrefetcher(IntPtr address, bool cache_hit, bool prefetch_hit, b
 }
 
 void
-CacheCntlr::Prefetch(SubsecondTime t_now, IntPtr eip, String& path)
+CacheCntlr::Prefetch(SubsecondTime t_now)
 {
    IntPtr address_to_prefetch = INVALID_ADDRESS;
    //IntPtr addresses_to_prefetch[32];
@@ -778,7 +778,7 @@ CacheCntlr::Prefetch(SubsecondTime t_now, IntPtr eip, String& path)
       /*for (int i = 0; i < count; ++i) {
          doPrefetch(addresses_to_prefetch[i], m_master->m_prefetch_next);
       }*/
-      doPrefetch(address_to_prefetch, m_master->m_prefetch_next, eip, path);//[UPDATE]
+      doPrefetch(address_to_prefetch, m_master->m_prefetch_next);//[UPDATE]
       atomic_add_subsecondtime(m_master->m_prefetch_next, PREFETCH_INTERVAL);
    }
 
@@ -786,14 +786,17 @@ CacheCntlr::Prefetch(SubsecondTime t_now, IntPtr eip, String& path)
    if (m_next_cache_cntlr){
       //[UPDATE]
       m_next_cache_cntlr->eip = eip;
-      m_next_cache_cntlr->Prefetch(t_now, eip, path);// i wont need to pass eip, if i am setting it for cntrl :TODO
+      m_next_cache_cntlr->Prefetch(t_now);// i wont need to pass eip, if i am setting it for cntrl :TODO
    }
       
 }
 
 void
-CacheCntlr::doPrefetch(IntPtr prefetch_address, SubsecondTime t_start, IntPtr eip, String& path)
+CacheCntlr::doPrefetch(IntPtr prefetch_address, SubsecondTime t_start)
 {
+   //not using 
+   String path="";
+
    ++stats.prefetches;
    acquireStackLock(prefetch_address);
    MYLOG("prefetching %lx", prefetch_address);
@@ -1067,9 +1070,6 @@ SubsecondTime t_issue, bool have_write_lock, String& path)
                boost::tie<HitWhere::where_t, SubsecondTime>(hit_where, latency) = accessDRAM(Core::READ, address, 
                isPrefetch != Prefetch::NONE, data_buf);
 
-               printf("LLC & DRAM= %s\n", Hit2WhereString(hit_where));
-               exit(0);
-
                getMemoryManager()->incrElapsedTime(latency, ShmemPerfModel::_USER_THREAD);
 
                // Insert the line. Be sure to use SHARED/MODIFIED as appropriate (upgrades are free anyway), we don't want to have to write back clean lines
@@ -1184,11 +1184,6 @@ boost::tuple<HitWhere::where_t, SubsecondTime>
 CacheCntlr::accessDRAM(Core::mem_op_t mem_op_type, IntPtr address, bool isPrefetch, Byte* data_buf)
 {
    IntPtr dram_eip = m_master->m_dram_cntlr->getEIP();
-   if(this->eip != eip)
-   {
-      printf("For set=%ld  dram=%ld\n", this->eip, dram_eip);
-      exit(0);
-   }
 
    ScopedLock sl(getLock()); // DRAM is shared and owned by m_master
 
