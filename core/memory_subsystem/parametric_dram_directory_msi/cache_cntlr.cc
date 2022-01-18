@@ -342,6 +342,8 @@ CacheCntlr::processMemOpFromCore(
       printf("EIP: set=%ld, passed=%ld\n", this->eip, eip);
       exit(0);
    }
+   // if debug level not specified, unlock to log all; or unlock individual level
+   loggingLevel(ca_address);
   
    String tmp1 = "";
    String tmp2 = "";
@@ -414,7 +416,7 @@ LOG_ASSERT_ERROR(offset + data_length <= getCacheBlockSize(), "access until %u >
 
    if (cache_hit)
    {
-
+      cache_helper::Misc::pathAdd(cache_hit, m_mem_component, "A", path);
 MYLOG("L1 hit");
       getMemoryManager()->incrElapsedTime(m_mem_component, CachePerfModel::ACCESS_CACHE_DATA_AND_TAGS, ShmemPerfModel::_USER_THREAD);
       hit_where = (HitWhere::where_t)m_mem_component;
@@ -465,8 +467,10 @@ MYLOG("L1 hit");
 
    } else {
       //[UPDATE]
-      path+=MemComponent2String(m_mem_component);
-      cache_helper::Misc::stateAppend(0,path);
+      // path+=MemComponent2String(m_mem_component);
+      // cache_helper::Misc::stateAppend(0,path);
+      cache_helper::Misc::pathAdd(cache_hit, m_mem_component, "B1", tmp1);
+
 
       /* cache miss: either wrong coherency state or not present in the cache */
 MYLOG("L1 miss");
@@ -516,6 +520,7 @@ MYLOG("processMemOpFromCore l%d next hit = %d", m_mem_component, next_cache_hit)
       } else {
          //[update]
          second_call = true;
+         cache_helper::Misc::pathAdd(cache_hit, m_mem_component, "B2", tmp2);
 
          /* last level miss, a message has been sent. */
 MYLOG("processMemOpFromCore l%d waiting for sent message", m_mem_component);
@@ -581,6 +586,7 @@ MYLOG("processMemOpFromCore l%d after next fill", m_mem_component);
       }
    }
 
+   
    //[update]
    if(first_call)
    {
@@ -594,8 +600,8 @@ MYLOG("processMemOpFromCore l%d after next fill", m_mem_component);
       path=cache_helper::Misc::collectPaths(tmp1,tmp2);
    }
    
-   path += MemComponent2String(m_mem_component);
-   cache_helper::Misc::stateAppend(1,path);
+   // path += MemComponent2String(m_mem_component);
+   // cache_helper::Misc::stateAppend(1,path);
 
    accessCache(mem_op_type, ca_address, offset, data_buf, data_length, 
    hit_where == HitWhere::where_t(m_mem_component) && count, path);
@@ -831,6 +837,7 @@ bool modeled, bool count, Prefetch::prefetch_type_t isPrefetch,
 SubsecondTime t_issue, bool have_write_lock, String& path)
 {
 
+   loggingLevel(address);
    #ifdef PRIVATE_L2_OPTIMIZATION
    bool have_write_lock_internal = have_write_lock;
    if (! have_write_lock && m_shared_cores > 1)
@@ -875,7 +882,8 @@ SubsecondTime t_issue, bool have_write_lock, String& path)
 
    if (cache_hit)
    {
-     
+      cache_helper::Misc::pathAdd(cache_hit, m_mem_component, "C", path);
+      
       if (isPrefetch == Prefetch::NONE && cache_block_info->hasOption(CacheBlockInfo::PREFETCH))
       {
          // This line was fetched by the prefetcher and has proven useful
@@ -978,9 +986,11 @@ SubsecondTime t_issue, bool have_write_lock, String& path)
    }
    else // !cache_hit: either data is not here, or operation on data is not permitted
    {
-      //[UPDATE]
-      path+=MemComponent2String(m_mem_component);
-      cache_helper::Misc::stateAppend(0,path);
+      // //[UPDATE]
+      // path+=MemComponent2String(m_mem_component);
+      // cache_helper::Misc::stateAppend(0,path);
+      cache_helper::Misc::pathAdd(cache_hit, m_mem_component, "D", path);
+
 
       // Increment shared mem perf model cycle counts
       if (modeled)
@@ -1010,6 +1020,7 @@ SubsecondTime t_issue, bool have_write_lock, String& path)
          // //[update]
          // m_next_cache_cntlr->eip = eip;
          // printf("this=%d, set=%d, verify=%ld\n", eip, this->eip, m_next_cache_cntlr->eip);
+         cache_helper::Misc::pathAdd(cache_hit, m_mem_component, "D1", path);
 
          hit_where = m_next_cache_cntlr->processShmemReqFromPrevCache(this, mem_op_type, address, modeled, count, 
          isPrefetch == Prefetch::NONE ? Prefetch::NONE : Prefetch::OTHER, t_issue, have_write_lock_internal, path);
@@ -1023,12 +1034,15 @@ SubsecondTime t_issue, bool have_write_lock, String& path)
             if (isPrefetch != Prefetch::NONE)
                getCacheBlockInfo(address)->setOption(CacheBlockInfo::PREFETCH);
          }
+
       }
       else // last-level cache
       {
 
          if (cache_block_info && cache_block_info->getCState() == CacheState::EXCLUSIVE)
          {
+            cache_helper::Misc::pathAdd(cache_hit, m_mem_component, "D2-1", path);
+
             // Data is present, but still no cache_hit => this is a write on a SHARED block. Do Upgrade
             SubsecondTime latency = SubsecondTime::Zero();
             for(CacheCntlrList::iterator it = m_master->m_prev_cache_cntlrs.begin(); it != m_master->m_prev_cache_cntlrs.end(); it++)
@@ -1051,6 +1065,8 @@ SubsecondTime t_issue, bool have_write_lock, String& path)
             cache_hit = true;
             if (cache_block_info)
             {
+               cache_helper::Misc::pathAdd(cache_hit, m_mem_component, "D2-2-1", path);
+
                // We already have the line: it must have been SHARED and this is a write (else there wouldn't have been a miss)
                // Upgrade silently
                cache_block_info->setCState(CacheState::MODIFIED);
@@ -1058,6 +1074,7 @@ SubsecondTime t_issue, bool have_write_lock, String& path)
             }
             else
             {
+               cache_helper::Misc::pathAdd(cache_hit, m_mem_component, "D2-2-2", path);
                m_shmem_perf->reset(getShmemPerfModel()->getElapsedTime(ShmemPerfModel::_USER_THREAD), m_core_id);
 
                Byte data_buf[getCacheBlockSize()];
@@ -1066,9 +1083,6 @@ SubsecondTime t_issue, bool have_write_lock, String& path)
                // Do the DRAM access and increment local time
                boost::tie<HitWhere::where_t, SubsecondTime>(hit_where, latency) = accessDRAM(Core::READ, address, 
                isPrefetch != Prefetch::NONE, data_buf);
-
-               printf("LLC & DRAM= %s\n", Hit2WhereString(hit_where));
-               exit(0);
 
                getMemoryManager()->incrElapsedTime(latency, ShmemPerfModel::_USER_THREAD);
 
@@ -1082,6 +1096,7 @@ SubsecondTime t_issue, bool have_write_lock, String& path)
          }
          else
          {
+            cache_helper::Misc::pathAdd(cache_hit, m_mem_component, "D2-3", path);
             initiateDirectoryAccess(mem_op_type, address, isPrefetch != Prefetch::NONE, t_issue);
          }
       }
@@ -1184,11 +1199,8 @@ boost::tuple<HitWhere::where_t, SubsecondTime>
 CacheCntlr::accessDRAM(Core::mem_op_t mem_op_type, IntPtr address, bool isPrefetch, Byte* data_buf)
 {
    IntPtr dram_eip = m_master->m_dram_cntlr->getEIP();
-   if(this->eip != eip)
-   {
-      printf("For set=%ld  dram=%ld\n", this->eip, dram_eip);
-      exit(0);
-   }
+   printf("For set=%ld  dram=%ld\n", this->eip, dram_eip);
+   exit(0);
 
    ScopedLock sl(getLock()); // DRAM is shared and owned by m_master
 
@@ -1210,7 +1222,7 @@ CacheCntlr::accessDRAM(Core::mem_op_t mem_op_type, IntPtr address, bool isPrefet
       default:
          LOG_PRINT_ERROR("Unsupported Mem Op Type(%u)", mem_op_type);
    }
-
+   
    return boost::tuple<HitWhere::where_t, SubsecondTime>(hit_where, dram_latency);
 }
 
@@ -1370,6 +1382,7 @@ CacheCntlr::accessCache(
       Core::mem_op_t mem_op_type, IntPtr ca_address, UInt32 offset,
       Byte* data_buf, UInt32 data_length, bool update_replacement, String path)
 {
+
    switch (mem_op_type)
    {
       case Core::READ:
@@ -1567,6 +1580,7 @@ MYLOG("evicting @%lx", evict_address);
       }
       else if (m_master->m_dram_cntlr)
       {
+         
          if (evict_block_info.getCState() == CacheState::MODIFIED)
          {
             SubsecondTime t_now = getShmemPerfModel()->getElapsedTime(ShmemPerfModel::_USER_THREAD);

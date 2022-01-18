@@ -15,15 +15,6 @@
 namespace cache_helper
 {   
 
-class PathStore
-{
-    static std::map<IntPtr, String> pathStore;
-    public:
-    bool find(IntPtr eip)
-    {
-        return pathStore.find(eip)!= pathStore.end();
-    }
-};
 
 class Sampling
 {
@@ -38,7 +29,7 @@ class Sampling
     }
 
     void flip(){
-        allowed!=allowed;
+        allowed=!allowed;
     }
 
     void reset(){
@@ -58,19 +49,12 @@ class Sampling
 
 class Misc
 {
+    
     public:
     static void pathAppend(String& path, String name, bool isTLB=0)// tlb flag not needed anymore as i am not logging its access
     {
         String next = "->";
-        String wait = "*";// waiting to know if accessed block is null or not. which implies miss/hit.
-        
         path += name;
-        // if(isTLB){
-        //     path = path + name + wait;
-        // }
-        // else{
-        //     path = path+name+next;
-        // }
     }
 
     static void stateAppend(bool state, String& path)
@@ -86,6 +70,13 @@ class Misc
         path+=sep;
     }
 
+    static void aliasAppend(String& path, String alias)
+    {
+        String open = "(";
+        String close = ")";
+        path+= open + alias + close;
+    }
+
     static String collectPaths(String& path1, String& path2)
     {
         separatorAppend(path1);
@@ -95,51 +86,58 @@ class Misc
         String close = "]";
         return open+ path1 + space + path2 +close;
     }
+
+    static void pathAdd(bool state, MemComponent::component_t m_comp, String alias, String& path, bool enable=true)
+    {
+        String next = "->";
+        path += MemComponent2String(m_comp);
+        if(enable)
+            aliasAppend(path, alias);
+        stateAppend(state, path);
+    }
 };
 
  class DataInfo
 {
     public:
-    DataInfo(bool access_type, uint32_t stride, String tag, String name){
+    DataInfo(bool access_type, uint32_t stride, String path){
         this->typeCount[access_type]+=1;
-        this->tag = tag;
-        this->stride.push_back(stride);
+        this->stride.insert(stride);
         this->total_access=1;
-        this->name = name;
     }
     uint32_t typeCount[2] = {0};
-    std::vector<uint32_t> stride;
-    std::vector<String> paths;
-    String tag;
+    std::set<uint32_t> stride;
     UInt32 total_access;
-    String name;
 };
-
 
 class StrideTable
 {
     public:
-    StrideTable()
-    { }
 
-    ~StrideTable()
-    {
-        write();
-    }
+    // ******accessinfo********
 
-    // accessinfo
     // addr to datainfo
     typedef std::map<String, DataInfo*> Add2Data;
+
     // eip to access info
     std::map<String, Add2Data> table;
 
-
     UInt32 last=0;
+
     int total, reeip, readdr;
-    
+
+    std::map<String, std::set<String>> path2haddrStorage;
+
+    bool cacheLevelDebug=false;
+
+    StrideTable() { }
+
+    ~StrideTable() {write();}
+
     void write()
     {
         std::map<String, Add2Data>::iterator pit = table.begin();
+        std::set<uint32_t>::iterator sit;
         for(;pit!=table.end();pit++)
         {
             Add2Data add2data = pit->second;
@@ -153,20 +151,36 @@ class StrideTable
                     _LOG_PRINT_CUSTOM(Log::Warning, "EIP=%s,ADDR=%s,LD=%ld,ST=%ld, T=%ld,STRIDE=[",
                     pit->first.c_str(), qit->first.c_str(), dataInfo->typeCount[1], dataInfo->typeCount[0], dataInfo->total_access);
 
-                    for(int i=0; i< dataInfo->stride.size(); i++)
+                    sit = dataInfo->stride.begin();
+                    for(;sit!=dataInfo->stride.end();sit++)
                     {
                         // _LOG_PRINT(Log::Warning, "%ld, ",dataInfo->stride[i]);
-                        _LOG_PRINT_CUSTOM(Log::Warning, "%ld, ",dataInfo->stride[i]);
+                        _LOG_PRINT_CUSTOM(Log::Warning, "%ld, ",sit);
                     }
                     // _LOG_PRINT(Log::Warning, "load=%ld store=%ld",dataInfo->typeCount[1], dataInfo->typeCount[0]);
                     _LOG_PRINT_CUSTOM(Log::Warning, "]\n");
                  }
             }
         }
+
+        _LOG_PRINT_CUSTOM(Log::Warning, "*********************************PATH-2-ADDRESSES*******************************\n");
+
+        std::map<String, std::set<String>>::iterator pasit = path2haddrStorage.begin();
+        for(;pasit!=path2haddrStorage.end();pasit++)
+        {
+            _LOG_PRINT_CUSTOM(Log::Warning, "%s\t=[",pasit->first.c_str());
+            std::set<String> addresses = pasit->second;
+            // std::set<String>::iterator it = addresses.begin();
+            for(auto address : addresses)
+            {
+                _LOG_PRINT_CUSTOM(Log::Warning, "%s,", address.c_str());
+            }
+            _LOG_PRINT_CUSTOM(Log::Warning, "]\n");
+        }
+        
     }
 
-    void lookupAndUpdate(int access_type, IntPtr eip, IntPtr addr, 
-    IntPtr tag, UInt32 set_index, String name)
+    void lookupAndUpdate(int access_type, IntPtr eip, IntPtr addr, String path)
     {   
         total++;
         // for stride calculation
@@ -177,16 +191,24 @@ class StrideTable
         IntPtr index = eip;
 
         std::stringstream ss;
-        String hindex, haddr, htag;
+        String hindex, haddr;
         ss << std::hex << index; ss >> hindex; ss.clear();
         ss << std::hex << addr; ss >> haddr; ss.clear();
-        ss << std::hex << tag; ss >> htag;
 
         // std::cout<<hindex<<" "<<haddr<<" "<<htag<<" "<<name<<" "<<eip<<std::endl ;
 
         // iteratros
         std::map<String, Add2Data>::iterator it;
         Add2Data:: iterator ot;
+        std::map<uint32_t, std::set<String>>:: iterator pt;
+        std::set<String>:: iterator st;
+        
+        // store path if not exists already
+        path2haddrStorage[path].insert(haddr);
+        if(path2haddrStorage.find(path)!=path2haddrStorage.end())
+            path2haddrStorage[path].insert(haddr);
+        else
+            path2haddrStorage.insert({path, {haddr}});
 
         // find eip on table
         it = table.find(hindex);
@@ -209,24 +231,20 @@ class StrideTable
                 // get datainfo
                 DataInfo* dataInfo = ot->second;
                 // update datainfo
-                dataInfo->tag = htag;
                 dataInfo->typeCount[access_type]+=1;
-                if(dataInfo->stride.back() != diff)
-                {
-                    dataInfo->stride.push_back(diff);
-                }
                 dataInfo->total_access++;
+                dataInfo->stride.insert(diff);
             }
             else // eip seeen before but addr is new
             {
                 add2data->insert( 
-                        {haddr, new DataInfo(access_type, diff, htag, name) } 
+                        { haddr, new DataInfo(access_type, diff, path) } 
                 );
             }
         }
         else
         {
-            table[hindex][haddr]=new DataInfo(access_type,  diff, htag, name);
+            table[hindex][haddr]=new DataInfo(access_type, diff, path);
         }
 
         last = tmp;
@@ -235,21 +253,62 @@ class StrideTable
 
 class CacheHelper
 {
+    bool singleCacheDebug;
+    bool allCacheDebug;
+
+    IntPtr eip, addr;
+    String name;
+    
     public:
+    CacheHelper()
+    { 
+        singleCacheDebug=allCacheDebug=false; 
+    }
     // helper tools
 
     // member variable
     StrideTable stride_table;
     Sampling sampling;
 
+    bool isSingleLevelDebugEnabled() { return this->singleCacheDebug; }
+    void setSingleCacheDebug()
+    {
+        this->singleCacheDebug=true;
+    }
+
+    void resetCacheDebug()
+    {
+        this->singleCacheDebug=false;
+        this->allCacheDebug=false;
+        this->eip=-1; this->addr=-1; this->name="XXX";
+    }
+
+    void setAllCacheDebug()
+    {
+        this->allCacheDebug=true;
+    }
+
+    void setCacheLevelName(String name)
+    {
+        this->name =name;
+    }
+
+    void debugVerify(IntPtr eip, IntPtr addr, String name)
+    {
+        this->eip=eip; this->addr=addr; this->name=name;
+    }
+    
     // member function
-    void strideTableUpdate(bool access, IntPtr eip, IntPtr addr, IntPtr tag, UInt32 set_index, String name, IntPtr origEip)
+    void strideTableUpdate(bool access, IntPtr eip, IntPtr addr, String path, IntPtr origEip, IntPtr origAddr)
     {
         char* p=&name[0];
-        printf("%ld = %s\n", origEip,p);
-
-        stride_table.lookupAndUpdate(access, eip, addr, tag, set_index, name);
-        sampling.count();
+        // printf("%ld = %s\n", origEip,p);
+        if(singleCacheDebug || allCacheDebug)
+        {
+            printf("verify eip=%ld, name=%s\n", this->eip, p);
+            stride_table.lookupAndUpdate(access, eip, addr, path);
+            resetCacheDebug();
+        }
     }
 };
 

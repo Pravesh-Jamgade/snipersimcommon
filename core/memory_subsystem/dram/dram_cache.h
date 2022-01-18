@@ -20,10 +20,9 @@ class DramCache : public DramCntlrInterface
       
       void setEIP(IntPtr eip);
       IntPtr getEIP();
+      void setName(String name){ this->name=name;}
    private:
-      //[update]
-      IntPtr eip;
-      
+
       core_id_t m_core_id;
       UInt32 m_cache_block_size;
       SubsecondTime m_data_access_time;

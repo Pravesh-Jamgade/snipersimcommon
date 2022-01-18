@@ -39,8 +39,6 @@ class Cache : public CacheBase
       UInt64* m_set_usage_hist;
       #endif
 
-      cache_helper::CacheHelper cache_helper;
-
    public:
 
       // constructors/destructors
@@ -81,6 +79,22 @@ class Cache : public CacheBase
       void enable() { m_enabled = true; }
       void disable() { m_enabled = false; }
 
+      void setSingleLevelDebug()
+      {
+            this->cache_helper.setSingleCacheDebug();
+      }
+
+      void setAllLevelDebug()
+      {
+            this->cache_helper.setAllCacheDebug();
+      }
+
+      void setDebugLevelName(String name)
+      {
+
+      }
+      
+      cache_helper::CacheHelper cache_helper;
 };
 
 template <class T>

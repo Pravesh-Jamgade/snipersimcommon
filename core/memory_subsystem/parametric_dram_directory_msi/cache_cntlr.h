@@ -280,6 +280,8 @@ namespace ParametricDramDirectoryMSI
          //[UPDATE]
          IntPtr eip;
          String name;
+         String memLevelDebug;
+         bool toDRAM;
 
          // Core-interfacing stuff
          void accessCache(
@@ -432,12 +434,28 @@ namespace ParametricDramDirectoryMSI
            this->name = name;
         }
 
-        void pathAppend(String& path)
+        void setMemLevelDebug(String memLevelDebug)
         {
-           String next = "->";
-           path = path + next + this->name;
+           this->memLevelDebug = memLevelDebug;
         }
 
+         void loggingLevel(IntPtr addr)
+         {
+            if(memLevelDebug!="")
+            {
+               char*p=&name[0];
+               bool debugEnable = memLevelDebug == name;
+               if(debugEnable & ! m_master->m_cache->cache_helper.isSingleLevelDebugEnabled()){
+                  printf("setting eip=%ld, name=%s\n", this->eip, p);
+                  m_master->m_cache->setSingleLevelDebug();
+                  m_master->m_cache->cache_helper.debugVerify(eip,addr,name);
+               }
+            }
+            else 
+            {
+               m_master->m_cache->setAllLevelDebug();
+            }
+         }
    };
 
 }

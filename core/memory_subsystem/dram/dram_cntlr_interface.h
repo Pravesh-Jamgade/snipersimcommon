@@ -22,7 +22,7 @@ class DramCntlrInterface
       UInt32 getCacheBlockSize() { return m_cache_block_size; }
       MemoryManagerBase* getMemoryManager() { return m_memory_manager; }
       ShmemPerfModel* getShmemPerfModel() { return m_shmem_perf_model; }
-      
+   
    public:
       typedef enum
       {
@@ -30,6 +30,10 @@ class DramCntlrInterface
          WRITE,
          NUM_ACCESS_TYPES
       } access_t;
+
+      IntPtr eip;
+      String name;
+      String memLevelDebug;
 
       DramCntlrInterface(MemoryManagerBase* memory_manager, ShmemPerfModel* shmem_perf_model, UInt32 cache_block_size)
          : m_memory_manager(memory_manager)
@@ -45,6 +49,16 @@ class DramCntlrInterface
 
       virtual void setEIP(IntPtr eip)=0;
       virtual IntPtr getEIP()=0;
+      
+      bool loggingLevel()
+      {
+         if(memLevelDebug!="")
+         {
+           return memLevelDebug == name;
+            
+         }
+         return true;
+      }
 };
 
 #endif // __DRAM_CNTLR_INTERFACE_H

@@ -91,7 +91,7 @@ class CacheBase
       void splitAddress(const IntPtr addr, IntPtr& tag, UInt32& set_index) const;
       void splitAddress(const IntPtr addr, IntPtr& tag, UInt32& set_index, UInt32& block_offset) const;
       IntPtr tagToAddress(const IntPtr tag);
-      String getName(void) { return m_name; }
+      String getName(void) { return m_name; }// cache objectName
 
       UInt32 getNumSets() const { return m_num_sets; }
       UInt32 getAssociativity() const { return m_associativity; }
