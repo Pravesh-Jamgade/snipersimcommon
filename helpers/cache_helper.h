@@ -124,7 +124,7 @@ class StrideTable
 
     UInt32 last=0;
 
-    int total, reeip, readdr;
+    IntPtr total, reeip, readdr;
 
     std::map<String, std::set<String>> path2haddrStorage;
 
@@ -178,6 +178,7 @@ class StrideTable
             _LOG_PRINT_CUSTOM(Log::Warning, "]\n");
         }
         
+        printf("Total accesses= %d\n", total);
     }
 
     void lookupAndUpdate(int access_type, IntPtr eip, IntPtr addr, String path)
