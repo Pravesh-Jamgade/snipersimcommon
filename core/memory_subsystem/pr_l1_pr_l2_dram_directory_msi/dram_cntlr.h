@@ -50,6 +50,9 @@ namespace PrL1PrL2DramDirectoryMSI
          void setEIP(IntPtr eip);
          IntPtr getEIP();
          void setName(String name){ this->name=name; }
-
+         void setCacheHelper(cache_helper::CacheHelper cacheHelper)
+         {
+            
+         }
    };
 }

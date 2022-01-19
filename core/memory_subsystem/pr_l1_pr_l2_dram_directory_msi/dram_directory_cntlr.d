@@ -24,12 +24,12 @@
  /mnt/B/sniper/common/performance_model/dram_perf_model.h \
  /mnt/B/sniper/common/performance_model/queue_model.h \
  /mnt/B/sniper/common/core/memory_subsystem/dram/dram_cntlr_interface.h \
+ /mnt/B/sniper/common/helpers/cache_helper.h \
  /mnt/B/sniper/common/core/memory_subsystem/pr_l1_pr_l2_dram_directory_msi/shmem_perf.h \
  /mnt/B/sniper/common/core/memory_subsystem/memory_manager_base.h \
  /mnt/B/sniper/common/core/core.h \
  /mnt/B/sniper/common/network/packet_type.h \
  /mnt/B/sniper/common/core/bbv_count.h /mnt/B/sniper/common/misc/cpuid.h \
- /mnt/B/sniper/common/helpers/cache_helper.h \
  /mnt/B/sniper/common/network/network.h \
  /mnt/B/sniper/common/network/packet_type.h \
  /mnt/B/sniper/common/misc/cond.h \

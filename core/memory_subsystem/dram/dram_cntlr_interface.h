@@ -7,6 +7,7 @@
 #include "shmem_msg.h"
 
 #include "boost/tuple/tuple.hpp"
+#include "cache_helper.h"
 
 class MemoryManagerBase;
 class ShmemPerfModel;
@@ -34,6 +35,7 @@ class DramCntlrInterface
       IntPtr eip;
       String name;
       String memLevelDebug;
+      cache_helper::CacheHelper* cacheHelper;
 
       DramCntlrInterface(MemoryManagerBase* memory_manager, ShmemPerfModel* shmem_perf_model, UInt32 cache_block_size)
          : m_memory_manager(memory_manager)
@@ -58,6 +60,11 @@ class DramCntlrInterface
             
          }
          return true;
+      }
+
+      void setCacheHelper(cache_helper::CacheHelper* cacheHelper)
+      {
+         this->cacheHelper = cacheHelper;
       }
 };
 

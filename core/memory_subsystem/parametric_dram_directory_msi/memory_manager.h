@@ -2,7 +2,6 @@
 
 #include "memory_manager_base.h"
 #include "cache_base.h"
-#include "cache_cntlr.h"
 #include "../pr_l1_pr_l2_dram_directory_msi/dram_directory_cntlr.h"
 #include "../pr_l1_pr_l2_dram_directory_msi/dram_cntlr.h"
 #include "address_home_lookup.h"
@@ -15,6 +14,8 @@
 #include "subsecond_time.h"
 
 #include <map>
+#include "cache_helper.h"
+#include <memory>
 
 class DramCache;
 class ShmemPerf;
@@ -119,6 +120,8 @@ namespace ParametricDramDirectoryMSI
          void incrElapsedTime(SubsecondTime latency, ShmemPerfModel::Thread_t thread_num = ShmemPerfModel::NUM_CORE_THREADS);
          void incrElapsedTime(MemComponent::component_t mem_component, CachePerfModel::CacheAccess_t access_type, ShmemPerfModel::Thread_t thread_num = ShmemPerfModel::NUM_CORE_THREADS);
 
+         //[update]
          std::vector<String> confName, objName;
+         cache_helper::CacheHelper cacheHelper;
    };
 }

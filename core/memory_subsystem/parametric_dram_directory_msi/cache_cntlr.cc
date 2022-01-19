@@ -343,7 +343,7 @@ CacheCntlr::processMemOpFromCore(
       exit(0);
    }
    // if debug level not specified, unlock to log all; or unlock individual level
-   loggingLevel(ca_address);
+   this->loggingLevel(eip, ca_address);
   
    String tmp1 = "";
    String tmp2 = "";

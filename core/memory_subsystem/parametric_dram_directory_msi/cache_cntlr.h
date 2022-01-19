@@ -283,6 +283,8 @@ namespace ParametricDramDirectoryMSI
          String memLevelDebug;
          bool toDRAM;
 
+         cache_helper::CacheHelper *cacheHelper;
+
          // Core-interfacing stuff
          void accessCache(
                Core::mem_op_t mem_op_type,
@@ -418,43 +420,51 @@ namespace ParametricDramDirectoryMSI
          friend class CacheCntlrList;
          friend class MemoryManager;
 
-        //
-        void setEIP(IntPtr eip)
-        {
-           this->eip = eip;
-        }
+         //
+         void setEIP(IntPtr eip)
+         {
+            this->eip = eip;
+         }
 
-        IntPtr getEIP()
-        {
-           return this->eip;
-        }
+         IntPtr getEIP()
+         {
+            return this->eip;
+         }
 
-        void setName(String name)
-        {
-           this->name = name;
-        }
+         void setName(String name)
+         {
+            this->name = name;
+         }
 
-        void setMemLevelDebug(String memLevelDebug)
-        {
-           this->memLevelDebug = memLevelDebug;
-        }
+         void setMemLevelDebug(String memLevelDebug)
+         {
+            this->memLevelDebug = memLevelDebug;
+         }
 
-         void loggingLevel(IntPtr addr)
+         void loggingLevel(IntPtr eip, IntPtr addr, bool cache_access)
          {
             if(memLevelDebug!="")
             {
                char*p=&name[0];
                bool debugEnable = memLevelDebug == name;
-               if(debugEnable & ! m_master->m_cache->cache_helper.isSingleLevelDebugEnabled()){
+               if(debugEnable & ! cache_helper->isSingleLevelDebugEnabled())
+               {
                   printf("setting eip=%ld, name=%s\n", this->eip, p);
-                  m_master->m_cache->setSingleLevelDebug();
-                  m_master->m_cache->cache_helper.debugVerify(eip,addr,name);
+                  cacheHelper->setSingleLevelDebug();
+                  // cacheHelper->debugVerify(eip,addr,name);
+                  if(cache_access)
+                     cacheHelper->setCacheInformation(m_cache_block_size, cache_params.size);
                }
             }
             else 
             {
-               m_master->m_cache->setAllLevelDebug();
+               cacheHelper->setAllLevelDebug();
             }
+         }
+         
+         void setCacheHelper(cache_helper::CacheHelper* cacheHelper)
+         {
+            this->cacheHelper = cacheHelper;
          }
    };
 

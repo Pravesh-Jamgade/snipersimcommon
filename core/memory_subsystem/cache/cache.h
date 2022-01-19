@@ -88,11 +88,6 @@ class Cache : public CacheBase
       {
             this->cache_helper.setAllCacheDebug();
       }
-
-      void setDebugLevelName(String name)
-      {
-
-      }
       
       cache_helper::CacheHelper cache_helper;
 };

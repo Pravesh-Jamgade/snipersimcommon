@@ -256,10 +256,15 @@ class CacheHelper
 {
     bool singleCacheDebug;
     bool allCacheDebug;
-
+    
     IntPtr eip, addr;
     String name;
     
+    UInt32 blockSize;
+    UInt32 cacheSize;
+
+    bool isItCacheAccess;
+
     public:
     CacheHelper()
     { 
@@ -281,7 +286,10 @@ class CacheHelper
     {
         this->singleCacheDebug=false;
         this->allCacheDebug=false;
-        this->eip=-1; this->addr=-1; this->name="XXX";
+        this->eip=this->addr=-1; 
+        this->cacheSize=this->blockSize=-1;
+        this->name="XXX";
+        this->isItCacheAccess=false;
     }
 
     void setAllCacheDebug()
@@ -289,25 +297,49 @@ class CacheHelper
         this->allCacheDebug=true;
     }
 
-    void setCacheLevelName(String name)
+    void setAddressInfo(IntPtr eip, IntPtr addr)
     {
-        this->name =name;
-    }
-
-    void debugVerify(IntPtr eip, IntPtr addr, String name)
-    {
-        this->eip=eip; this->addr=addr; this->name=name;
+        this->eip=eip; this->addr=addr;
     }
     
-    // member function
-    void strideTableUpdate(bool access, IntPtr eip, IntPtr addr, String path, IntPtr origEip, IntPtr origAddr)
+    void setCacheInformation(UInt32 block_size, UInt32 cache_size, String name)
     {
-        char* p=&name[0];
-        // printf("%ld = %s\n", origEip,p);
+        this->block_size = block_size;
+        this->cache_size = cache_size;
+        this->name = name;
+        this->isItCacheAccess = true;
+    }
+
+    void logInformation(bool access)
+    {
+        if(isItCacheAccess)
+        {
+            
+        }
+        strideTableUpdate();
+    }
+
+    // member function
+    // void strideTableUpdate(bool access, IntPtr eip, IntPtr addr, String path, IntPtr origEip, IntPtr origAddr)
+    // {
+        
+    //     if(singleCacheDebug || allCacheDebug)
+    //     {
+    //         char* p=&name[0];
+    //         printf("verify eip=%ld, name=%s\n", this->eip, p);
+    //         stride_table.lookupAndUpdate(access, eip, addr, path);
+    //         resetCacheDebug();
+    //     }
+    // }
+
+    void strideTableUpdate(bool accessType)
+    {
+        
         if(singleCacheDebug || allCacheDebug)
         {
+            char* p=&name[0];
             printf("verify eip=%ld, name=%s\n", this->eip, p);
-            stride_table.lookupAndUpdate(access, eip, addr, path);
+            stride_table.lookupAndUpdate(accessType, eip, addr, path);
             resetCacheDebug();
         }
     }

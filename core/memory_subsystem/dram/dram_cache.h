@@ -21,6 +21,10 @@ class DramCache : public DramCntlrInterface
       void setEIP(IntPtr eip);
       IntPtr getEIP();
       void setName(String name){ this->name=name;}
+      void setCacheHelper(cache_helper::CacheHelper* cacheHelper)
+      {
+         
+      }
    private:
 
       core_id_t m_core_id;
