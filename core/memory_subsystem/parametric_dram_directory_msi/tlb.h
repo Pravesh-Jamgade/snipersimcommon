@@ -27,6 +27,21 @@ namespace ParametricDramDirectoryMSI
 
          //[UPDATE]
          String name;
+         String objectNameDebug;
+         void setMemLevelDebug(String objectNameDebug)
+         {
+            this->objectNameDebug = objectNameDebug;
+         }
+         void addRequest(IntPtr eip, IntPtr addr)
+         {
+            if(objectNameDebug!="")
+            {
+               if(objectNameDebug==name){
+                  m_cache.cache_helper.addRequest(eip,addr,objectNameDebug);
+               }
+            }
+            else m_cache.cache_helper.addRequest(eip,addr,objectNameDebug);
+         }
    };
 }
 

@@ -12,6 +12,7 @@
         #include <iostream>
         #include <filesystem>
         #include <unistd.h>
+        #include<stack>
 namespace cache_helper
 {   
 
@@ -124,9 +125,11 @@ class StrideTable
 
     UInt32 last=0;
 
-    int total, reeip, readdr;
+    UInt32 total, reeip, readdr;
 
     std::map<String, std::set<String>> path2haddrStorage;
+
+    std::map<String, std::vector<String>> countByName;
 
     bool cacheLevelDebug=false;
 
@@ -177,10 +180,23 @@ class StrideTable
             }
             _LOG_PRINT_CUSTOM(Log::Warning, "]\n");
         }
-        
+
+        printf("Total Access=%d\n", total);
+
+        if(countByName.empty()) return;
+        printf("Total Access by Access Type\n");
+        std::map<String, std::vector<String>>::iterator icn = countByName.begin();
+        for(;icn!=countByName.end();icn++)
+        {
+            String name = icn->first;
+            char* p=&name[0];
+            printf("%s = %d\n", p, icn->second.size());
+        }
+        icn = countByName.begin();
+        // countByName.erase(icn, countByName.end());
     }
 
-    void lookupAndUpdate(int access_type, IntPtr eip, IntPtr addr, String path)
+    void lookupAndUpdate(int access_type, IntPtr eip, IntPtr addr, String path, String name)
     {   
         total++;
         // for stride calculation
@@ -248,66 +264,52 @@ class StrideTable
         }
 
         last = tmp;
+
+        std::map<String, std::vector<String>>::iterator icn = countByName.find(name);
+        if(icn!=countByName.end())
+        {
+            icn->second.push_back(haddr);
+        }
+        else{
+            countByName.insert({name, {haddr}});
+        }
     }
+};
+
+class Access
+{
+    IntPtr eip, addr;
+    String objectName;
+    public:
+    Access(IntPtr eip, IntPtr addr, String objectName){
+        this->eip=eip; this->addr=addr; this->objectName=objectName;
+    }
+
+    String getObjectName(){return objectName;}
+    IntPtr getEip(){return eip;}
 };
 
 class CacheHelper
 {
-    bool singleCacheDebug;
-    bool allCacheDebug;
-
-    IntPtr eip, addr;
-    String name;
-    
+    std::stack<Access*> request;
+    StrideTable strideTable;
     public:
-    CacheHelper()
-    { 
-        singleCacheDebug=allCacheDebug=false; 
-    }
-    // helper tools
-
-    // member variable
-    StrideTable stride_table;
-    Sampling sampling;
-
-    bool isSingleLevelDebugEnabled() { return this->singleCacheDebug; }
-    void setSingleCacheDebug()
+    void addRequest(IntPtr eip, IntPtr addr, String objname)
     {
-        this->singleCacheDebug=true;
+        request.push(new Access(eip,addr,objname));
     }
 
-    void resetCacheDebug()
-    {
-        this->singleCacheDebug=false;
-        this->allCacheDebug=false;
-        this->eip=-1; this->addr=-1; this->name="XXX";
-    }
-
-    void setAllCacheDebug()
-    {
-        this->allCacheDebug=true;
-    }
-
-    void setCacheLevelName(String name)
-    {
-        this->name =name;
-    }
-
-    void debugVerify(IntPtr eip, IntPtr addr, String name)
-    {
-        this->eip=eip; this->addr=addr; this->name=name;
-    }
+    void addRequest(Access* access){request.push(access);}
     
-    // member function
-    void strideTableUpdate(bool access, IntPtr eip, IntPtr addr, String path, IntPtr origEip, IntPtr origAddr)
+    void strideTableUpdate(bool accessType, IntPtr eip, IntPtr addr, String path, IntPtr origEip, IntPtr origAddr)
     {
-        char* p=&name[0];
-        // printf("%ld = %s\n", origEip,p);
-        if(singleCacheDebug || allCacheDebug)
-        {
-            printf("verify eip=%ld, name=%s\n", this->eip, p);
-            stride_table.lookupAndUpdate(access, eip, addr, path);
-            resetCacheDebug();
+        while(!request.empty())
+        {   
+            Access* access = request.top(); 
+            request.pop();
+            char* p=&access->getObjectName()[0];
+            printf("verify pass=%ld, requested=%ld, name=%s\n", eip,access->getEip(), p);
+            strideTable.lookupAndUpdate(accessType, origEip, origAddr, path, access->getObjectName());
         }
     }
 };

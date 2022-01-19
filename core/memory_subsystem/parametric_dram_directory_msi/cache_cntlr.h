@@ -445,15 +445,12 @@ namespace ParametricDramDirectoryMSI
             {
                char*p=&name[0];
                bool debugEnable = memLevelDebug == name;
-               if(debugEnable & ! m_master->m_cache->cache_helper.isSingleLevelDebugEnabled()){
-                  printf("setting eip=%ld, name=%s\n", this->eip, p);
-                  m_master->m_cache->setSingleLevelDebug();
-                  m_master->m_cache->cache_helper.debugVerify(eip,addr,name);
+               if(debugEnable){
+                 m_master->m_cache->cache_helper.addRequest(eip, addr, name);
                }
             }
-            else 
-            {
-               m_master->m_cache->setAllLevelDebug();
+            else{
+               m_master->m_cache->cache_helper.addRequest(eip, addr, name);
             }
          }
    };

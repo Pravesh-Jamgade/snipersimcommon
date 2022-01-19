@@ -283,6 +283,12 @@ MemoryManager::MemoryManager(Core* core,
       }
    }
 
+   // normalizing either controller or cache of dram as dram access only
+   String objectNameDebug,configNameDebug;
+   // get objectName from configName, set objectName to each mem level. will be use to enbale debug/log
+   String dramconfigname = "dram";
+   String dramobjname = "DRAM";
+
    for(UInt32 i = MemComponent::FIRST_LEVEL_CACHE; i <= (UInt32)m_last_level_cache; ++i) {
       CacheCntlr* cache_cntlr = new CacheCntlr(
          (MemComponent::component_t)i,
@@ -302,21 +308,6 @@ MemoryManager::MemoryManager(Core* core,
       cache_cntlr->setEIP(-1);
       cache_cntlr->setName(cache_names[(MemComponent::component_t)i]); // same thing
       
-      // get objectName from configName, set objectName to each mem level. will be use to enbale debug/log
-      String dramconfigname = "dram";
-      String dramobjname = "DRAM";
-
-      // normalizing either controller or cache of dram as dram access only
-      String dram_obj_name="DRAM";
-      if(m_dram_cntlr){
-         m_dram_cntlr->setName(dram_obj_name);
-      }
-      
-      if(m_dram_cache){
-         m_dram_cache->setName(dram_obj_name);
-      }
-
-      String objectNameDebug,configNameDebug;
       if(Sim()->getCfg()->hasKey("debug/DebugCacheLevel"))
       {
          configNameDebug = Sim()->getCfg()->getString("debug/DebugCacheLevel");
@@ -339,6 +330,27 @@ MemoryManager::MemoryManager(Core* core,
 
       m_cache_cntlrs[(MemComponent::component_t)i] = cache_cntlr;
       setCacheCntlrAt(getCore()->getId(), (MemComponent::component_t)i, cache_cntlr);
+   }
+
+   if(m_dram_cntlr){
+      m_dram_cntlr->setName(dramobjname);
+   }
+   
+   if(m_dram_cache){
+      m_dram_cache->setName(dramobjname);
+   }
+
+   if(m_stlb)
+   {
+      m_stlb->setMemLevelDebug(objectNameDebug);
+   }
+   if(m_dtlb)
+   {
+      m_dtlb->setMemLevelDebug(objectNameDebug);
+   }
+   if(m_itlb)
+   {
+      m_itlb->setMemLevelDebug(objectNameDebug);
    }
 
    m_cache_cntlrs[MemComponent::L1_ICACHE]->setNextCacheCntlr(m_cache_cntlrs[MemComponent::L2_CACHE]);
@@ -659,8 +671,10 @@ MYLOG("bcast msg");
 void
 MemoryManager::accessTLB(TLB * tlb, IntPtr address, bool isIfetch, Core::MemModeled modeled, IntPtr eip, String& path)
 {
-
+   
    bool hit = tlb->lookup(address, getShmemPerfModel()->getElapsedTime(ShmemPerfModel::_USER_THREAD));
+
+   tlb->addRequest(eip,address);
 
    cache_helper::Misc::pathAppend(path, tlb->name);
    cache_helper::Misc::stateAppend(hit, path);
