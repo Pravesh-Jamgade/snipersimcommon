@@ -284,19 +284,23 @@ MemoryManager::MemoryManager(Core* core,
    }
 
    //[update]
-   cacheHelper->setCacheBlockSize(m_cache_block_size);
    // normalizing either controller or cache of dram as dram access only
    String objectNameDebug,configNameDebug;
    // get objectName from configName, set objectName to each mem level. will be use to enbale debug/log
-   String dramconfigname = "dram";
-   String dramobjname = "DRAM";
+   String dramCacheConfigName = "dram-cache";
+   String dramCntrlConfigName = "dram-cntrl";
+   String dramCacheObjName = "DRAM-Cache";
+   String dramCntrlObjName = "DRAM-Cntrl";
 
    if(Sim()->getCfg()->hasKey("debug/DebugCacheLevel"))
    {
       configNameDebug = Sim()->getCfg()->getString("debug/DebugCacheLevel");
       
-      if(configNameDebug == dramconfigname){
-         objectNameDebug = dramobjname;
+      if(configNameDebug == dramCacheConfigName){
+         objectNameDebug = dramCacheConfigName;
+      }
+      else if(configNameDebug == dramCntrlConfigName){
+         objectNameDebug = dramCntrlConfigName;
       }
       else{
          for(int i=0; i< confName.size(); i++)
@@ -311,7 +315,7 @@ MemoryManager::MemoryManager(Core* core,
    for(UInt32 i = MemComponent::FIRST_LEVEL_CACHE; i <= (UInt32)m_last_level_cache; ++i) {
       CacheCntlr* cache_cntlr = new CacheCntlr(
          (MemComponent::component_t)i,
-         cache_names[(MemComponent::component_t)i],//same thing
+         cache_names[(MemComponent::component_t)i],
          getCore()->getId(),
          this,
          m_tag_directory_home_lookup,
@@ -326,7 +330,7 @@ MemoryManager::MemoryManager(Core* core,
       //[update]
       cache_cntlr->setCacheHelper(&cacheHelper);
       cache_cntlr->setEIP(-1);
-      cache_cntlr->setName(cache_names[(MemComponent::component_t)i]); // same thing
+      cache_cntlr->setName(cache_names[(MemComponent::component_t)i]);
       cache_cntlr->setMemLevelDebug(objectNameDebug);  // set objectName at all cacheCntrl to compare it with name of cache
 
       m_cache_cntlrs[(MemComponent::component_t)i] = cache_cntlr;
@@ -335,29 +339,31 @@ MemoryManager::MemoryManager(Core* core,
 
    //[update]
    if(m_dram_cntlr){
-      m_dram_cntlr->setName(objectNameDebug);
+      m_dram_cntlr->setName(dramCntrlObjName);// object name
+      m_dram_cntlr->setMemLevelDebug(objectNameDebug);// debug levelname target name
       m_dram_cntlr->setCacheHelper(&cacheHelper);
    }
       
    if(m_dram_cache){
-      m_dram_cache->setName(objectNameDebug);
-      m_dram_cntlr->setCacheHelper(&cacheHelper);
+      m_dram_cache->setName(dramCacheObjName);
+      m_dram_cache->setMemLevelDebug(objectNameDebug);
+      m_dram_cache->setCacheHelper(&cacheHelper);
    }
 
    if(m_stlb)
    {
       m_stlb->setMemLevelDebug(objectNameDebug);
-      m_stlb->setCacheHelper(cacheHelper);
+      m_stlb->setCacheHelper(&cacheHelper);
    }
    if(m_dtlb)
    {
       m_dtlb->setMemLevelDebug(objectNameDebug);
-      m_dtlb->setCacheHelper(cacheHelper);
+      m_dtlb->setCacheHelper(&cacheHelper);
    }
    if(m_itlb)
    {
       m_itlb->setMemLevelDebug(objectNameDebug);
-      m_itlb->setCacheHelper(cacheHelper);
+      m_itlb->setCacheHelper(&cacheHelper);
    }
 
    m_cache_cntlrs[MemComponent::L1_ICACHE]->setNextCacheCntlr(m_cache_cntlrs[MemComponent::L2_CACHE]);
@@ -445,6 +451,9 @@ MemoryManager::MemoryManager(Core* core,
 
 MemoryManager::~MemoryManager()
 {
+   //[update]
+   cacheHelper.writeOutput();
+
    UInt32 i;
 
    getNetwork()->unregisterCallback(SHARED_MEM_1);

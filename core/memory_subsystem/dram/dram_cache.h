@@ -43,6 +43,7 @@ class DramCache : public DramCntlrInterface
       void insertLine(Cache::access_t access, IntPtr address, core_id_t requester, Byte* data_buf, SubsecondTime now, IntPtr eip);
       SubsecondTime accessDataArray(Cache::access_t access, core_id_t requester, SubsecondTime t_start, ShmemPerf *perf);
       void callPrefetcher(IntPtr address, bool cache_hit, bool prefetch_hit, SubsecondTime t_issue, IntPtr eip);
+
 };
 
 #endif // __DRAM_CACHE

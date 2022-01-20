@@ -116,8 +116,6 @@ Cache::accessSingleLine(IntPtr addr, access_t access_type,
          m_fault_injector->postWrite(addr, set_index * m_associativity + line_index, bytes, (Byte*)m_sets[set_index]->getDataPtr(line_index, block_offset), now);
    }
 
-   }
-   
    return cache_block_info;
 }
 

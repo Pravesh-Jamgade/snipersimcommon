@@ -24,6 +24,7 @@ class DramCntlrInterface
       MemoryManagerBase* getMemoryManager() { return m_memory_manager; }
       ShmemPerfModel* getShmemPerfModel() { return m_shmem_perf_model; }
    
+   //[update]
    private:
    IntPtr eip;
    String name;
@@ -31,6 +32,9 @@ class DramCntlrInterface
    cache_helper::CacheHelper* cacheHelper;
 
    public:
+      //[update]
+      UInt64 totalAccess;
+
       typedef enum
       {
          READ = 0,
@@ -50,21 +54,29 @@ class DramCntlrInterface
 
       void handleMsgFromTagDirectory(core_id_t sender, PrL1PrL2DramDirectoryMSI::ShmemMsg* shmem_msg);
 
-      bool loggingLevel()
-      {
-         if(memLevelDebug!="")
-         {
-           return memLevelDebug == name;
-            
-         }
-         return true;
-      }
-
+      //[update]
       void setCacheHelper(cache_helper::CacheHelper* cacheHelper){this->cacheHelper = cacheHelper;}
+      cache_helper::CacheHelper* getCacheHelper(){return cacheHelper;}
+
       void setEIP(IntPtr eip) {this->eip=eip;}
       IntPtr getEIP(){return this->eip;}
+
       void setName(String name){this->name=name;}
       String getName(){return this->name;}
+
+      void setMemLevelDebug(String objectDebugName){this->memLevelDebug=objectDebugName;}
+      String getMemLevelDebug(){return this->memLevelDebug;}
+
+      void updateTotalAccess(){this->totalAccess++;}
+
+      void loggingDRAM(IntPtr addr, Core::mem_op_t mem_op)
+      {
+         if((getMemLevelDebug()!="" && getMemLevelDebug()==getName() ) || getMemLevelDebug()=="")
+         {
+            updateTotalAccess();
+            getCacheHelper()->addRequest(eip, addr, getName(), NULL, mem_op);
+         }
+      }
 };
 
 #endif // __DRAM_CNTLR_INTERFACE_H

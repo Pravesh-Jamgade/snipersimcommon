@@ -56,6 +56,9 @@ DramCache::DramCache(MemoryManagerBase* memory_manager, ShmemPerfModel* shmem_pe
    m_prefetcher = Prefetcher::createPrefetcher(Sim()->getCfg()->getString("perf_model/dram/cache/prefetcher"), "dram/cache", m_core_id, 1);
    m_prefetch_on_prefetch_hit = Sim()->getCfg()->getBool("perf_model/dram/cache/prefetcher/prefetch_on_prefetch_hit");
 
+   //[update]
+   registerStatsMetric("dram-cache", m_core_id, "totalAccess", &totalAccess);
+
    registerStatsMetric("dram-cache", m_core_id, "reads", &m_reads);
    registerStatsMetric("dram-cache", m_core_id, "writes", &m_writes);
    registerStatsMetric("dram-cache", m_core_id, "read-misses", &m_read_misses);
@@ -77,10 +80,13 @@ DramCache::getDataFromDram(IntPtr address, core_id_t requester, Byte* data_buf, 
 {
    std::pair<bool, SubsecondTime> res = doAccess(Cache::LOAD, address, requester, data_buf, now, perf, eip);
 
+   //[update]
+   loggingDRAM(address, Core::READ);
+
    if (!res.first)
       ++m_read_misses;
    ++m_reads;
-
+   
    return boost::tuple<SubsecondTime, HitWhere::where_t>(res.second, res.first ? HitWhere::DRAM_CACHE : HitWhere::DRAM);
 }
 
@@ -88,6 +94,9 @@ boost::tuple<SubsecondTime, HitWhere::where_t>
 DramCache::putDataToDram(IntPtr address, core_id_t requester, Byte* data_buf, SubsecondTime now, IntPtr eip)
 {
    std::pair<bool, SubsecondTime> res = doAccess(Cache::STORE, address, requester, data_buf, now, NULL, eip);
+
+   //[udpate]
+   loggingDRAM(address, Core::WRITE);
 
    if (!res.first)
       ++m_write_misses;

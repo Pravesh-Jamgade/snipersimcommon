@@ -12,9 +12,6 @@
 #include "core.h"
 #include "fault_injection.h"
 
-// [ME] adding plug in
-#include "cache_helper.h"
-#include "test.h"
 
 // Define to enable the set usage histogram
 //#define ENABLE_SET_USAGE_HIST

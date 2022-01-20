@@ -659,6 +659,9 @@ MYLOG("access done");
    if (Sim()->getConfig()->getCacheEfficiencyCallbacks().notify_access_func)
       Sim()->getConfig()->getCacheEfficiencyCallbacks().call_notify_access(cache_block_info->getOwner(), mem_op_type, hit_where);
 
+   //[update]
+   cacheHelper->strideTableUpdate();
+
    MYLOG("returning %s, latency %lu ns", HitWhereString(hit_where), total_latency.getNS());
    return hit_where;
 }
@@ -2403,25 +2406,28 @@ CacheCntlr::getNetworkThreadSemaphore()
 }
 
 void 
-CacheCntlr::loggingLevel(IntPtr addr, Core::mem_op_t mem_op_type)
+CacheCntlr::loggingLevel(IntPtr addr, Core::mem_op_t mem_op_type, bool isCache)
 {
    String name = getName();
    IntPtr eip = getEIP();
+   Cache* cache=NULL;
+   if(isCache)
+      cache=getCache();
+
    if(memLevelDebug!="")
    {
       char*p=&name[0];
       bool debugEnable = getMemLevelDebug() == name;
       if(debugEnable){
          stats.totalAccess++;
-         getCache()->cache_helper.addRequest(eip, addr, name);
+         cacheHelper->addRequest(eip, addr, name, cache, mem_op_type);
       }
    }
    else{
      stats.totalAccess++;
-     getCache()->cache_helper.addRequest(eip, addr, name);
+     cacheHelper->addRequest(eip, addr, name, cache, mem_op_type);
    }
 }
-
 
 
 }

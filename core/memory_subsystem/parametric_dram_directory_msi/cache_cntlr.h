@@ -19,6 +19,8 @@
 #include "shmem_perf.h"
 
 #include "boost/tuple/tuple.hpp"
+//[update]
+#include "cache_helper.h"
 
 class DramCntlrInterface;
 class ATD;
@@ -457,8 +459,7 @@ namespace ParametricDramDirectoryMSI
             return this->eip;
          }
          
-         void loggingLevel(IntPtr addr);
-         
+         void loggingLevel(IntPtr addr, Core::mem_op_t mem_op_type, bool isCache=true);
    };
 
 }

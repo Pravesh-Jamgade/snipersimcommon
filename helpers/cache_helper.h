@@ -3,7 +3,7 @@
 
 #include<map>
 #include "fixed_types.h"
-
+#include "cache.h"
         #include <stdio.h>      /* printf */
         #include <unistd.h>
         #include "log.h"
@@ -98,11 +98,11 @@ class StrideTable
 
     std::map<String, std::set<String>> path2haddrStorage;
 
-    std::map<String, std::vector<String>> countByName;
+    std::map<String, UInt32> countByName;
 
     StrideTable() { }
 
-    ~StrideTable() {write();}
+    ~StrideTable() {}
 
     void write()
     {
@@ -148,18 +148,17 @@ class StrideTable
             _LOG_PRINT_CUSTOM(Log::Warning, "]\n");
         }
 
-        // printf("Total Access=%d\n", total);
+        printf("Total Access=%d\n", total);
 
-        // printf("Total Access by Access Type\n");
-        // std::map<String, std::vector<String>>::iterator icn = countByName.begin();
-        // for(;icn!=countByName.end();icn++)
-        // {
-        //     String name = icn->first;
-        //     char* p=&name[0];
-        //     printf("%s = %d\n", p, icn->second.size());
-        // }
-        // icn = countByName.begin();
-        // countByName.erase(icn, countByName.end());
+        printf("Total Access by Access Type\n");
+        std::map<String, UInt32>::iterator icn = countByName.begin();
+        for(;icn!=countByName.end();icn++)
+        {
+            String name = icn->first;
+            char* p=&name[0];
+            printf("%s = %d\n", p, icn->second);
+        }
+        
     }
 
     void lookupAndUpdate(int access_type, IntPtr eip, IntPtr addr, String path)
@@ -220,24 +219,24 @@ class StrideTable
             else // eip seeen before but addr is new
             {
                 add2data->insert( 
-                        { haddr, new DataInfo(access_type, diff, path) } 
+                        { haddr, new DataInfo(access_type, diff) } 
                 );
             }
         }
         else
         {
-            table[hindex][haddr]=new DataInfo(access_type, diff, path);
+            table[hindex][haddr]=new DataInfo(access_type, diff);
         }
 
         last = tmp;
 
-        std::map<String, std::vector<String>>::iterator icn = countByName.find(name);
+        std::map<String, UInt32>::iterator icn = countByName.find(path);
         if(icn!=countByName.end())
         {
-            icn->second.push_back(haddr);
+            icn->second++;
         }
         else{
-            countByName.insert({name, {haddr}});
+            countByName.insert({path, 1});
         }
     }
 };
@@ -249,7 +248,7 @@ class Access
     bool instAccessType;// st=0 ld=1
     public:
     Access(IntPtr eip, IntPtr addr, String objectName, bool accessType){
-        this->eip=eip; this->addr=addr; this->objectName=objectName; thhis->instAccessType=accessType;
+        this->eip=eip; this->addr=addr; this->objectName=objectName; this->instAccessType=accessType;
     }
 
     String getObjectName(){return objectName;}
@@ -268,6 +267,9 @@ class CacheHelper
     
     void addRequest(IntPtr eip, IntPtr addr, String objname, Cache* cache, Core::mem_op_t mem_op_type){
         bool accessType = accessTypeInfo(mem_op_type);
+        IntPtr index = eip & 0xfffff; // use lsb 20 bits for indexing, possible all instructions are in few blocks
+        IntPtr addrForStride = addr;
+
         //todo: i can take some contant to generate these inforamtion regardless of where access is comming from
         if(cache==NULL)
         {
@@ -279,18 +281,14 @@ class CacheHelper
             IntPtr tag;
             UInt32 set_index;
             UInt32 block_offset;
-            cache->splitAddress(addr, &tag, &set_index, &block_offset)
+            cache->splitAddress(addr, tag, set_index, block_offset);
 
-            IntPtr eip_tag;
-            UInt32 eip_set_index;
-            UInt32 eip_block_offset;
-            cache->splitAddress(eip, eip_tag, eip_set_index, eip_block_offset);
-
-            IntPtr index = eip & 0xfffff; // use lsb 20 bits for indexing, possible all instructions are in few blocks
             IntPtr blockBasedStride = addr >> cache->getLogBlockSize() & cache->getBlockMask(); // as we want to calculate stride beyond a single block
             IntPtr setBasedStride = addr >> cache->getLogBlockSize() & cache->getSetMask();
+
+            addrForStride = blockBasedStride;
         }
-        request.push(new Access(eip,addr,objname,accessType));
+        request.push(new Access(index,addrForStride,objname,accessType));
     }
     void addRequest(Access* access){request.push(access);}
     void setCacheBlockSize(UInt32 cache_block_size){this->cacheBlockSize=cache_block_size;}
@@ -322,7 +320,13 @@ class CacheHelper
             request.pop();
             char* p=&access->getObjectName()[0];
             strideTable.lookupAndUpdate(access->getAccessType(), access->getEip(), access->getAddr(), access->getObjectName());
+            std::cout<<access->getAccessType()<<" "<<access->getEip()<<" "<<access->getObjectName()<<std::endl;
         }
+    }
+
+    void writeOutput()
+    {
+        strideTable.write();
     }
 };
 
