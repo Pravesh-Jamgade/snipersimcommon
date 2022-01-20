@@ -335,10 +335,12 @@ MemoryManager::MemoryManager(Core* core,
 
    if(m_dram_cntlr){
       m_dram_cntlr->setName(dramobjname);
+      m_dram_cntlr->setCacheHelper(&cacheHelper);
    }
       
    if(m_dram_cache){
       m_dram_cache->setName(dramobjname);
+      m_dram_cntlr->setCacheHelper(&cacheHelper);
    }
 
    m_cache_cntlrs[MemComponent::L1_ICACHE]->setNextCacheCntlr(m_cache_cntlrs[MemComponent::L2_CACHE]);

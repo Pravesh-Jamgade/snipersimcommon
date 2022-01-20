@@ -339,7 +339,7 @@ class CacheHelper
         {
             char* p=&name[0];
             printf("verify eip=%ld, name=%s\n", this->eip, p);
-            stride_table.lookupAndUpdate(accessType, eip, addr, path);
+            stride_table.lookupAndUpdate(accessType, eip, addr, name);
             resetCacheDebug();
         }
     }
