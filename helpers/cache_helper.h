@@ -309,7 +309,7 @@ class CacheHelper
             Access* access = request.top(); 
             request.pop();
             char* p=&access->getObjectName()[0];
-            printf("verify pass=%ld, requested=%ld, name=%s\n", eip,access->getEip(), p);
+            // printf("verify pass=%ld, requested=%ld, name=%s\n", eip,access->getEip(), p);
             strideTable.lookupAndUpdate(accessType, origEip, origAddr, path, access->getObjectName());
         }
     }

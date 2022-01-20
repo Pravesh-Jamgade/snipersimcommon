@@ -75,6 +75,7 @@ DramCache::~DramCache()
 boost::tuple<SubsecondTime, HitWhere::where_t>
 DramCache::getDataFromDram(IntPtr address, core_id_t requester, Byte* data_buf, SubsecondTime now, ShmemPerf *perf, IntPtr eip)
 {
+   printf("*******************get DRAM Cache*********************\n");
    std::pair<bool, SubsecondTime> res = doAccess(Cache::LOAD, address, requester, data_buf, now, perf, eip);
 
    if (!res.first)
@@ -87,6 +88,7 @@ DramCache::getDataFromDram(IntPtr address, core_id_t requester, Byte* data_buf, 
 boost::tuple<SubsecondTime, HitWhere::where_t>
 DramCache::putDataToDram(IntPtr address, core_id_t requester, Byte* data_buf, SubsecondTime now, IntPtr eip)
 {
+   printf("*******************put DRAM Cache*********************\n");
    std::pair<bool, SubsecondTime> res = doAccess(Cache::STORE, address, requester, data_buf, now, NULL, eip);
 
    if (!res.first)

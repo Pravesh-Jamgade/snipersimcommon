@@ -1200,11 +1200,9 @@ CacheCntlr::walkUsageBits()
 boost::tuple<HitWhere::where_t, SubsecondTime>
 CacheCntlr::accessDRAM(Core::mem_op_t mem_op_type, IntPtr address, bool isPrefetch, Byte* data_buf)
 {
-   IntPtr dram_eip = m_master->m_dram_cntlr->getEIP();
-   printf("For set=%ld  dram=%ld\n", this->eip, dram_eip);
-   exit(0);
-
    ScopedLock sl(getLock()); // DRAM is shared and owned by m_master
+
+   printf("*******************accessDRAM*********************\n");
 
    SubsecondTime t_issue = getShmemPerfModel()->getElapsedTime(ShmemPerfModel::_USER_THREAD);
    SubsecondTime dram_latency;
