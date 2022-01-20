@@ -294,6 +294,7 @@ class CacheHelper
     std::stack<Access*> request;
     StrideTable strideTable;
     public:
+    
     void addRequest(IntPtr eip, IntPtr addr, String objname)
     {
         request.push(new Access(eip,addr,objname));

@@ -218,6 +218,7 @@ namespace ParametricDramDirectoryMSI
          bool m_l1_mshr;
 
          struct {
+            UInt64 totalAccess;
            UInt64 loads, stores;
            UInt64 load_misses, store_misses;
            UInt64 load_overlapping_misses, store_overlapping_misses;
@@ -418,41 +419,39 @@ namespace ParametricDramDirectoryMSI
          friend class CacheCntlrList;
          friend class MemoryManager;
 
-        //
-        void setEIP(IntPtr eip)
-        {
-           this->eip = eip;
-        }
+      //
+      void loggingLevel(IntPtr addr);
 
-        IntPtr getEIP()
-        {
-           return this->eip;
-        }
+      void setEIP(IntPtr eip)
+      {
+         this->eip = eip;
+      }
 
-        void setName(String name)
-        {
-           this->name = name;
-        }
+      IntPtr getEIP()
+      {
+         return this->eip;
+      }
 
-        void setMemLevelDebug(String memLevelDebug)
-        {
-           this->memLevelDebug = memLevelDebug;
-        }
+      void setName(String name)
+      {
+         this->name = name;
+      }
 
-         void loggingLevel(IntPtr addr)
-         {
-            if(memLevelDebug!="")
-            {
-               char*p=&name[0];
-               bool debugEnable = memLevelDebug == name;
-               if(debugEnable){
-                 m_master->m_cache->cache_helper.addRequest(eip, addr, name);
-               }
-            }
-            else{
-               m_master->m_cache->cache_helper.addRequest(eip, addr, name);
-            }
-         }
+      void setMemLevelDebug(String memLevelDebug)
+      {
+         this->memLevelDebug = memLevelDebug;
+      }
+
+      String getName()
+      {
+         return this->name;
+      }
+
+      String getMemLevelDebug()
+      {
+         return this->memLevelDebug;
+      }
+         
    };
 
 }
