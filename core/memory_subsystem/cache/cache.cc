@@ -85,7 +85,6 @@ CacheBlockInfo*
 Cache::accessSingleLine(IntPtr addr, access_t access_type,
       Byte* buff, UInt32 bytes, SubsecondTime now, bool update_replacement, IntPtr eip, String path)
 {
-   //assert((buff == NULL) == (bytes == 0));
    IntPtr tag;
    UInt32 set_index;
    UInt32 line_index = -1;
@@ -117,22 +116,6 @@ Cache::accessSingleLine(IntPtr addr, access_t access_type,
          m_fault_injector->postWrite(addr, set_index * m_associativity + line_index, bytes, (Byte*)m_sets[set_index]->getDataPtr(line_index, block_offset), now);
    }
 
-   // [UPDATE]
-   if( eip != -1 && (access_type == LOAD || access_type == STORE)) {
-
-      IntPtr eip_tag;
-      UInt32 eip_set_index;
-      UInt32 eip_block_offset;
-
-      splitAddress(eip, eip_tag, eip_set_index, eip_block_offset);
-
-      IntPtr index = eip & 0xfffff; // use lsb 20 bits for indexing, possible all instructions are in few blocks
-      IntPtr blockBasedStride = addr >> m_log_blocksize & block_mask; // as we want to calculate stride beyond a single block
-      IntPtr setBasedStride = addr >> m_log_blocksize & set_mask;
-
-      cache_helper.strideTableUpdate(access_type==LOAD?1:0, index, blockBasedStride, eip_tag, eip_set_index, path, eip);
-   }
-   
    return cache_block_info;
 }
 

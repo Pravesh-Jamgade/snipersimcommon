@@ -19,6 +19,8 @@
 #include "shmem_perf.h"
 
 #include "boost/tuple/tuple.hpp"
+//[update]
+#include "cache_helper.h"
 
 class DramCntlrInterface;
 class ATD;
@@ -218,6 +220,7 @@ namespace ParametricDramDirectoryMSI
          bool m_l1_mshr;
 
          struct {
+            UInt64 totalAccess;
            UInt64 loads, stores;
            UInt64 load_misses, store_misses;
            UInt64 load_overlapping_misses, store_overlapping_misses;
@@ -280,6 +283,10 @@ namespace ParametricDramDirectoryMSI
          //[UPDATE]
          IntPtr eip;
          String name;
+         String memLevelDebug;
+         bool toDRAM;
+
+         cache_helper::CacheHelper *cacheHelper;
 
          // Core-interfacing stuff
          void accessCache(
@@ -416,28 +423,43 @@ namespace ParametricDramDirectoryMSI
          friend class CacheCntlrList;
          friend class MemoryManager;
 
-        //
-        void setEIP(IntPtr eip)
-        {
-           this->eip = eip;
-        }
+         //
+         void setEIP(IntPtr eip)
+         {
+            this->eip = eip;
+         }
 
-        IntPtr getEIP()
-        {
-           return this->eip;
-        }
+         void setName(String name)
+         {
+            this->name = name;
+         }
 
-        void setName(String name)
-        {
-           this->name = name;
-        }
+         void setMemLevelDebug(String memLevelDebug)
+         {
+            this->memLevelDebug = memLevelDebug;
+         }
+         
+         void setCacheHelper(cache_helper::CacheHelper* cacheHelper)
+         {
+            this->cacheHelper = cacheHelper;
+         }
 
-        void pathAppend(String& path)
-        {
-           String next = "->";
-           path = path + next + this->name;
-        }
+         String getName()
+         {
+            return this->name;
+         }
 
+         String getMemLevelDebug()
+         {
+            return this->memLevelDebug;
+         }
+
+         IntPtr getEIP()
+         {
+            return this->eip;
+         }
+         
+         void loggingLevel(IntPtr addr, Core::mem_op_t mem_op_type, bool isCache=true);
    };
 
 }

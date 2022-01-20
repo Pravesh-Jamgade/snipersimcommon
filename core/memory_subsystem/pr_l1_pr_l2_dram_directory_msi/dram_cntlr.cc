@@ -39,6 +39,9 @@ DramCntlr::DramCntlr(MemoryManagerBase* memory_manager,
    m_dram_access_count = new AccessCountMap[DramCntlrInterface::NUM_ACCESS_TYPES];
    registerStatsMetric("dram", memory_manager->getCore()->getId(), "reads", &m_reads);
    registerStatsMetric("dram", memory_manager->getCore()->getId(), "writes", &m_writes);
+
+   //[update]
+   registerStatsMetric("dram", memory_manager->getCore()->getId(), "totalAccess", &totalAccess);
 }
 
 DramCntlr::~DramCntlr()
@@ -69,6 +72,9 @@ DramCntlr::getDataFromDram(IntPtr address, core_id_t requester, Byte* data_buf, 
 
    SubsecondTime dram_access_latency = runDramPerfModel(requester, now, address, READ, perf);
 
+   //[update]
+   loggingDRAM(address, Core::READ);
+
    ++m_reads;
    #ifdef ENABLE_DRAM_ACCESS_COUNT
    addToDramAccessCount(address, READ);
@@ -95,6 +101,9 @@ DramCntlr::putDataToDram(IntPtr address, core_id_t requester, Byte* data_buf, Su
    }
 
    SubsecondTime dram_access_latency = runDramPerfModel(requester, now, address, WRITE, &m_dummy_shmem_perf);
+
+   //[update]
+   loggingDRAM(address, Core::WRITE);
 
    ++m_writes;
    #ifdef ENABLE_DRAM_ACCESS_COUNT
@@ -134,16 +143,6 @@ DramCntlr::printDramAccessCount()
          }
       }
    }
-}
-
-void DramCntlr::setEIP(IntPtr eip)
-{
-   this->eip = eip;
-}
-
-IntPtr DramCntlr::getEIP()
-{
-   return this->eip;
 }
 
 }

@@ -4,6 +4,9 @@
 #include "fixed_types.h"
 #include "cache.h"
 
+//[update]
+#include "cache_helper.h"
+
 namespace ParametricDramDirectoryMSI
 {
    class TLB
@@ -20,13 +23,37 @@ namespace ParametricDramDirectoryMSI
          TLB *m_next_level;
 
          UInt64 m_access, m_miss;
+         //[update]
+         UInt64 totalAccess;
+         //[udpate]
+         cache_helper::CacheHelper* cacheHelper;
+
       public:
+         
          TLB(String name, String cfgname, core_id_t core_id, UInt32 num_entries, UInt32 associativity, TLB *next_level);
          bool lookup(IntPtr address, SubsecondTime now, bool allocate_on_miss = true);
          void allocate(IntPtr address, SubsecondTime now);
 
          //[UPDATE]
          String name;
+         String objectNameDebug;
+         void setMemLevelDebug(String objectNameDebug)
+         {
+            this->objectNameDebug = objectNameDebug;
+         }
+         void addRequest(IntPtr eip, IntPtr addr)
+         {
+            if((objectNameDebug!="" && objectNameDebug==name) || objectNameDebug=="")
+            {
+               totalAccess++;
+               cacheHelper->addRequest(eip,addr,name, &m_cache, Core::READ);
+            }
+         }
+
+         void setCacheHelper(cache_helper::CacheHelper* cacheHelper)
+         {
+            this->cacheHelper=cacheHelper;
+         }
    };
 }
 

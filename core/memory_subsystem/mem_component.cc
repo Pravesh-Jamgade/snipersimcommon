@@ -1,4 +1,5 @@
 #include "mem_component.h"
+#include "itostr.h"
 
 const char * MemComponentString(MemComponent::component_t mem_component)
 {
@@ -47,3 +48,5 @@ String MemComponent2String(MemComponent::component_t mem_component)
       // default:                         return "????->";
    }
 }
+
+

@@ -12,9 +12,6 @@
 #include "core.h"
 #include "fault_injection.h"
 
-// [ME] adding plug in
-#include "cache_helper.h"
-#include "test.h"
 
 // Define to enable the set usage histogram
 //#define ENABLE_SET_USAGE_HIST
@@ -38,8 +35,6 @@ class Cache : public CacheBase
       #ifdef ENABLE_SET_USAGE_HIST
       UInt64* m_set_usage_hist;
       #endif
-
-      cache_helper::CacheHelper cache_helper;
 
    public:
 
@@ -80,7 +75,6 @@ class Cache : public CacheBase
 
       void enable() { m_enabled = true; }
       void disable() { m_enabled = false; }
-
 };
 
 template <class T>

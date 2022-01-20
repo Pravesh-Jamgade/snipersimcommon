@@ -14,6 +14,8 @@
 #include "topology_info.h"
 
 #include <algorithm>
+#include "cache_helper.h"
+#include "mem_component.h"
 
 #if 0
    extern Lock iolock;
@@ -83,6 +85,9 @@ MemoryManager::MemoryManager(Core* core,
 
       smt_cores = Sim()->getCfg()->getInt("perf_model/core/logical_cpus");
 
+      confName.clear();
+      objName.clear();
+
       for(UInt32 i = MemComponent::FIRST_LEVEL_CACHE; i <= (UInt32)m_last_level_cache; ++i)
       {
          String configName, objectName;
@@ -102,6 +107,10 @@ MemoryManager::MemoryManager(Core* core,
                break;
          }
 
+         std::cout<<configName<<" "<<objectName<<std::endl;
+         confName.push_back(configName);
+         objName.push_back(objectName);
+         
          const ComponentPeriod *clock_domain = NULL;
          String domain_name = Sim()->getCfg()->getStringArray("perf_model/" + configName + "/dvfs_domain", core->getId());
          if (domain_name == "core")
@@ -274,6 +283,35 @@ MemoryManager::MemoryManager(Core* core,
       }
    }
 
+   //[update]
+   // normalizing either controller or cache of dram as dram access only
+   String objectNameDebug,configNameDebug;
+   // get objectName from configName, set objectName to each mem level. will be use to enbale debug/log
+   String dramCacheConfigName = "dram-cache";
+   String dramCntrlConfigName = "dram-cntrl";
+   String dramCacheObjName = "DRAM-Cache";
+   String dramCntrlObjName = "DRAM-Cntrl";
+
+   if(Sim()->getCfg()->hasKey("debug/DebugCacheLevel"))
+   {
+      configNameDebug = Sim()->getCfg()->getString("debug/DebugCacheLevel");
+      
+      if(configNameDebug == dramCacheConfigName){
+         objectNameDebug = dramCacheConfigName;
+      }
+      else if(configNameDebug == dramCntrlConfigName){
+         objectNameDebug = dramCntrlConfigName;
+      }
+      else{
+         for(int i=0; i< confName.size(); i++)
+         {
+            if(configNameDebug == confName[i])
+               objectNameDebug=objName[i];
+         }
+      }
+   }
+   std::cout<<"cache debug = "<<objectNameDebug<<" & "<<configNameDebug<<std::endl;
+
    for(UInt32 i = MemComponent::FIRST_LEVEL_CACHE; i <= (UInt32)m_last_level_cache; ++i) {
       CacheCntlr* cache_cntlr = new CacheCntlr(
          (MemComponent::component_t)i,
@@ -288,12 +326,44 @@ MemoryManager::MemoryManager(Core* core,
          getShmemPerfModel(),
          i == (UInt32)m_last_level_cache
       );
+      
       //[update]
+      cache_cntlr->setCacheHelper(&cacheHelper);
       cache_cntlr->setEIP(-1);
       cache_cntlr->setName(cache_names[(MemComponent::component_t)i]);
+      cache_cntlr->setMemLevelDebug(objectNameDebug);  // set objectName at all cacheCntrl to compare it with name of cache
 
       m_cache_cntlrs[(MemComponent::component_t)i] = cache_cntlr;
       setCacheCntlrAt(getCore()->getId(), (MemComponent::component_t)i, cache_cntlr);
+   }
+
+   //[update]
+   if(m_dram_cntlr){
+      m_dram_cntlr->setName(dramCntrlObjName);// object name
+      m_dram_cntlr->setMemLevelDebug(objectNameDebug);// debug levelname target name
+      m_dram_cntlr->setCacheHelper(&cacheHelper);
+   }
+      
+   if(m_dram_cache){
+      m_dram_cache->setName(dramCacheObjName);
+      m_dram_cache->setMemLevelDebug(objectNameDebug);
+      m_dram_cache->setCacheHelper(&cacheHelper);
+   }
+
+   if(m_stlb)
+   {
+      m_stlb->setMemLevelDebug(objectNameDebug);
+      m_stlb->setCacheHelper(&cacheHelper);
+   }
+   if(m_dtlb)
+   {
+      m_dtlb->setMemLevelDebug(objectNameDebug);
+      m_dtlb->setCacheHelper(&cacheHelper);
+   }
+   if(m_itlb)
+   {
+      m_itlb->setMemLevelDebug(objectNameDebug);
+      m_itlb->setCacheHelper(&cacheHelper);
    }
 
    m_cache_cntlrs[MemComponent::L1_ICACHE]->setNextCacheCntlr(m_cache_cntlrs[MemComponent::L2_CACHE]);
@@ -381,6 +451,9 @@ MemoryManager::MemoryManager(Core* core,
 
 MemoryManager::~MemoryManager()
 {
+   //[update]
+   cacheHelper.writeOutput();
+
    UInt32 i;
 
    getNetwork()->unregisterCallback(SHARED_MEM_1);
@@ -437,10 +510,13 @@ MemoryManager::coreInitiateMemoryAccess(
       m_cache_cntlrs[(MemComponent::component_t)i]->setEIP(eip);
    }
 
-   if(m_dram_cache!=NULL)
+   if(m_dram_cache!=NULL){
       m_dram_cache->setEIP(eip);
-   if(m_dram_cntlr!=NULL)
+   }
+      
+   if(m_dram_cntlr!=NULL){
       m_dram_cntlr->setEIP(eip);
+   }
 
    if (mem_component == MemComponent::L1_ICACHE && m_itlb)
       accessTLB(m_itlb, address, true, modeled, eip, path);
@@ -611,12 +687,14 @@ MYLOG("bcast msg");
 void
 MemoryManager::accessTLB(TLB * tlb, IntPtr address, bool isIfetch, Core::MemModeled modeled, IntPtr eip, String& path)
 {
-
+   
    bool hit = tlb->lookup(address, getShmemPerfModel()->getElapsedTime(ShmemPerfModel::_USER_THREAD));
+
+   tlb->addRequest(eip,address);
 
    cache_helper::Misc::pathAppend(path, tlb->name);
    cache_helper::Misc::stateAppend(hit, path);
-   
+
    if (hit == false
        && !(modeled == Core::MEM_MODELED_NONE || modeled == Core::MEM_MODELED_COUNT)
        && m_tlb_miss_penalty.getLatency() != SubsecondTime::Zero()
