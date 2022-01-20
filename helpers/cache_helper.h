@@ -12,40 +12,10 @@
         #include <iostream>
         #include <filesystem>
         #include <unistd.h>
+        #include<stack>
+        #include<vector>
 namespace cache_helper
 {   
-
-
-class Sampling
-{
-    public:
-    bool allowed;
-    int sampleLimit;
-    int provided;
-    Sampling(int sampleLimit=100000, bool flag=false){
-        this->sampleLimit = sampleLimit;
-        provided = sampleLimit;
-        allowed=flag;
-    }
-
-    void flip(){
-        allowed=!allowed;
-    }
-
-    void reset(){
-        sampleLimit=provided;
-    }
-
-    void count(){
-        if(sampleLimit==0){
-            flip();
-            reset();
-            return;
-        }
-        sampleLimit--;
-    }
-
-};
 
 class Misc
 {
@@ -100,7 +70,7 @@ class Misc
  class DataInfo
 {
     public:
-    DataInfo(bool access_type, uint32_t stride, String path){
+    DataInfo(bool access_type, uint32_t stride){
         this->typeCount[access_type]+=1;
         this->stride.insert(stride);
         this->total_access=1;
@@ -124,11 +94,11 @@ class StrideTable
 
     UInt32 last=0;
 
-    IntPtr total, reeip, readdr;
+    UInt32 total, reeip, readdr;
 
     std::map<String, std::set<String>> path2haddrStorage;
 
-    bool cacheLevelDebug=false;
+    std::map<String, std::vector<String>> countByName;
 
     StrideTable() { }
 
@@ -177,8 +147,19 @@ class StrideTable
             }
             _LOG_PRINT_CUSTOM(Log::Warning, "]\n");
         }
-        
-        printf("Total accesses= %d\n", total);
+
+        // printf("Total Access=%d\n", total);
+
+        // printf("Total Access by Access Type\n");
+        // std::map<String, std::vector<String>>::iterator icn = countByName.begin();
+        // for(;icn!=countByName.end();icn++)
+        // {
+        //     String name = icn->first;
+        //     char* p=&name[0];
+        //     printf("%s = %d\n", p, icn->second.size());
+        // }
+        // icn = countByName.begin();
+        // countByName.erase(icn, countByName.end());
     }
 
     void lookupAndUpdate(int access_type, IntPtr eip, IntPtr addr, String path)
@@ -206,10 +187,10 @@ class StrideTable
         
         // store path if not exists already
         path2haddrStorage[path].insert(haddr);
-        if(path2haddrStorage.find(path)!=path2haddrStorage.end())
-            path2haddrStorage[path].insert(haddr);
-        else
-            path2haddrStorage.insert({path, {haddr}});
+        // if(path2haddrStorage.find(path)!=path2haddrStorage.end())
+        //     path2haddrStorage[path].insert(haddr);
+        // else
+        //     path2haddrStorage.insert({path, {haddr}});
 
         // find eip on table
         it = table.find(hindex);
@@ -249,98 +230,98 @@ class StrideTable
         }
 
         last = tmp;
+
+        std::map<String, std::vector<String>>::iterator icn = countByName.find(name);
+        if(icn!=countByName.end())
+        {
+            icn->second.push_back(haddr);
+        }
+        else{
+            countByName.insert({name, {haddr}});
+        }
     }
+};
+
+class Access
+{
+    IntPtr eip, addr;
+    String objectName;
+    bool instAccessType;// st=0 ld=1
+    public:
+    Access(IntPtr eip, IntPtr addr, String objectName, bool accessType){
+        this->eip=eip; this->addr=addr; this->objectName=objectName; thhis->instAccessType=accessType;
+    }
+
+    String getObjectName(){return objectName;}
+    IntPtr getEip(){return eip;}
+    bool getAccessType(){return this->instAccessType;}
+    IntPtr getAddr(){return this->addr;}
 };
 
 class CacheHelper
 {
-    bool singleCacheDebug;
-    bool allCacheDebug;
-    
-    IntPtr eip, addr;
-    String name;
-    
-    UInt32 blockSize;
-    UInt32 cacheSize;
-
-    bool isItCacheAccess;
-
+    std::stack<Access*> request;
+    StrideTable strideTable;
+    UInt32 cacheBlockSize;
+    bool memAccessType;// cache=0 dram=1
     public:
-    CacheHelper()
-    { 
-        singleCacheDebug=allCacheDebug=false; 
-    }
-    // helper tools
-
-    // member variable
-    StrideTable stride_table;
-    Sampling sampling;
-
-    bool isSingleLevelDebugEnabled() { return this->singleCacheDebug; }
-    void setSingleCacheDebug()
-    {
-        this->singleCacheDebug=true;
-    }
-
-    void resetCacheDebug()
-    {
-        this->singleCacheDebug=false;
-        this->allCacheDebug=false;
-        this->eip=this->addr=-1; 
-        this->cacheSize=this->blockSize=-1;
-        this->name="XXX";
-        this->isItCacheAccess=false;
-    }
-
-    void setAllCacheDebug()
-    {
-        this->allCacheDebug=true;
-    }
-
-    void setAddressInfo(IntPtr eip, IntPtr addr)
-    {
-        this->eip=eip; this->addr=addr;
-    }
     
-    void setCacheInformation(UInt32 block_size, UInt32 cache_size, String name)
-    {
-        this->block_size = block_size;
-        this->cache_size = cache_size;
-        this->name = name;
-        this->isItCacheAccess = true;
-    }
-
-    void logInformation(bool access)
-    {
-        if(isItCacheAccess)
+    void addRequest(IntPtr eip, IntPtr addr, String objname, Cache* cache, Core::mem_op_t mem_op_type){
+        bool accessType = accessTypeInfo(mem_op_type);
+        //todo: i can take some contant to generate these inforamtion regardless of where access is comming from
+        if(cache==NULL)
         {
-            
+            // for dram access, i dont know how to mask it yet;
         }
-        strideTableUpdate();
-    }
-
-    // member function
-    // void strideTableUpdate(bool access, IntPtr eip, IntPtr addr, String path, IntPtr origEip, IntPtr origAddr)
-    // {
-        
-    //     if(singleCacheDebug || allCacheDebug)
-    //     {
-    //         char* p=&name[0];
-    //         printf("verify eip=%ld, name=%s\n", this->eip, p);
-    //         stride_table.lookupAndUpdate(access, eip, addr, path);
-    //         resetCacheDebug();
-    //     }
-    // }
-
-    void strideTableUpdate(bool accessType)
-    {
-        
-        if(singleCacheDebug || allCacheDebug)
+        else
         {
-            char* p=&name[0];
-            printf("verify eip=%ld, name=%s\n", this->eip, p);
-            stride_table.lookupAndUpdate(accessType, eip, addr, name);
-            resetCacheDebug();
+            // for cache access, i am taking into account cache size, blocksize and calculating indexing information
+            IntPtr tag;
+            UInt32 set_index;
+            UInt32 block_offset;
+            cache->splitAddress(addr, &tag, &set_index, &block_offset)
+
+            IntPtr eip_tag;
+            UInt32 eip_set_index;
+            UInt32 eip_block_offset;
+            cache->splitAddress(eip, eip_tag, eip_set_index, eip_block_offset);
+
+            IntPtr index = eip & 0xfffff; // use lsb 20 bits for indexing, possible all instructions are in few blocks
+            IntPtr blockBasedStride = addr >> cache->getLogBlockSize() & cache->getBlockMask(); // as we want to calculate stride beyond a single block
+            IntPtr setBasedStride = addr >> cache->getLogBlockSize() & cache->getSetMask();
+        }
+        request.push(new Access(eip,addr,objname,accessType));
+    }
+    void addRequest(Access* access){request.push(access);}
+    void setCacheBlockSize(UInt32 cache_block_size){this->cacheBlockSize=cache_block_size;}
+    
+    bool accessTypeInfo(Core::mem_op_t mem_op_type)
+    {
+        bool result;
+        switch (mem_op_type)
+        {
+            case Core::READ:
+            case Core::READ_EX:
+                result = true;//LOAD
+                break;
+            case Core::WRITE:
+                result = false;//STORE
+                break;
+            default:
+                LOG_PRINT_ERROR("Unsupported Mem Op Type: %u", mem_op_type);
+                exit(0);
+                break;
+        }
+        return result;
+    }
+    void strideTableUpdate()
+    {
+        while(!request.empty())
+        {   
+            Access* access = request.top(); 
+            request.pop();
+            char* p=&access->getObjectName()[0];
+            strideTable.lookupAndUpdate(access->getAccessType(), access->getEip(), access->getAddr(), access->getObjectName());
         }
     }
 };

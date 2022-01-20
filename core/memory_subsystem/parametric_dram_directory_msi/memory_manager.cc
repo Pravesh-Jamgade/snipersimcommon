@@ -283,9 +283,30 @@ MemoryManager::MemoryManager(Core* core,
       }
    }
 
+   //[update]
+   cacheHelper->setCacheBlockSize(m_cache_block_size);
+   // normalizing either controller or cache of dram as dram access only
+   String objectNameDebug,configNameDebug;
    // get objectName from configName, set objectName to each mem level. will be use to enbale debug/log
-      String dramconfigname = "dram";
-      String dramobjname = "DRAM";
+   String dramconfigname = "dram";
+   String dramobjname = "DRAM";
+
+   if(Sim()->getCfg()->hasKey("debug/DebugCacheLevel"))
+   {
+      configNameDebug = Sim()->getCfg()->getString("debug/DebugCacheLevel");
+      
+      if(configNameDebug == dramconfigname){
+         objectNameDebug = dramobjname;
+      }
+      else{
+         for(int i=0; i< confName.size(); i++)
+         {
+            if(configNameDebug == confName[i])
+               objectNameDebug=objName[i];
+         }
+      }
+   }
+   std::cout<<"cache debug = "<<objectNameDebug<<" & "<<configNameDebug<<std::endl;
 
    for(UInt32 i = MemComponent::FIRST_LEVEL_CACHE; i <= (UInt32)m_last_level_cache; ++i) {
       CacheCntlr* cache_cntlr = new CacheCntlr(
@@ -306,41 +327,37 @@ MemoryManager::MemoryManager(Core* core,
       cache_cntlr->setCacheHelper(&cacheHelper);
       cache_cntlr->setEIP(-1);
       cache_cntlr->setName(cache_names[(MemComponent::component_t)i]); // same thing
-
-      // normalizing either controller or cache of dram as dram access only
-      String objectNameDebug,configNameDebug;
-      if(Sim()->getCfg()->hasKey("debug/DebugCacheLevel"))
-      {
-         configNameDebug = Sim()->getCfg()->getString("debug/DebugCacheLevel");
-         
-         if(configNameDebug == dramconfigname){
-            objectNameDebug = dramobjname;
-         }
-         else{
-            for(int i=0; i< confName.size(); i++)
-            {
-               if(configNameDebug == confName[i])
-                  objectNameDebug=objName[i];
-            }
-         }
-      }
-      std::cout<<"cache debug = "<<objectNameDebug<<" & "<<configNameDebug<<std::endl;
-      
-      // set objectName at all cacheCntrl to compare it with name of cache
-      cache_cntlr->setMemLevelDebug(objectNameDebug);
+      cache_cntlr->setMemLevelDebug(objectNameDebug);  // set objectName at all cacheCntrl to compare it with name of cache
 
       m_cache_cntlrs[(MemComponent::component_t)i] = cache_cntlr;
       setCacheCntlrAt(getCore()->getId(), (MemComponent::component_t)i, cache_cntlr);
    }
 
+   //[update]
    if(m_dram_cntlr){
-      m_dram_cntlr->setName(dramobjname);
+      m_dram_cntlr->setName(objectNameDebug);
       m_dram_cntlr->setCacheHelper(&cacheHelper);
    }
       
    if(m_dram_cache){
-      m_dram_cache->setName(dramobjname);
+      m_dram_cache->setName(objectNameDebug);
       m_dram_cntlr->setCacheHelper(&cacheHelper);
+   }
+
+   if(m_stlb)
+   {
+      m_stlb->setMemLevelDebug(objectNameDebug);
+      m_stlb->setCacheHelper(cacheHelper);
+   }
+   if(m_dtlb)
+   {
+      m_dtlb->setMemLevelDebug(objectNameDebug);
+      m_dtlb->setCacheHelper(cacheHelper);
+   }
+   if(m_itlb)
+   {
+      m_itlb->setMemLevelDebug(objectNameDebug);
+      m_itlb->setCacheHelper(cacheHelper);
    }
 
    m_cache_cntlrs[MemComponent::L1_ICACHE]->setNextCacheCntlr(m_cache_cntlrs[MemComponent::L2_CACHE]);
@@ -661,8 +678,10 @@ MYLOG("bcast msg");
 void
 MemoryManager::accessTLB(TLB * tlb, IntPtr address, bool isIfetch, Core::MemModeled modeled, IntPtr eip, String& path)
 {
-
+   
    bool hit = tlb->lookup(address, getShmemPerfModel()->getElapsedTime(ShmemPerfModel::_USER_THREAD));
+
+   tlb->addRequest(eip,address);
 
    cache_helper::Misc::pathAppend(path, tlb->name);
    cache_helper::Misc::stateAppend(hit, path);

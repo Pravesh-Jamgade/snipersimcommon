@@ -220,6 +220,8 @@ CacheCntlr::CacheCntlr(MemComponent::component_t mem_component,
 
    bzero(&stats, sizeof(stats));
 
+   registerStatsMetric(name, core_id, "totalAccess", &stats.totalAccess);
+
    registerStatsMetric(name, core_id, "loads", &stats.loads);
    registerStatsMetric(name, core_id, "stores", &stats.stores);
    registerStatsMetric(name, core_id, "load-misses", &stats.load_misses);
@@ -343,7 +345,7 @@ CacheCntlr::processMemOpFromCore(
       exit(0);
    }
    // if debug level not specified, unlock to log all; or unlock individual level
-   this->loggingLevel(eip, ca_address);
+   this->loggingLevel(ca_address, mem_op_type);
   
    String tmp1 = "";
    String tmp2 = "";
@@ -837,7 +839,7 @@ bool modeled, bool count, Prefetch::prefetch_type_t isPrefetch,
 SubsecondTime t_issue, bool have_write_lock, String& path)
 {
 
-   loggingLevel(address);
+   this->loggingLevel(address, mem_op_type);
    #ifdef PRIVATE_L2_OPTIMIZATION
    bool have_write_lock_internal = have_write_lock;
    if (! have_write_lock && m_shared_cores > 1)
@@ -2399,5 +2401,27 @@ CacheCntlr::getNetworkThreadSemaphore()
 {
    return m_network_thread_sem;
 }
+
+void 
+CacheCntlr::loggingLevel(IntPtr addr, Core::mem_op_t mem_op_type)
+{
+   String name = getName();
+   IntPtr eip = getEIP();
+   if(memLevelDebug!="")
+   {
+      char*p=&name[0];
+      bool debugEnable = getMemLevelDebug() == name;
+      if(debugEnable){
+         stats.totalAccess++;
+         getCache()->cache_helper.addRequest(eip, addr, name);
+      }
+   }
+   else{
+     stats.totalAccess++;
+     getCache()->cache_helper.addRequest(eip, addr, name);
+   }
+}
+
+
 
 }

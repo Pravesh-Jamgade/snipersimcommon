@@ -218,6 +218,7 @@ namespace ParametricDramDirectoryMSI
          bool m_l1_mshr;
 
          struct {
+            UInt64 totalAccess;
            UInt64 loads, stores;
            UInt64 load_misses, store_misses;
            UInt64 load_overlapping_misses, store_overlapping_misses;
@@ -426,11 +427,6 @@ namespace ParametricDramDirectoryMSI
             this->eip = eip;
          }
 
-         IntPtr getEIP()
-         {
-            return this->eip;
-         }
-
          void setName(String name)
          {
             this->name = name;
@@ -440,32 +436,29 @@ namespace ParametricDramDirectoryMSI
          {
             this->memLevelDebug = memLevelDebug;
          }
-
-         void loggingLevel(IntPtr eip, IntPtr addr, bool cache_access)
-         {
-            if(memLevelDebug!="")
-            {
-               char*p=&name[0];
-               bool debugEnable = memLevelDebug == name;
-               if(debugEnable & ! cache_helper->isSingleLevelDebugEnabled())
-               {
-                  printf("setting eip=%ld, name=%s\n", this->eip, p);
-                  cacheHelper->setSingleLevelDebug();
-                  // cacheHelper->debugVerify(eip,addr,name);
-                  if(cache_access)
-                     cacheHelper->setCacheInformation(m_cache_block_size, cache_params.size);
-               }
-            }
-            else 
-            {
-               cacheHelper->setAllLevelDebug();
-            }
-         }
          
          void setCacheHelper(cache_helper::CacheHelper* cacheHelper)
          {
             this->cacheHelper = cacheHelper;
          }
+
+         String getName()
+         {
+            return this->name;
+         }
+
+         String getMemLevelDebug()
+         {
+            return this->memLevelDebug;
+         }
+
+         IntPtr getEIP()
+         {
+            return this->eip;
+         }
+         
+         void loggingLevel(IntPtr addr);
+         
    };
 
 }

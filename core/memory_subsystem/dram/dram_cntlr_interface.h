@@ -24,6 +24,12 @@ class DramCntlrInterface
       MemoryManagerBase* getMemoryManager() { return m_memory_manager; }
       ShmemPerfModel* getShmemPerfModel() { return m_shmem_perf_model; }
    
+   private:
+   IntPtr eip;
+   String name;
+   String memLevelDebug;
+   cache_helper::CacheHelper* cacheHelper;
+
    public:
       typedef enum
       {
@@ -31,11 +37,6 @@ class DramCntlrInterface
          WRITE,
          NUM_ACCESS_TYPES
       } access_t;
-
-      IntPtr eip;
-      String name;
-      String memLevelDebug;
-      cache_helper::CacheHelper* cacheHelper;
 
       DramCntlrInterface(MemoryManagerBase* memory_manager, ShmemPerfModel* shmem_perf_model, UInt32 cache_block_size)
          : m_memory_manager(memory_manager)
@@ -49,9 +50,6 @@ class DramCntlrInterface
 
       void handleMsgFromTagDirectory(core_id_t sender, PrL1PrL2DramDirectoryMSI::ShmemMsg* shmem_msg);
 
-      virtual void setEIP(IntPtr eip)=0;
-      virtual IntPtr getEIP()=0;
-      
       bool loggingLevel()
       {
          if(memLevelDebug!="")
@@ -62,10 +60,11 @@ class DramCntlrInterface
          return true;
       }
 
-      void setCacheHelper(cache_helper::CacheHelper* cacheHelper)
-      {
-         this->cacheHelper = cacheHelper;
-      }
+      void setCacheHelper(cache_helper::CacheHelper* cacheHelper){this->cacheHelper = cacheHelper;}
+      void setEIP(IntPtr eip) {this->eip=eip;}
+      IntPtr getEIP(){return this->eip;}
+      void setName(String name){this->name=name;}
+      String getName(){return this->name;}
 };
 
 #endif // __DRAM_CNTLR_INTERFACE_H

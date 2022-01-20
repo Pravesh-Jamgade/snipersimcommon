@@ -47,12 +47,5 @@ namespace PrL1PrL2DramDirectoryMSI
          // Run DRAM performance model. Pass in begin time, returns latency
          boost::tuple<SubsecondTime, HitWhere::where_t> getDataFromDram(IntPtr address, core_id_t requester, Byte* data_buf, SubsecondTime now, ShmemPerf *perf, IntPtr eip);
          boost::tuple<SubsecondTime, HitWhere::where_t> putDataToDram(IntPtr address, core_id_t requester, Byte* data_buf, SubsecondTime now, IntPtr eip);
-         void setEIP(IntPtr eip);
-         IntPtr getEIP();
-         void setName(String name){ this->name=name; }
-         void setCacheHelper(cache_helper::CacheHelper cacheHelper)
-         {
-            
-         }
    };
 }

@@ -2,6 +2,7 @@
 
 #include "memory_manager_base.h"
 #include "cache_base.h"
+#include "cache_cntlr.h"
 #include "../pr_l1_pr_l2_dram_directory_msi/dram_directory_cntlr.h"
 #include "../pr_l1_pr_l2_dram_directory_msi/dram_cntlr.h"
 #include "address_home_lookup.h"

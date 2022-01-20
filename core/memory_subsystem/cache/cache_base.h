@@ -97,6 +97,11 @@ class CacheBase
       UInt32 getAssociativity() const { return m_associativity; }
 
       static hash_t parseAddressHash(String hash_name);
+
+      //[update]
+      UInt32 getLogBlockSize(){return this->m_log_blocksize;}
+      IntPtr getBlockMask(){return this->block_mask;}
+      IntPtr getSetMask(){return this->set_mask;}
 };
 
 #endif /* __CACHE_BASE_H__ */

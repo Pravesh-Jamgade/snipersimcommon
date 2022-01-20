@@ -231,13 +231,3 @@ DramCache::callPrefetcher(IntPtr train_address, bool cache_hit, bool prefetch_hi
       }
    }
 }
-
-void DramCache::setEIP(IntPtr eip)
-{
-   this->eip = eip;
-}
-
-IntPtr DramCache::getEIP()
-{
-   return this->eip;
-}

@@ -39,6 +39,24 @@
  /mnt/B/sniper/common/core/memory_subsystem/parametric_dram_directory_msi/memory_manager.h \
  /mnt/B/sniper/common/core/memory_subsystem/memory_manager_base.h \
  /mnt/B/sniper/common/core/memory_subsystem/cache/cache_base.h \
+ /mnt/B/sniper/common/core/memory_subsystem/parametric_dram_directory_msi/cache_cntlr.h \
+ /mnt/B/sniper/common/core/memory_subsystem/cache/cache.h \
+ /mnt/B/sniper/common/core/memory_subsystem/cache/cache_set.h \
+ /mnt/B/sniper/common/core/memory_subsystem/cache/cache_block_info.h \
+ /mnt/B/sniper/common/misc/random.h /mnt/B/sniper/common/misc/utils.h \
+ /mnt/B/sniper/common/misc/hash_map_set.h \
+ /mnt/B/sniper/common/performance_model/cache_perf_model.h \
+ /mnt/B/sniper/common/fault_injection/fault_injection.h \
+ /mnt/B/sniper/common/helpers/test.h \
+ /mnt/B/sniper/common/core/memory_subsystem/parametric_dram_directory_msi/prefetcher.h \
+ /mnt/B/sniper/common/core/memory_subsystem/cache/shared_cache_block_info.h \
+ /mnt/B/sniper/common/core/memory_subsystem/address_home_lookup.h \
+ /mnt/B/sniper/common/misc/semaphore.h \
+ /mnt/B/sniper/common/misc/setlock.h /mnt/B/sniper/common/misc/selock.h \
+ /mnt/B/sniper/common/performance_model/contention_model.h \
+ /mnt/B/sniper/common/core/memory_subsystem/cache/req_queue_list_template.h \
+ /mnt/B/sniper/common/misc/stats.h \
+ /mnt/B/sniper/common/core/memory_subsystem/pr_l1_pr_l2_dram_directory_msi/shmem_perf.h \
  /mnt/B/sniper/common/core/memory_subsystem/parametric_dram_directory_msi/../pr_l1_pr_l2_dram_directory_msi/dram_directory_cntlr.h \
  /mnt/B/sniper/common/core/memory_subsystem/parametric_dram_directory_msi/../pr_l1_pr_l2_dram_directory_msi/dram_directory_cache.h \
  /mnt/B/sniper/common/core/memory_subsystem/directory_schemes/directory.h \
@@ -47,17 +65,12 @@
  /mnt/B/sniper/common/core/memory_subsystem/directory_schemes/directory_state.h \
  /mnt/B/sniper/common/core/memory_subsystem/parametric_dram_directory_msi/../pr_l1_pr_l2_dram_directory_msi/req_queue_list.h \
  /mnt/B/sniper/common/core/memory_subsystem/parametric_dram_directory_msi/../pr_l1_pr_l2_dram_directory_msi/shmem_req.h \
- /mnt/B/sniper/common/core/memory_subsystem/cache/req_queue_list_template.h \
  /mnt/B/sniper/common/core/memory_subsystem/parametric_dram_directory_msi/../pr_l1_pr_l2_dram_directory_msi/dram_cntlr.h \
  /mnt/B/sniper/common/performance_model/dram_perf_model.h \
  /mnt/B/sniper/common/performance_model/queue_model.h \
  /mnt/B/sniper/common/core/memory_subsystem/dram/dram_cntlr_interface.h \
  /mnt/B/sniper/common/core/memory_subsystem/parametric_dram_directory_msi/../pr_l1_pr_l2_dram_directory_msi/shmem_perf.h \
- /mnt/B/sniper/common/core/memory_subsystem/address_home_lookup.h \
  /mnt/B/sniper/common/core/memory_subsystem/directory_schemes/coherency_protocol.h \
- /mnt/B/sniper/common/misc/semaphore.h \
- /mnt/B/sniper/common/core/memory_subsystem/cache/shared_cache_block_info.h \
- /mnt/B/sniper/common/core/memory_subsystem/cache/cache_block_info.h \
  /mnt/B/sniper/common/core/memory_subsystem/fast_nehalem/memory_manager.h \
  /mnt/B/sniper/common/core/memory_subsystem/memory_manager_fast.h \
  /mnt/B/sniper/common/config/config.hpp \
