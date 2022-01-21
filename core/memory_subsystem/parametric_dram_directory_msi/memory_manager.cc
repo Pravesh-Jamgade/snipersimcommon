@@ -289,8 +289,6 @@ MemoryManager::MemoryManager(Core* core,
    // get objectName from configName, set objectName to each mem level. will be use to enbale debug/log
    String dramCacheConfigName = "dram-cache";
    String dramCntrlConfigName = "dram-cntrl";
-   String dramCacheObjName = "DRAM-Cache";
-   String dramCntrlObjName = "DRAM-Cntrl";
 
    if(Sim()->getCfg()->hasKey("debug/DebugCacheLevel"))
    {
@@ -338,21 +336,26 @@ MemoryManager::MemoryManager(Core* core,
    }
 
    //[update]
+   // purpose of setMemleveldebug() name is to enable debug of that level only unless specified empty("")
+   // each structre has object name; for given debug name we get its object name. for cache only i have object name. others i keep their config ass their object name
+   // although unnecessary
+   // by setting objectNameDebug for each strcuture, while logging i check object's own name and objectNameDebug if same, then log those accesses for that structure
+   // for tlb and dram-cache, dram-cntr; we placing configname same as their individual objectname
    if(m_dram_cntlr){
-      m_dram_cntlr->setName(dramCntrlObjName);// object name
+      m_dram_cntlr->setName(dramCntrlConfigName);// structures own name
       m_dram_cntlr->setMemLevelDebug(objectNameDebug);// debug levelname target name
       m_dram_cntlr->setCacheHelper(&cacheHelper);
    }
       
    if(m_dram_cache){
-      m_dram_cache->setName(dramCacheObjName);
-      m_dram_cache->setMemLevelDebug(objectNameDebug);
+      m_dram_cache->setName(dramCacheConfigName);// structures own name
+      m_dram_cache->setMemLevelDebug(objectNameDebug);// debug levelname target name
       m_dram_cache->setCacheHelper(&cacheHelper);
    }
 
    if(m_stlb)
    {
-      m_stlb->setMemLevelDebug(objectNameDebug);
+      m_stlb->setMemLevelDebug(objectNameDebug);// debug levelname target name
       m_stlb->setCacheHelper(&cacheHelper);
    }
    if(m_dtlb)

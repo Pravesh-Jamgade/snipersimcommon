@@ -46,7 +46,7 @@ namespace ParametricDramDirectoryMSI
             if((objectNameDebug!="" && objectNameDebug==name) || objectNameDebug=="")
             {
                totalAccess++;
-               cacheHelper->addRequest(eip,addr,name, &m_cache, Core::READ);
+               cacheHelper->addRequest(eip,addr,name, &m_cache, true);//its a load; tlb lookup() passes LOAD
             }
          }
 

@@ -221,6 +221,8 @@ CacheCntlr::CacheCntlr(MemComponent::component_t mem_component,
    bzero(&stats, sizeof(stats));
 
    registerStatsMetric(name, core_id, "totalAccess", &stats.totalAccess);
+   registerStatsMetric(name, core_id, "totalLoads", &stats.totalLoads);
+   registerStatsMetric(name, core_id, "totalStores", &stats.totalStores);
 
    registerStatsMetric(name, core_id, "loads", &stats.loads);
    registerStatsMetric(name, core_id, "stores", &stats.stores);
@@ -2413,19 +2415,15 @@ CacheCntlr::loggingLevel(IntPtr addr, Core::mem_op_t mem_op_type, bool isCache)
    Cache* cache=NULL;
    if(isCache)
       cache=getCache();
-
-   if(memLevelDebug!="")
+   if((memLevelDebug!="" && getMemLevelDebug() == name)||memLevelDebug=="")
    {
-      char*p=&name[0];
-      bool debugEnable = getMemLevelDebug() == name;
-      if(debugEnable){
-         stats.totalAccess++;
-         cacheHelper->addRequest(eip, addr, name, cache, mem_op_type);
-      }
-   }
-   else{
-     stats.totalAccess++;
-     cacheHelper->addRequest(eip, addr, name, cache, mem_op_type);
+      bool typeAccess = cache_helper::Misc::accessTypeInfo(mem_op_type);
+      if(typeAccess)
+         stats.totalLoads++;
+      else stats.totalStores++;
+      
+      stats.totalAccess++;
+      cacheHelper->addRequest(eip, addr, name, cache, mem_op_type);
    }
 }
 

@@ -58,6 +58,8 @@ DramCache::DramCache(MemoryManagerBase* memory_manager, ShmemPerfModel* shmem_pe
 
    //[update]
    registerStatsMetric("dram-cache", m_core_id, "totalAccess", &totalAccess);
+   registerStatsMetric("dram-cache", m_core_id, "totalLoads", &totalLoads);
+   registerStatsMetric("dram-cache", m_core_id, "totalStores", &totalStores);
 
    registerStatsMetric("dram-cache", m_core_id, "reads", &m_reads);
    registerStatsMetric("dram-cache", m_core_id, "writes", &m_writes);

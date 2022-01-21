@@ -34,7 +34,9 @@ class DramCntlrInterface
    public:
       //[update]
       UInt64 totalAccess;
-
+      UInt64 totalLoads;
+      UInt64 totalStores;
+      
       typedef enum
       {
          READ = 0,
@@ -67,14 +69,18 @@ class DramCntlrInterface
       void setMemLevelDebug(String objectDebugName){this->memLevelDebug=objectDebugName;}
       String getMemLevelDebug(){return this->memLevelDebug;}
 
-      void updateTotalAccess(){this->totalAccess++;}
-
       void loggingDRAM(IntPtr addr, Core::mem_op_t mem_op)
       {
          if((getMemLevelDebug()!="" && getMemLevelDebug()==getName() ) || getMemLevelDebug()=="")
          {
-            updateTotalAccess();
-            getCacheHelper()->addRequest(eip, addr, getName(), NULL, mem_op);
+            bool typeAccess = cache_helper::Misc::accessTypeInfo(mem_op);
+
+            if(typeAccess)
+               totalLoads++;
+            else totalStores++;
+
+            totalAccess++;
+            getCacheHelper()->addRequest(eip, addr, getName(), NULL, typeAccess);
          }
       }
 };

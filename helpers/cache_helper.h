@@ -65,6 +65,26 @@ class Misc
             aliasAppend(path, alias);
         stateAppend(state, path);
     }
+
+    static bool accessTypeInfo(Core::mem_op_t mem_op_type)
+    {
+        bool result;
+        switch (mem_op_type)
+        {
+            case Core::READ:
+            case Core::READ_EX:
+                result = true;//LOAD
+                break;
+            case Core::WRITE:
+                result = false;//STORE
+                break;
+            default:
+                LOG_PRINT_ERROR("Unsupported Mem Op Type: %u", mem_op_type);
+                exit(0);
+                break;
+        }
+        return result;
+    }
 };
 
  class DataInfo
@@ -265,8 +285,7 @@ class CacheHelper
     bool memAccessType;// cache=0 dram=1
     public:
     
-    void addRequest(IntPtr eip, IntPtr addr, String objname, Cache* cache, Core::mem_op_t mem_op_type){
-        bool accessType = accessTypeInfo(mem_op_type);
+    void addRequest(IntPtr eip, IntPtr addr, String objname, Cache* cache, bool accessType){
         IntPtr index = eip & 0xfffff; // use lsb 20 bits for indexing, possible all instructions are in few blocks
         IntPtr addrForStride = addr;
 
@@ -292,26 +311,7 @@ class CacheHelper
     }
     void addRequest(Access* access){request.push(access);}
     void setCacheBlockSize(UInt32 cache_block_size){this->cacheBlockSize=cache_block_size;}
-    
-    bool accessTypeInfo(Core::mem_op_t mem_op_type)
-    {
-        bool result;
-        switch (mem_op_type)
-        {
-            case Core::READ:
-            case Core::READ_EX:
-                result = true;//LOAD
-                break;
-            case Core::WRITE:
-                result = false;//STORE
-                break;
-            default:
-                LOG_PRINT_ERROR("Unsupported Mem Op Type: %u", mem_op_type);
-                exit(0);
-                break;
-        }
-        return result;
-    }
+   
     void strideTableUpdate()
     {
         while(!request.empty())

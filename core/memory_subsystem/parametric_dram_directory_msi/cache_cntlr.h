@@ -221,6 +221,9 @@ namespace ParametricDramDirectoryMSI
 
          struct {
             UInt64 totalAccess;
+            UInt64 totalLoads;
+            UInt64 totalStores;
+            
            UInt64 loads, stores;
            UInt64 load_misses, store_misses;
            UInt64 load_overlapping_misses, store_overlapping_misses;

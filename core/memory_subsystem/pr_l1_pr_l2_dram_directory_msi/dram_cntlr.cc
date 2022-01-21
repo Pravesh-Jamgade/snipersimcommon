@@ -42,6 +42,8 @@ DramCntlr::DramCntlr(MemoryManagerBase* memory_manager,
 
    //[update]
    registerStatsMetric("dram", memory_manager->getCore()->getId(), "totalAccess", &totalAccess);
+   registerStatsMetric("dram", memory_manager->getCore()->getId(), "totalLoads", &totalLoads);
+   registerStatsMetric("dram", memory_manager->getCore()->getId(), "totalStores", &totalStores);
 }
 
 DramCntlr::~DramCntlr()
