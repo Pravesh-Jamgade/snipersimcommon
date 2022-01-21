@@ -341,6 +341,7 @@ MemoryManager::MemoryManager(Core* core,
    // although unnecessary
    // by setting objectNameDebug for each strcuture, while logging i check object's own name and objectNameDebug if same, then log those accesses for that structure
    // for tlb and dram-cache, dram-cntr; we placing configname same as their individual objectname
+   //objectNameDebug could be empty in case for debugging all levels
    if(m_dram_cntlr){
       m_dram_cntlr->setName(dramCntrlConfigName);// structures own name
       m_dram_cntlr->setMemLevelDebug(objectNameDebug);// debug levelname target name
