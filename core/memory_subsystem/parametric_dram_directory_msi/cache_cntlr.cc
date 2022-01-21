@@ -346,9 +346,7 @@ CacheCntlr::processMemOpFromCore(
       printf("EIP: set=%ld, passed=%ld\n", this->eip, eip);
       exit(0);
    }
-   // if debug level not specified, unlock to log all; or unlock individual level
-   this->loggingLevel(ca_address, mem_op_type);
-  
+   
    String tmp1 = "";
    String tmp2 = "";
    bool second_call = false;
@@ -359,6 +357,10 @@ CacheCntlr::processMemOpFromCore(
    // Protect against concurrent access from sibling SMT threads
    ScopedLock sl_smt(m_master->m_smt_lock);
 
+   // if debug level not specified, unlock to log all; or unlock individual level
+   this->loggingLevel(ca_address, mem_op_type);
+  
+  
    LOG_PRINT("processMemOpFromCore(), lock_signal(%u), mem_op_type(%u), ca_address(0x%x)",
              lock_signal, mem_op_type, ca_address);
 MYLOG("----------------------------------------------");
