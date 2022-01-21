@@ -357,10 +357,6 @@ CacheCntlr::processMemOpFromCore(
    // Protect against concurrent access from sibling SMT threads
    ScopedLock sl_smt(m_master->m_smt_lock);
 
-   // if debug level not specified, unlock to log all; or unlock individual level
-   this->loggingLevel(ca_address, mem_op_type);
-  
-  
    LOG_PRINT("processMemOpFromCore(), lock_signal(%u), mem_op_type(%u), ca_address(0x%x)",
              lock_signal, mem_op_type, ca_address);
 MYLOG("----------------------------------------------");
@@ -392,6 +388,9 @@ LOG_ASSERT_ERROR(offset + data_length <= getCacheBlockSize(), "access until %u >
 
    CacheBlockInfo *cache_block_info;
    bool cache_hit = operationPermissibleinCache(ca_address, mem_op_type, &cache_block_info), prefetch_hit = false;
+
+    // if debug level not specified, unlock to log all; or unlock individual level
+   this->loggingLevel(ca_address, mem_op_type);
 
    if (!cache_hit && m_perfect)
    {
@@ -849,7 +848,6 @@ bool modeled, bool count, Prefetch::prefetch_type_t isPrefetch,
 SubsecondTime t_issue, bool have_write_lock, String& path)
 {
 
-   this->loggingLevel(address, mem_op_type);
    #ifdef PRIVATE_L2_OPTIMIZATION
    bool have_write_lock_internal = have_write_lock;
    if (! have_write_lock && m_shared_cores > 1)
@@ -865,6 +863,10 @@ SubsecondTime t_issue, bool have_write_lock, String& path)
    bool first_hit = cache_hit;
    HitWhere::where_t hit_where = HitWhere::MISS;
    SharedCacheBlockInfo* cache_block_info = getCacheBlockInfo(address);
+
+   //[update]
+   if(modeled==count && modeled!=false )
+      this->loggingLevel(address, mem_op_type);
 
    if (!cache_hit && m_perfect)
    {
@@ -1391,7 +1393,7 @@ CacheCntlr::accessCache(
       Core::mem_op_t mem_op_type, IntPtr ca_address, UInt32 offset,
       Byte* data_buf, UInt32 data_length, bool update_replacement, String path)
 {
-
+   loggingLevel(ca_address,mem_op_type);
    switch (mem_op_type)
    {
       case Core::READ:
