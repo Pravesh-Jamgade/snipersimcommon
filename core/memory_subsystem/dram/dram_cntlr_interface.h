@@ -69,20 +69,7 @@ class DramCntlrInterface
       void setMemLevelDebug(String objectDebugName){this->memLevelDebug=objectDebugName;}
       String getMemLevelDebug(){return this->memLevelDebug;}
 
-      void loggingDRAM(IntPtr addr, Core::mem_op_t mem_op)
-      {
-         if((getMemLevelDebug()!="" && getMemLevelDebug()==getName() ) || getMemLevelDebug()=="")
-         {
-            bool typeAccess = cache_helper::Misc::accessTypeInfo(mem_op);
-
-            if(typeAccess)
-               totalLoads++;
-            else totalStores++;
-
-            totalAccess++;
-            getCacheHelper()->addRequest(eip, addr, getName(), NULL, typeAccess);
-         }
-      }
+      void loggingDRAM(IntPtr addr, Core::mem_op_t mem_op);
 };
 
 #endif // __DRAM_CNTLR_INTERFACE_H

@@ -133,6 +133,9 @@ class Core
          m_spin_elapsed_time += elapsed_time;
       }
 
+      //[update]
+      UInt64 getCycleCount();
+
    private:
       core_id_t m_core_id;
       const ComponentPeriod* m_dvfs_domain;
@@ -150,6 +153,9 @@ class Core
       State m_core_state;
 
       static Lock m_global_core_lock;
+
+      //[update]
+      SubsecondTimeCycleConverter* subSecTimeCycleConv;
 
       MemoryResult initiateMemoryAccess(
             MemComponent::component_t mem_component,

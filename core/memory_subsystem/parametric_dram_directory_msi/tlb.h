@@ -41,12 +41,12 @@ namespace ParametricDramDirectoryMSI
          {
             this->objectNameDebug = objectNameDebug;
          }
-         void addRequest(IntPtr eip, IntPtr addr)
+         void addRequest(IntPtr eip, IntPtr addr, UInt64 cycleCount)
          {
             if((objectNameDebug!="" && objectNameDebug==name) || objectNameDebug=="")
             {
                totalAccess++;
-               cacheHelper->addRequest(eip,addr,name, &m_cache, true);//its a load; tlb lookup() passes LOAD
+               cacheHelper->addRequest(eip,addr,name, &m_cache, cycleCount, true);//its a load; tlb lookup() passes LOAD
             }
          }
 

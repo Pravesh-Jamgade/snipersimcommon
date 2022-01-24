@@ -14,7 +14,8 @@
 #include "topology_info.h"
 
 #include <algorithm>
-#include "cache_helper.h"
+#include "cache_helper.h"//[update]
+#include "config.h"
 #include "mem_component.h"
 
 #if 0
@@ -284,6 +285,7 @@ MemoryManager::MemoryManager(Core* core,
    }
 
    //[update]
+   cacheHelper.setOutputDir(Sim()->getConfig()->getOutputDirectory());
    // normalizing either controller or cache of dram as dram access only
    String objectNameDebug,configNameDebug;
    // get objectName from configName, set objectName to each mem level. will be use to enbale debug/log
@@ -694,7 +696,7 @@ MemoryManager::accessTLB(TLB * tlb, IntPtr address, bool isIfetch, Core::MemMode
    
    bool hit = tlb->lookup(address, getShmemPerfModel()->getElapsedTime(ShmemPerfModel::_USER_THREAD));
 
-   tlb->addRequest(eip,address);
+   tlb->addRequest(eip,address,getCore()->getCycleCount());
 
    cache_helper::Misc::pathAppend(path, tlb->name);
    cache_helper::Misc::stateAppend(hit, path);

@@ -2421,13 +2421,14 @@ CacheCntlr::loggingLevel(IntPtr addr, Core::mem_op_t mem_op_type, bool isCache)
       cache=getCache();
    if((memLevelDebug!="" && getMemLevelDebug() == name)||memLevelDebug=="")
    {
+      UInt64 cycleCount=getMemoryManager()->getCore()->getCycleCount();
       bool typeAccess = cache_helper::Misc::accessTypeInfo(mem_op_type);
       if(typeAccess)
          stats.totalLoads++;
       else stats.totalStores++;
       
       stats.totalAccess++;
-      cacheHelper->addRequest(eip, addr, name, cache, mem_op_type);
+      cacheHelper->addRequest(eip, addr, name, cache, cycleCount, mem_op_type);
    }
 }
 

@@ -50,3 +50,20 @@ void DramCntlrInterface::handleMsgFromTagDirectory(core_id_t sender, PrL1PrL2Dra
          break;
    }
 }
+
+
+void  DramCntlrInterface::loggingDRAM(IntPtr addr, Core::mem_op_t mem_op)
+{
+   UInt64 cycleCount = getMemoryManager()->getCore()->getCycleCount();
+   if((getMemLevelDebug()!="" && getMemLevelDebug()==getName() ) || getMemLevelDebug()=="")
+   {
+      bool typeAccess = cache_helper::Misc::accessTypeInfo(mem_op);
+
+      if(typeAccess)
+         totalLoads++;
+      else totalStores++;
+
+      totalAccess++;
+      getCacheHelper()->addRequest(eip, addr, getName(), NULL, cycleCount, typeAccess);
+   }
+}

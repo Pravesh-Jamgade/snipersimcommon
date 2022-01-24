@@ -81,6 +81,8 @@ Core::Core(SInt32 id)
    , m_instructions_hpi_callback(0)
    , m_instructions_hpi_last(0)
 {
+   subSecTimeCycleConv = new SubsecondTimeCycleConverter(m_dvfs_domain);
+
    LOG_PRINT("Core ctor for: %d", id);
 
    registerStatsMetric("core", id, "instructions", &m_instructions);
@@ -582,3 +584,6 @@ Core::emulateCpuid(UInt32 eax, UInt32 ecx, cpuid_result_t &res) const
    printf("%08x %08x %08x %08x\n", res.eax, res.ebx, res.ecx, res.edx);
    #endif
 }
+
+UInt64 Core::getCycleCount() { return getPerformanceModel()->getCycleCount();}
+// UInt64 Core::getCycleCountDvfs() { return subSecTimeCycleConv->subsecondTimeToCycles(getElaspedTime()); }
