@@ -99,6 +99,98 @@ class Misc
         String res = p+ space + AppendWithSpace(param...);
         return res;
     }
+
+    static String AccessLocationByPostionBit(SInt8 location)
+    {
+        switch(location)
+        {
+            case 1: return "dram-cntrl";
+            case 2: return "dram-cache";
+            case 4: return "L3";
+            case 8: return "L2";
+            case 16: return "L1-D";
+            case 32: return "L1-I";
+            case 64: return "dtlb";
+            case 128: return "itlb";
+            case 256: return "stlb";
+        }
+        return "*location*";
+    }
+
+    /*
+    Important: will try to store flags or names of memory element in bits access them in following way: to reduce application data
+        bit nuumber        | 10            |                  9|   8|   7|  6|  5| 4| 3|2|1|                 0|
+        bit description    |AccessType(L/S)|AccessLocation(stlb|itlb|dtlb|l1i|l1d|l2|l3|D|D)|AccessStatus(h/m)|
+        # bits used        |        1 bit  |                        8 bit                 |       1 bit       |
+    */
+    
+    static void RetriveFlags(SInt16 data, String& access_status, String& access_type, String& access_location)
+    {   
+       
+        if(data & 1) // checking lsb bit 
+            access_status="h";
+        else 
+            access_status="m";
+        
+        SInt8 location = data>>1 & ((1<<9) - 1); // need middle 9 bits, hence 9 bit mask for finding memory accessed 
+
+        access_location = AccessLocationByPostionBit(location);// getting memory name
+
+        if(data >> 10 & 1) // 11th bit, shift right 10 bits and mask 1 bit
+            access_type = "L";
+        else access_type = "S";
+    }
+
+    static void SetHitFlag(SInt16& data){ data=data|1;} // last lsb bit is h/m bit
+    static void SetAccessTypeFlag(SInt16& data){ data= data | 1<<10; } // last msb bit is L/S bit
+    static void SetAccessLocationFlag(SInt16& data, String name) // from name apply bit mask for that position
+    { 
+        if(name=="stlb")
+        {
+            data=data | 1<<9; 
+        }
+        if(name=="itlb")
+        {
+            data=data | 1<<8; 
+        }
+        if(name=="dtlb")
+        {
+            data=data | 1<<7; 
+        }
+        if(name=="L1-I")
+        {
+            data=data | 1<<6; 
+        }
+        if(name=="L1-D")
+        {
+            data=data | 1<<5; 
+        }
+        if(name=="L2")
+        {
+            data=data | 1<<4; 
+        }
+        if(name=="L3")
+        {
+            data=data | 1<<3; 
+        }
+        if(name=="dram-cache")
+        {
+            data=data | 1<<2; 
+        }
+        if(name=="dram-cntrl")
+        {
+            data=data | 1<<1; 
+        }
+    }
+
+    static void PiggyBackStatus(SInt16& statusBits, String accessLocation, bool accessType, bool accessRes)
+    {
+        if(accessRes)// if hit then we set
+            SetHitFlag(statusBits);
+        if(accessType)// if load then we set
+            SetAccessTypeFlag(statusBits);
+        SetAccessLocationFlag(statusBits, accessLocation); // where access at least come dont bother about h/m
+    }
 };
 
  class DataInfo
@@ -156,10 +248,11 @@ class Access
     String objectName;
     UInt64 cycleCount;
     bool instAccessType;// st=0 ld=1
+    SInt16 piggyBack;
     public:
-    Access(IntPtr eip, IntPtr addr, String objectName, UInt64 cycleCount, bool accessType){
+    Access(IntPtr eip, IntPtr addr, String objectName, UInt64 cycleCount, bool accessType, SInt16 piggyBack){
         this->eip=eip; this->addr=addr; this->objectName=objectName; this->instAccessType=accessType;
-        this->cycleCount=cycleCount;
+        this->cycleCount=cycleCount; this->piggyBack=piggyBack;
     }
 
     String getObjectName(){return objectName;}
@@ -167,6 +260,7 @@ class Access
     bool getAccessType(){return this->instAccessType;}
     IntPtr getAddr(){return this->addr;}
     UInt64 getCycleCount(){return this->cycleCount;}
+    SInt16 getPiggyBack(){return this->piggyBack;}
 };
 
 class CacheHelper
@@ -179,7 +273,7 @@ class CacheHelper
     void writeOutput(){ strideTable.write();}
     void strideTableUpdate();
     void addRequest(Access* access);
-    void addRequest(IntPtr eip, IntPtr addr, String objname, Cache* cache, UInt64 cycleCount, bool accessType);
+    void addRequest(IntPtr eip, IntPtr addr, String objname, Cache* cache, UInt64 cycleCount, bool accessType, SInt16 piggyBack=0);
     std::stack<Access*> getRequestStack(){return this->request;}
     void setOutputDir(String outputDir){ strideTable.setOutputDir(outputDir); }
 };

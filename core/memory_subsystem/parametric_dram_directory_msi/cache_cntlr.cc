@@ -2428,7 +2428,9 @@ CacheCntlr::loggingLevel(IntPtr addr, Core::mem_op_t mem_op_type, bool isCache)
       else stats.totalStores++;
       
       stats.totalAccess++;
-      cacheHelper->addRequest(eip, addr, name, cache, cycleCount, mem_op_type);
+      SInt16 statusBits = 0;
+      cache_helper::Misc::PiggyBackStatus(statusBits, name, typeAccess, false);
+      cacheHelper->addRequest(eip, addr, name, cache, cycleCount, typeAccess, statusBits);
    }
 }
 

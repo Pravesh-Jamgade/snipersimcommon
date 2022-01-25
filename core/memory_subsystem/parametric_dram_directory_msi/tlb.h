@@ -46,7 +46,10 @@ namespace ParametricDramDirectoryMSI
             if((objectNameDebug!="" && objectNameDebug==name) || objectNameDebug=="")
             {
                totalAccess++;
-               cacheHelper->addRequest(eip,addr,name, &m_cache, cycleCount, true);//its a load; tlb lookup() passes LOAD
+               SInt16 statusBits = 0;
+               cache_helper::Misc::PiggyBackStatus(statusBits, name, true, false);
+
+               cacheHelper->addRequest(eip,addr,name, &m_cache, cycleCount, true, statusBits);//its a load; tlb lookup() passes LOAD
             }
          }
 

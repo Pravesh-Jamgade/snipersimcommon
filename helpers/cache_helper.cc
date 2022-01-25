@@ -154,29 +154,26 @@ void StrideTable::lookupAndUpdate(int access_type, IntPtr eip, IntPtr addr, Stri
     }
 }
 
-void CacheHelper::addRequest(IntPtr eip, IntPtr addr, String objname, Cache* cache, UInt64 cycleCount, bool accessType){
+void CacheHelper::addRequest(IntPtr eip, IntPtr addr, String objname, Cache* cache, UInt64 cycleCount, bool accessType, SInt16 piggyBack){
     IntPtr index = eip & 0xfffff; // use lsb 20 bits for indexing, possible all instructions are in few blocks
     IntPtr addrForStride = addr;
 
     //todo: i can take some contant to generate these inforamtion regardless of where access is comming from
-    if(cache==NULL)
-    {
-        // for dram access, i dont know how to mask it yet;
-    }
-    else
-    {
-        // for cache access, i am taking into account cache size, blocksize and calculating indexing information
-        IntPtr tag;
-        UInt32 set_index;
-        UInt32 block_offset;
-        cache->splitAddress(addr, tag, set_index, block_offset);
+    if(cache==NULL){ /*for dram access, i dont know how to mask it yet;*/}
+    else{}
 
-        IntPtr blockBasedStride = addr >> cache->getLogBlockSize() & cache->getBlockMask();
-        IntPtr setBasedStride = addr >> cache->getLogBlockSize() & cache->getSetMask();
+    // for cache access, i am taking into account cache size, blocksize and calculating indexing information
+    IntPtr tag;
+    UInt32 set_index;
+    UInt32 block_offset;
+    cache->splitAddress(addr, tag, set_index, block_offset);
 
-        addrForStride = blockBasedStride;
-    }
-    request.push(new Access(index,addrForStride,objname, cycleCount, accessType));
+    IntPtr forStride = (addr>>6) & ((1<<20) - 1); // using 20 bits from lsb // blockszie is 1<<6, 6bits only;
+    // IntPtr blockBasedStride = >>6 >> cache->getLogBlockSize() & cache->getBlockMask();
+    // IntPtr setBasedStride = addr >> cache->getLogBlockSize() & cache->getSetMask();
+
+    addrForStride = forStride;
+    request.push(new Access(index,addrForStride,objname, cycleCount, accessType, piggyBack));
 }
 void CacheHelper::addRequest(Access* access){request.push(access);}
 
@@ -189,8 +186,7 @@ void CacheHelper::strideTableUpdate()
         char* p=&access->getObjectName()[0];
         strideTable.lookupAndUpdate(access->getAccessType(), access->getEip(), access->getAddr(), 
         access->getObjectName(), access->getCycleCount());
-        std::cout<<access->getAccessType()<<" "<<access->getEip()<<" "<<access->getObjectName()<<" cycle="<<access->getCycleCount()<<std::endl;
-
+        
         delete access;
     }
 }
