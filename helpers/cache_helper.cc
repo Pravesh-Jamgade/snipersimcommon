@@ -1,4 +1,5 @@
 #include "cache_helper.h"
+#include <iomanip>
 
 using namespace cache_helper;
 
@@ -58,12 +59,13 @@ void StrideTable::write()
     }
 
     std::fstream outfile;
+    cycleInfoOutput=outputDirName+cycleInfoOutput;
     outfile.open(cycleInfoOutput.c_str(), std::ios_base::out);
     if(outfile.is_open())
     {
         for(int i=0; i< cycleInfo.size(); i++)
         {
-            outfile << cycleInfo[i] << std::endl;
+           outfile<<cycleInfo[i]<<std::endl;
         }
         outfile.close();
     }
@@ -88,9 +90,8 @@ void StrideTable::lookupAndUpdate(int access_type, IntPtr eip, IntPtr addr, Stri
     ss << std::hex << addr; ss >> haddr; ss.clear();
     ss << std::hex << cycleNumber; ss >> hcycle; ss.clear();
     
-    String cycleInfoOfAccess = Misc::AppendWithSpace(hindex, haddr, hcycle);
-    cycleInfo.push_back(cycleInfoOfAccess);
-    // std::cout<<hindex<<" "<<haddr<<" "<<htag<<" "<<name<<" "<<eip<<std::endl ;
+    String cycleInfoString = Misc::AppendWithSpace(hindex, haddr, hcycle);
+    cycleInfo.push_back(cycleInfoString);
 
     // iteratros
     std::map<String, Add2Data>::iterator it;
@@ -154,7 +155,7 @@ void StrideTable::lookupAndUpdate(int access_type, IntPtr eip, IntPtr addr, Stri
     }
 }
 
-void CacheHelper::addRequest(IntPtr eip, IntPtr addr, String objname, Cache* cache, UInt64 cycleCount, bool accessType){
+void CacheHelper::addRequest(IntPtr eip, IntPtr addr, String objname, Cache* cache, UInt64 cycleCount, bool accessType, bool accessResult){
     IntPtr index = eip & 0xfffff; // use lsb 20 bits for indexing, possible all instructions are in few blocks
     IntPtr addrForStride = addr;
 
@@ -166,17 +167,10 @@ void CacheHelper::addRequest(IntPtr eip, IntPtr addr, String objname, Cache* cac
     else
     {
         // for cache access, i am taking into account cache size, blocksize and calculating indexing information
-        IntPtr tag;
-        UInt32 set_index;
-        UInt32 block_offset;
-        cache->splitAddress(addr, tag, set_index, block_offset);
-
-        IntPtr blockBasedStride = addr >> cache->getLogBlockSize() & cache->getBlockMask();
-        IntPtr setBasedStride = addr >> cache->getLogBlockSize() & cache->getSetMask();
-
-        addrForStride = blockBasedStride;
     }
-    request.push(new Access(index,addrForStride,objname, cycleCount, accessType));
+    IntPtr forStride = addr & 0xfffff;
+
+    request.push(new Access(index, forStride, objname, cycleCount, accessType));
 }
 void CacheHelper::addRequest(Access* access){request.push(access);}
 

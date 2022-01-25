@@ -75,7 +75,7 @@ DramCntlr::getDataFromDram(IntPtr address, core_id_t requester, Byte* data_buf, 
    SubsecondTime dram_access_latency = runDramPerfModel(requester, now, address, READ, perf);
 
    //[update]
-   loggingDRAM(address, Core::READ);
+   loggingDRAM(address, Core::READ, true);
 
    ++m_reads;
    #ifdef ENABLE_DRAM_ACCESS_COUNT
@@ -105,7 +105,7 @@ DramCntlr::putDataToDram(IntPtr address, core_id_t requester, Byte* data_buf, Su
    SubsecondTime dram_access_latency = runDramPerfModel(requester, now, address, WRITE, &m_dummy_shmem_perf);
 
    //[update]
-   loggingDRAM(address, Core::WRITE);
+   loggingDRAM(address, Core::WRITE, true);
 
    ++m_writes;
    #ifdef ENABLE_DRAM_ACCESS_COUNT

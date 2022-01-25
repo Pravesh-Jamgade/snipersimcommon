@@ -138,7 +138,9 @@ class StrideTable
 
     //* eip address cycle#
     std::vector<String> cycleInfo;
-    String cycleInfoOutput;
+    String cycleInfoOutput="/cycleStat.out";
+
+    String outputDirName;
     
     StrideTable() {}
 
@@ -146,8 +148,7 @@ class StrideTable
 
     void lookupAndUpdate(int access_type, IntPtr eip, IntPtr addr, String path, UInt64 cycleNumber);
     void write();
-    void setOutputDir(String outputDir){this->cycleInfoOutput=outputDir+"/cycleStat.out";}
-
+    void setOutputDir(String outputDir){this->outputDirName=outputDir;}
 };
 
 class Access
@@ -179,7 +180,7 @@ class CacheHelper
     void writeOutput(){ strideTable.write();}
     void strideTableUpdate();
     void addRequest(Access* access);
-    void addRequest(IntPtr eip, IntPtr addr, String objname, Cache* cache, UInt64 cycleCount, bool accessType);
+    void addRequest(IntPtr eip, IntPtr addr, String objname, Cache* cache, UInt64 cycleCount, bool accessType, bool accessResult);
     std::stack<Access*> getRequestStack(){return this->request;}
     void setOutputDir(String outputDir){ strideTable.setOutputDir(outputDir); }
 };

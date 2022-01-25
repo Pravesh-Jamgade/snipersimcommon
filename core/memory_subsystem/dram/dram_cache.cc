@@ -83,7 +83,7 @@ DramCache::getDataFromDram(IntPtr address, core_id_t requester, Byte* data_buf, 
    std::pair<bool, SubsecondTime> res = doAccess(Cache::LOAD, address, requester, data_buf, now, perf, eip);
 
    //[update]
-   loggingDRAM(address, Core::READ);
+   loggingDRAM(address, Core::READ, res.first);
 
    if (!res.first)
       ++m_read_misses;
@@ -98,7 +98,7 @@ DramCache::putDataToDram(IntPtr address, core_id_t requester, Byte* data_buf, Su
    std::pair<bool, SubsecondTime> res = doAccess(Cache::STORE, address, requester, data_buf, now, NULL, eip);
 
    //[udpate]
-   loggingDRAM(address, Core::WRITE);
+   loggingDRAM(address, Core::WRITE, res.first);
 
    if (!res.first)
       ++m_write_misses;

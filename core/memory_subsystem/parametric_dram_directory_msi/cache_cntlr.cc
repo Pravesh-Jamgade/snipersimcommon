@@ -390,7 +390,7 @@ LOG_ASSERT_ERROR(offset + data_length <= getCacheBlockSize(), "access until %u >
    bool cache_hit = operationPermissibleinCache(ca_address, mem_op_type, &cache_block_info), prefetch_hit = false;
 
     // if debug level not specified, unlock to log all; or unlock individual level
-   this->loggingLevel(ca_address, mem_op_type);
+   this->loggingLevel(ca_address, mem_op_type, cache_hit);
 
    if (!cache_hit && m_perfect)
    {
@@ -866,7 +866,7 @@ SubsecondTime t_issue, bool have_write_lock, String& path)
 
    //[update]
    if(modeled==count && modeled!=false )
-      this->loggingLevel(address, mem_op_type);
+      this->loggingLevel(address, mem_op_type, cache_hit);
 
    if (!cache_hit && m_perfect)
    {
@@ -1393,7 +1393,7 @@ CacheCntlr::accessCache(
       Core::mem_op_t mem_op_type, IntPtr ca_address, UInt32 offset,
       Byte* data_buf, UInt32 data_length, bool update_replacement, String path)
 {
-   loggingLevel(ca_address,mem_op_type);
+   // loggingLevel(ca_address,mem_op_type);
    switch (mem_op_type)
    {
       case Core::READ:
@@ -2412,7 +2412,7 @@ CacheCntlr::getNetworkThreadSemaphore()
 }
 
 void 
-CacheCntlr::loggingLevel(IntPtr addr, Core::mem_op_t mem_op_type, bool isCache)
+CacheCntlr::loggingLevel(IntPtr addr, Core::mem_op_t mem_op_type, bool accessResult, bool isCache)
 {
    String name = getName();
    IntPtr eip = getEIP();
@@ -2428,7 +2428,7 @@ CacheCntlr::loggingLevel(IntPtr addr, Core::mem_op_t mem_op_type, bool isCache)
       else stats.totalStores++;
       
       stats.totalAccess++;
-      cacheHelper->addRequest(eip, addr, name, cache, cycleCount, mem_op_type);
+      cacheHelper->addRequest(eip, addr, name, cache, cycleCount, typeAccess, accessResult);
    }
 }
 
