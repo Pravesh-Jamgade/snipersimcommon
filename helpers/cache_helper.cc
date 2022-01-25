@@ -74,7 +74,7 @@ void StrideTable::write()
     
 }
 
-void StrideTable::lookupAndUpdate(int access_type, IntPtr eip, IntPtr addr, String path, UInt64 cycleNumber)
+void StrideTable::lookupAndUpdate(int access_type, IntPtr eip, IntPtr addr, String path, UInt64 cycleNumber, bool accessResult)
 {   
     total++;
     // for stride calculation
@@ -90,7 +90,12 @@ void StrideTable::lookupAndUpdate(int access_type, IntPtr eip, IntPtr addr, Stri
     ss << std::hex << addr; ss >> haddr; ss.clear();
     ss << std::hex << cycleNumber; ss >> hcycle; ss.clear();
     
-    String cycleInfoString = Misc::AppendWithSpace(hindex, haddr, hcycle);
+    String accessResStr = "";
+    if(accessResult)
+        accessResStr="H";
+    else accessResult="M";
+
+    String cycleInfoString = Misc::AppendWithSpace(accessResStr, hindex, haddr, hcycle);
     cycleInfo.push_back(cycleInfoString);
 
     // iteratros
@@ -170,7 +175,7 @@ void CacheHelper::addRequest(IntPtr eip, IntPtr addr, String objname, Cache* cac
     }
     IntPtr forStride = addr & 0xfffff;
 
-    request.push(new Access(index, forStride, objname, cycleCount, accessType));
+    request.push(new Access(index, forStride, objname, cycleCount, accessType, accessResult));
 }
 void CacheHelper::addRequest(Access* access){request.push(access);}
 
@@ -182,7 +187,7 @@ void CacheHelper::strideTableUpdate()
         request.pop();
         char* p=&access->getObjectName()[0];
         strideTable.lookupAndUpdate(access->getAccessType(), access->getEip(), access->getAddr(), 
-        access->getObjectName(), access->getCycleCount());
+        access->getObjectName(), access->getCycleCount(), access->getAccessResult());
         std::cout<<access->getAccessType()<<" "<<access->getEip()<<" "<<access->getObjectName()<<" cycle="<<access->getCycleCount()<<std::endl;
 
         delete access;
