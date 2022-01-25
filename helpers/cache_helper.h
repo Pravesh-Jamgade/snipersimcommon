@@ -95,7 +95,7 @@ class Misc
     template<typename P, typename ...Param>
     static String AppendWithSpace(const P &p, const Param& ...param)
     {
-        String space = "\n";
+        String space = "\t";
         String res = p+ space + AppendWithSpace(param...);
         return res;
     }
@@ -137,7 +137,7 @@ class StrideTable
     std::map<String, UInt32> countByName;
 
     //* eip address cycle#
-    std::vector<String> cycleInfo;
+    std::vector<std::vector<String>> cycleInfo;
     String cycleInfoOutput="/cycleStat.out";
 
     String outputDirName;

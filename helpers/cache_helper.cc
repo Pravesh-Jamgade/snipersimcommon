@@ -58,20 +58,38 @@ void StrideTable::write()
         printf("%s = %d\n", p, icn->second);
     }
 
-    std::fstream outfile;
+    // std::fstream outfile;
     cycleInfoOutput=outputDirName+cycleInfoOutput;
-    outfile.open(cycleInfoOutput.c_str(), std::ios_base::out);
-    if(outfile.is_open())
+    // outfile.open(cycleInfoOutput.c_str(), std::ios_base::out);
+    // if(outfile.is_open())
+    // {
+    //     for(int i=0; i< cycleInfo.size(); i++)
+    //     {
+    //        outfile<<cycleInfo[i]<<'\n';
+    //     }
+    //     outfile.close();
+    // }
+    // else std::cout<<"cycleLog.dat is not open"<<'\n';
+    
+    std::FILE* fileForCyleInfo;
+    fileForCyleInfo = fopen(cycleInfoOutput.c_str(), "w");
+    if(fileForCyleInfo==NULL)
     {
-        for(int i=0; i< cycleInfo.size(); i++)
-        {
-           outfile<<cycleInfo[i]<<std::endl;
-        }
-        outfile.close();
+        printf("File couldnot open\n");
+        exit(1);
     }
-    else std::cout<<"cycleLog.dat is not open"<<'\n';
-    
-    
+    for(int i=0; i< cycleInfo.size(); i++)
+    {
+        for(int j=0; j< 3; j++)
+        {
+            String input = cycleInfo[i][j];
+            char* tmp = &input[0];
+            fprintf(fileForCyleInfo, "%10s", tmp);
+        }
+        fprintf(fileForCyleInfo,"\n");
+        
+    }
+
 }
 
 void StrideTable::lookupAndUpdate(int access_type, IntPtr eip, IntPtr addr, String path, UInt64 cycleNumber, bool accessResult)
@@ -81,22 +99,21 @@ void StrideTable::lookupAndUpdate(int access_type, IntPtr eip, IntPtr addr, Stri
     UInt32 tmp = addr;
     UInt32 diff = abs((long)tmp - last);
 
-    // for indexing,
+    String hindex, haddr, hcycle;
+    hcycle = itostr(cycleNumber);
+
     IntPtr index = eip;
 
     std::stringstream ss;
-    String hindex, haddr, hcycle;
     ss << std::hex << index; ss >> hindex; ss.clear();
     ss << std::hex << addr; ss >> haddr; ss.clear();
-    ss << std::hex << cycleNumber; ss >> hcycle; ss.clear();
     
-    String accessResStr = "";
-    if(accessResult)
-        accessResStr="H";
-    else accessResult="M";
+    String accessResStr;
+    if(accessResult){accessResStr="H";}
+    else {accessResStr = "M";}
 
-    String cycleInfoString = Misc::AppendWithSpace(accessResStr, hindex, haddr, hcycle);
-    cycleInfo.push_back(cycleInfoString);
+    cycleInfo.push_back(std::vector<String>{accessResStr, hindex, haddr, hcycle});
+    // std::cout<<hcycle<<"="<<cycleNumber<<std::endl;
 
     // iteratros
     std::map<String, Add2Data>::iterator it;
