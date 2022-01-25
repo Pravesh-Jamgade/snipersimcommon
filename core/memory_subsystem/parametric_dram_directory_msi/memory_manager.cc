@@ -696,7 +696,7 @@ MemoryManager::accessTLB(TLB * tlb, IntPtr address, bool isIfetch, Core::MemMode
    
    bool hit = tlb->lookup(address, getShmemPerfModel()->getElapsedTime(ShmemPerfModel::_USER_THREAD));
 
-   tlb->addRequest(eip,address,getCore()->getCycleCount());
+   tlb->addRequest(eip,address,getCore()->getCycleCount(), hit);
 
    cache_helper::Misc::pathAppend(path, tlb->name);
    cache_helper::Misc::stateAppend(hit, path);

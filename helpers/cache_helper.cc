@@ -1,4 +1,5 @@
 #include "cache_helper.h"
+#include <iomanip>
 
 using namespace cache_helper;
 
@@ -57,40 +58,62 @@ void StrideTable::write()
         printf("%s = %d\n", p, icn->second);
     }
 
-    std::fstream outfile;
-    outfile.open(cycleInfoOutput.c_str(), std::ios_base::out);
-    if(outfile.is_open())
+    // std::fstream outfile;
+    cycleInfoOutput=outputDirName+cycleInfoOutput;
+    // outfile.open(cycleInfoOutput.c_str(), std::ios_base::out);
+    // if(outfile.is_open())
+    // {
+    //     for(int i=0; i< cycleInfo.size(); i++)
+    //     {
+    //        outfile<<cycleInfo[i]<<'\n';
+    //     }
+    //     outfile.close();
+    // }
+    // else std::cout<<"cycleLog.dat is not open"<<'\n';
+    
+    std::FILE* fileForCyleInfo;
+    fileForCyleInfo = fopen(cycleInfoOutput.c_str(), "w");
+    if(fileForCyleInfo==NULL)
     {
-        for(int i=0; i< cycleInfo.size(); i++)
-        {
-            outfile << cycleInfo[i] << std::endl;
-        }
-        outfile.close();
+        printf("File couldnot open\n");
+        exit(1);
     }
-    else std::cout<<"cycleLog.dat is not open"<<'\n';
-    
-    
+    for(int i=0; i< cycleInfo.size(); i++)
+    {
+        for(int j=0; j< 3; j++)
+        {
+            String input = cycleInfo[i][j];
+            char* tmp = &input[0];
+            fprintf(fileForCyleInfo, "%10s", tmp);
+        }
+        fprintf(fileForCyleInfo,"\n");
+        
+    }
+
 }
 
-void StrideTable::lookupAndUpdate(int access_type, IntPtr eip, IntPtr addr, String path, UInt64 cycleNumber)
+void StrideTable::lookupAndUpdate(int access_type, IntPtr eip, IntPtr addr, String path, UInt64 cycleNumber, bool accessResult)
 {   
     total++;
     // for stride calculation
     UInt32 tmp = addr;
     UInt32 diff = abs((long)tmp - last);
 
-    // for indexing,
+    String hindex, haddr, hcycle;
+    hcycle = itostr(cycleNumber);
+
     IntPtr index = eip;
 
     std::stringstream ss;
-    String hindex, haddr, hcycle;
     ss << std::hex << index; ss >> hindex; ss.clear();
     ss << std::hex << addr; ss >> haddr; ss.clear();
-    ss << cycleNumber; ss >> hcycle; ss.clear();
     
-    String cycleInfoOfAccess = Misc::AppendWithSpace(hindex, haddr, hcycle);
-    cycleInfo.push_back(cycleInfoOfAccess);
-    // std::cout<<hindex<<" "<<haddr<<" "<<htag<<" "<<name<<" "<<eip<<std::endl ;
+    String accessResStr;
+    if(accessResult){accessResStr="H";}
+    else {accessResStr = "M";}
+
+    cycleInfo.push_back(std::vector<String>{accessResStr, hindex, haddr, hcycle});
+    // std::cout<<hcycle<<"="<<cycleNumber<<std::endl;
 
     // iteratros
     std::map<String, Add2Data>::iterator it;
@@ -154,7 +177,7 @@ void StrideTable::lookupAndUpdate(int access_type, IntPtr eip, IntPtr addr, Stri
     }
 }
 
-void CacheHelper::addRequest(IntPtr eip, IntPtr addr, String objname, Cache* cache, UInt64 cycleCount, bool accessType){
+void CacheHelper::addRequest(IntPtr eip, IntPtr addr, String objname, Cache* cache, UInt64 cycleCount, bool accessType, bool accessResult){
     IntPtr index = eip & 0xfffff; // use lsb 20 bits for indexing, possible all instructions are in few blocks
     IntPtr addrForStride = addr;
 
@@ -165,19 +188,11 @@ void CacheHelper::addRequest(IntPtr eip, IntPtr addr, String objname, Cache* cac
     }
     else
     {
-        // // for cache access, i am taking into account cache size, blocksize and calculating indexing information
-        // IntPtr tag;
-        // UInt32 set_index;
-        // UInt32 block_offset;
-        // cache->splitAddress(addr, tag, set_index, block_offset);
-
-        // IntPtr blockBasedStride = addr >> cache->getLogBlockSize() & cache->getBlockMask();
-        // IntPtr setBasedStride = addr >> cache->getLogBlockSize() & cache->getSetMask();
-
-        // addrForStride = blockBasedStride;
+        // for cache access, i am taking into account cache size, blocksize and calculating indexing information
     }
-    addrForStride = addr & ((1<<20)-1);
-    request.push(new Access(index,addrForStride,objname, cycleCount, accessType));
+    IntPtr forStride = addr & 0xfffff;
+
+    request.push(new Access(index, forStride, objname, cycleCount, accessType, accessResult));
 }
 void CacheHelper::addRequest(Access* access){request.push(access);}
 
@@ -189,7 +204,7 @@ void CacheHelper::strideTableUpdate()
         request.pop();
         char* p=&access->getObjectName()[0];
         strideTable.lookupAndUpdate(access->getAccessType(), access->getEip(), access->getAddr(), 
-        access->getObjectName(), access->getCycleCount());
+        access->getObjectName(), access->getCycleCount(), access->getAccessResult());
         std::cout<<access->getAccessType()<<" "<<access->getEip()<<" "<<access->getObjectName()<<" cycle="<<access->getCycleCount()<<std::endl;
 
         delete access;

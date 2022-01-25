@@ -462,7 +462,7 @@ namespace ParametricDramDirectoryMSI
             return this->eip;
          }
          
-         void loggingLevel(IntPtr addr, Core::mem_op_t mem_op_type, bool isCache=true);
+         void loggingLevel(IntPtr addr, Core::mem_op_t mem_op_type, bool accessResult, bool isCache=true);
    };
 
 }

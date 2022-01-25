@@ -95,7 +95,7 @@ class Misc
     template<typename P, typename ...Param>
     static String AppendWithSpace(const P &p, const Param& ...param)
     {
-        String space = " ";
+        String space = "\t";
         String res = p+ space + AppendWithSpace(param...);
         return res;
     }
@@ -137,17 +137,18 @@ class StrideTable
     std::map<String, UInt32> countByName;
 
     //* eip address cycle#
-    std::vector<String> cycleInfo;
-    String cycleInfoOutput;
+    std::vector<std::vector<String>> cycleInfo;
+    String cycleInfoOutput="/cycleStat.out";
+
+    String outputDirName;
     
     StrideTable() {}
 
     ~StrideTable() {}
 
-    void lookupAndUpdate(int access_type, IntPtr eip, IntPtr addr, String path, UInt64 cycleNumber);
+    void lookupAndUpdate(int access_type, IntPtr eip, IntPtr addr, String path, UInt64 cycleNumber, bool accessResult);
     void write();
-    void setOutputDir(String outputDir){this->cycleInfoOutput=outputDir+"/cycleStat.out";}
-
+    void setOutputDir(String outputDir){this->outputDirName=outputDir;}
 };
 
 class Access
@@ -156,10 +157,11 @@ class Access
     String objectName;
     UInt64 cycleCount;
     bool instAccessType;// st=0 ld=1
+    bool accessResult;
     public:
-    Access(IntPtr eip, IntPtr addr, String objectName, UInt64 cycleCount, bool accessType){
+    Access(IntPtr eip, IntPtr addr, String objectName, UInt64 cycleCount, bool accessType, bool accessResult){
         this->eip=eip; this->addr=addr; this->objectName=objectName; this->instAccessType=accessType;
-        this->cycleCount=cycleCount;
+        this->cycleCount=cycleCount; this->accessResult=accessResult;
     }
 
     String getObjectName(){return objectName;}
@@ -167,6 +169,7 @@ class Access
     bool getAccessType(){return this->instAccessType;}
     IntPtr getAddr(){return this->addr;}
     UInt64 getCycleCount(){return this->cycleCount;}
+    bool getAccessResult(){return this->accessResult;}
 };
 
 class CacheHelper
@@ -179,7 +182,7 @@ class CacheHelper
     void writeOutput(){ strideTable.write();}
     void strideTableUpdate();
     void addRequest(Access* access);
-    void addRequest(IntPtr eip, IntPtr addr, String objname, Cache* cache, UInt64 cycleCount, bool accessType);
+    void addRequest(IntPtr eip, IntPtr addr, String objname, Cache* cache, UInt64 cycleCount, bool accessType, bool accessResult);
     std::stack<Access*> getRequestStack(){return this->request;}
     void setOutputDir(String outputDir){ strideTable.setOutputDir(outputDir); }
 };

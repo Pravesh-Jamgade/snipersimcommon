@@ -69,7 +69,7 @@ class DramCntlrInterface
       void setMemLevelDebug(String objectDebugName){this->memLevelDebug=objectDebugName;}
       String getMemLevelDebug(){return this->memLevelDebug;}
 
-      void loggingDRAM(IntPtr addr, Core::mem_op_t mem_op);
+      void loggingDRAM(IntPtr addr, Core::mem_op_t mem_op, bool accessResult);
 };
 
 #endif // __DRAM_CNTLR_INTERFACE_H
