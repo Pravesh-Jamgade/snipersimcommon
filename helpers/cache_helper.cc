@@ -86,7 +86,7 @@ void StrideTable::lookupAndUpdate(int access_type, IntPtr eip, IntPtr addr, Stri
     String hindex, haddr, hcycle;
     ss << std::hex << index; ss >> hindex; ss.clear();
     ss << std::hex << addr; ss >> haddr; ss.clear();
-    ss << std::hex << cycleNumber; ss >> hcycle; ss.clear();
+    ss << cycleNumber; ss >> hcycle; ss.clear();
     
     String cycleInfoOfAccess = Misc::AppendWithSpace(hindex, haddr, hcycle);
     cycleInfo.push_back(cycleInfoOfAccess);
@@ -165,17 +165,18 @@ void CacheHelper::addRequest(IntPtr eip, IntPtr addr, String objname, Cache* cac
     }
     else
     {
-        // for cache access, i am taking into account cache size, blocksize and calculating indexing information
-        IntPtr tag;
-        UInt32 set_index;
-        UInt32 block_offset;
-        cache->splitAddress(addr, tag, set_index, block_offset);
+        // // for cache access, i am taking into account cache size, blocksize and calculating indexing information
+        // IntPtr tag;
+        // UInt32 set_index;
+        // UInt32 block_offset;
+        // cache->splitAddress(addr, tag, set_index, block_offset);
 
-        IntPtr blockBasedStride = addr >> cache->getLogBlockSize() & cache->getBlockMask();
-        IntPtr setBasedStride = addr >> cache->getLogBlockSize() & cache->getSetMask();
+        // IntPtr blockBasedStride = addr >> cache->getLogBlockSize() & cache->getBlockMask();
+        // IntPtr setBasedStride = addr >> cache->getLogBlockSize() & cache->getSetMask();
 
-        addrForStride = blockBasedStride;
+        // addrForStride = blockBasedStride;
     }
+    addrForStride = addr & ((1<<20)-1);
     request.push(new Access(index,addrForStride,objname, cycleCount, accessType));
 }
 void CacheHelper::addRequest(Access* access){request.push(access);}
