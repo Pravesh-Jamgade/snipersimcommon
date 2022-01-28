@@ -95,7 +95,7 @@ class Misc
     template<typename P, typename ...Param>
     static String AppendWithSpace(const P &p, const Param& ...param)
     {
-        String space = "\t";
+        String space = " ";
         String res = p+ space + AppendWithSpace(param...);
         return res;
     }
@@ -128,7 +128,7 @@ class StrideTable
 
     UInt32 last=0;
 
-    UInt32 total, reeip, readdr;
+    UInt32 total=0,reeip=0,readdr=0;
 
     //* path(aka name of structure) to  requested address
     std::map<String, std::set<String>> path2haddrStorage;
@@ -137,7 +137,7 @@ class StrideTable
     std::map<String, UInt32> countByName;
 
     //* eip address cycle#
-    std::vector<std::vector<String>> cycleInfo;
+    std::vector<String> cycleInfo;
     String cycleInfoOutput="/cycleStat.out";
 
     String outputDirName;
