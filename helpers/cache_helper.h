@@ -14,6 +14,7 @@
         #include <unistd.h>
         #include<stack>
         #include<vector>
+        #include <memory>
 
 namespace cache_helper
 {   
@@ -101,17 +102,69 @@ class Misc
     }
 };
 
+class StrideOrder
+{
+    String address;
+    uint32_t count;
+    public:
+    StrideOrder(String addr):address(addr), count(0){} 
+
+    bool operator==(StrideOrder pre) {return address==pre.address;}
+    void incrCount() {count++;}
+    String getAddress(){return address;}
+    uint32_t getAddrCount(){return count;}
+};
+
+class StrideCluster
+{
+    std::set<String> strideList;//tracks only stride
+    std::vector<StrideOrder> strideOrderList;//tracks addresses responsible for stride
+    IntPtr lastSeenAddr=0;//tracks last seen address
+    public:
+    StrideCluster(){}
+    StrideCluster(IntPtr initAddr){ 
+        String initAddrStr = itostr(initAddr);
+        strideList.insert(initAddrStr); //stride from incoming address
+        StrideOrder newStrideOrderElement(initAddrStr); // create new strideOrder and track it
+        strideOrderList.push_back(newStrideOrderElement);//incoming address order
+        lastSeenAddr=initAddr; 
+    }
+    ~StrideCluster(){};
+    
+    IntPtr getLastSeenAddr() { return this->lastSeenAddr;}
+    void setStride(IntPtr newAddr) { 
+        IntPtr diff = newAddr-lastSeenAddr;
+        if(diff<0)
+            diff=-1*diff; 
+        
+        lastSeenAddr=newAddr;
+
+        String diffStr = itostr(diff);
+        strideList.insert(diffStr); 
+
+        StrideOrder newstrideOrderElement(itostr(newAddr));
+        if(newstrideOrderElement==strideOrderList.back()){
+            strideOrderList.back().incrCount();
+            return;}//if prev strideorder == newstrideorder skip, otherwise track
+        strideOrderList.push_back(newstrideOrderElement);
+    }
+    std::set<String> getStrideList(){return strideList;}
+    std::vector<StrideOrder> getStrideOrder(){return strideOrderList;}
+};
+
  class DataInfo
 {
+    UInt32 typeCount[2] = {0};
+    UInt32 total_access;
+
     public:
-    DataInfo(bool access_type, uint32_t stride){
+    DataInfo(bool access_type){
         this->typeCount[access_type]+=1;
-        this->stride.insert(stride);
         this->total_access=1;
     }
-    uint32_t typeCount[2] = {0};
-    std::set<uint32_t> stride;
-    UInt32 total_access;
+    void incrTotalCount(){total_access++;}
+    void incrTypeCount(int accessType){typeCount[accessType]+=1;}
+    UInt32 getCount(int type){ if(type<0){return total_access;}else{return typeCount[type];} }
 };
 
 class StrideTable
@@ -126,19 +179,23 @@ class StrideTable
     //* eip to access info
     std::map<String, Add2Data> table;
 
+    //
+    std::map<String, StrideCluster> strideClusterInfo;
+
     UInt32 last=0;
 
     UInt32 total=0,reeip=0,readdr=0;
 
     //* path(aka name of structure) to  requested address
-    std::map<String, std::set<String>> path2haddrStorage;
+    std::map<String, std::set<String>> path2haddrStorageInfo;
 
     // path(ake name of structure) to count of requested addresses
-    std::map<String, UInt32> countByName;
+    std::map<String, UInt32> countByNameInfo;
 
     //* eip address cycle#
     std::vector<String> cycleInfo;
     String cycleInfoOutput="/cycleStat.out";
+    String strideAddrOrderOutput="/strideOrderStat.out";
 
     String outputDirName;
     
