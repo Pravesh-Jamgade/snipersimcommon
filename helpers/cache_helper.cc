@@ -101,6 +101,52 @@ void StrideTable::write()
         }
         outfile.close();
     }
+
+    //for eip nodes
+    String eipNodesInfo = "/eipnodes.csv";
+    String addNodesInfo = "/addrnodes.csv";
+    String edgesInfo = "/edges.csv";
+    String eipFreqInfo = "/EipFrequency.csv"; //use eipFreq
+
+    String eipNodesFilePath=outputDirName+eipNodesInfo;
+    String addrNodesFilePath=outputDirName+addNodesInfo;
+    String edgesFilePath=outputDirName+edgesInfo;
+    String eipFreqFilePath=outputDirName+eipFreqInfo;
+
+    std::fstream eipNodesFile, edgesFile, addNodesFile, eipFreqFile;
+
+    eipNodesFile.open(eipNodesFilePath.c_str(), std::ios_base::out);
+    addNodesFile.open(addrNodesFilePath.c_str(), std::ios_base::out);
+    edgesFile.open(edgesFilePath.c_str(), std::ios_base::out);
+    eipFreqFile.open(eipFreqFilePath.c_str(), std::ios_base::out);
+
+    std::set<String> seenBefore;
+    if(eipNodesFile.is_open() && edgesFile.is_open() && addNodesFile.is_open() && eipFreqFile.is_open())
+    {
+        eipNodesFile<<"EIP\n";
+        addNodesFile<<"ADDRESS\n";
+        edgesFile<<"EIP,ADDRESS\n";
+        std::map<String, Add2Data>::iterator pit = table.begin();// iterator on eip add2data
+        for(;pit!=table.end();pit++)
+        {
+            eipNodesFile<<pit->first<<'\n';
+            Add2Data add2data = pit->second;
+            Add2Data::iterator qit = add2data.begin();
+            for(;qit!=add2data.end();qit++)
+            {
+                addNodesFile<<qit->first<<'\n';
+                edgesFile<<pit->first<<','<<qit->first<<'\n';
+            }
+        }
+        /*eipFrequency output*/
+        std::map<String, UInt64>::iterator it = eipFreq.begin();
+        eipFreqFile<<"EIP"<<","<<"Frquency\n";
+        for(;it!=eipFreq.end();it++)
+        {
+            eipFreqFile<<it->first<<","<<it->second<<'\n';
+        }
+    }
+    eipNodesFile.close(); edgesFile.close(); addNodesFile.close(); eipFreqFile.close();
 }
 
 void StrideTable::lookupAndUpdate(int access_type, IntPtr eip, IntPtr addr, String path, UInt64 cycleNumber, 
@@ -140,6 +186,8 @@ bool accessResult)
     {
         reeip++;
 
+        eipFreq[hindex]++;
+
         // get accessinfo for correspnding eip
         Add2Data *add2data = &tableIt->second;
 
@@ -170,13 +218,14 @@ bool accessResult)
             std::cout<<"EIP is not here\n";
             exit(0);
         }
-        strideIt->second.setStride(addr);
+        strideIt->second.setStride(addr,haddr);
     }
     else
     {
-        StrideCluster strideCluster(addr);
+        StrideCluster strideCluster(addr,haddr);
         strideClusterInfo[hindex]= strideCluster;
         table[hindex][haddr]=new DataInfo(access_type);
+        eipFreq[hindex]=1;
     }
 
     std::map<String, UInt32>::iterator icn = countByNameInfo.find(path);

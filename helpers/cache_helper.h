@@ -107,7 +107,7 @@ class StrideOrder
     String address;
     uint32_t count;
     public:
-    StrideOrder(String addr):address(addr), count(0){} 
+    StrideOrder(String addr):address(addr), count(1){} 
 
     bool operator==(StrideOrder pre) {return address==pre.address;}
     void incrCount() {count++;}
@@ -115,24 +115,26 @@ class StrideOrder
     uint32_t getAddrCount(){return count;}
 };
 
+/*Data regarding access pattern of particular eip, stroes stride seen by eip on behalf of addresses,
+ (StrideOrder) access order of addresses and times the address has been accessed*/
 class StrideCluster
 {
     std::set<String> strideList;//tracks only stride
     std::vector<StrideOrder> strideOrderList;//tracks addresses responsible for stride
-    IntPtr lastSeenAddr=0;//tracks last seen address
+    IntPtr lastSeenAddr=0;//tracks last seen address, to calculate stride for next access
     public:
     StrideCluster(){}
-    StrideCluster(IntPtr initAddr){ 
+    StrideCluster(IntPtr initAddr, String haddr){ 
         String initAddrStr = itostr(initAddr);
         strideList.insert(initAddrStr); //stride from incoming address
-        StrideOrder newStrideOrderElement(initAddrStr); // create new strideOrder and track it
+        StrideOrder newStrideOrderElement(haddr); // create new strideOrder and track it, in hex form
         strideOrderList.push_back(newStrideOrderElement);//incoming address order
         lastSeenAddr=initAddr; 
     }
     ~StrideCluster(){};
     
     IntPtr getLastSeenAddr() { return this->lastSeenAddr;}
-    void setStride(IntPtr newAddr) { 
+    void setStride(IntPtr newAddr, String haddr) { 
         IntPtr diff = newAddr-lastSeenAddr;
         if(diff<0)
             diff=-1*diff; 
@@ -142,7 +144,7 @@ class StrideCluster
         String diffStr = itostr(diff);
         strideList.insert(diffStr); 
 
-        StrideOrder newstrideOrderElement(itostr(newAddr));
+        StrideOrder newstrideOrderElement(haddr);
         if(newstrideOrderElement==strideOrderList.back()){
             strideOrderList.back().incrCount();
             return;}//if prev strideorder == newstrideorder skip, otherwise track
@@ -181,6 +183,8 @@ class StrideTable
 
     //
     std::map<String, StrideCluster> strideClusterInfo;
+
+    std::map<String, UInt64> eipFreq; // eip  frequcny
 
     UInt32 last=0;
 
