@@ -102,6 +102,19 @@ class Misc
     }
 };
 
+class Count
+{
+    uint count;
+    int cluster;
+    public:
+    Count(){this->count=1; this->cluster=-1;}
+    void incrCount(){count++;}
+    uint getCount(){return count;}
+    void setCount(uint count){this->count+=count;}
+    void setCluster(int cluster){this->cluster=cluster;}
+    int getCluster(){return this->cluster;}
+};
+
 class StrideOrder
 {
     String address;
@@ -175,6 +188,14 @@ class StrideTable
 
     // ******accessinfo********
 
+     //output files names
+    String eipNodesInfo = "/eipnodes.csv";
+    String addNodesInfo = "/addrnodes.csv";
+    String edgesInfo = "/edges.csv";
+    String eipFreqInfo = "/EipFrequency.csv"; //use eipFreq
+    String addFreFileInfo = "/AddrFrequency.csv";
+    String addrClusterFileInfo = "/AddrCluster.csv";
+
     // addr to datainfo
     typedef std::map<String, DataInfo*> Add2Data;
 
@@ -183,8 +204,6 @@ class StrideTable
 
     //
     std::map<String, StrideCluster> strideClusterInfo;
-
-    std::map<String, UInt64> eipFreq; // eip  frequcny
 
     UInt32 last=0;
 
@@ -236,16 +255,24 @@ class Access
 class CacheHelper
 {
     std::stack<Access*> request;
-    StrideTable strideTable;
+    StrideTable *strideTable = new StrideTable();
     bool memAccessType;// cache=0 dram=1
    
     public:
-    void writeOutput(){ strideTable.write();}
+    CacheHelper(){}
+    ~CacheHelper(){delete strideTable;}
+    void writeOutput(){ strideTable->write();}
     void strideTableUpdate();
     void addRequest(Access* access);
     void addRequest(IntPtr eip, IntPtr addr, String objname, Cache* cache, UInt64 cycleCount, bool accessType, bool accessResult);
     std::stack<Access*> getRequestStack(){return this->request;}
-    void setOutputDir(String outputDir){ strideTable.setOutputDir(outputDir); }
+    void setOutputDir(String outputDir){
+        if(strideTable==NULL)
+        {
+            printf("nUll error");
+            exit(0);
+        }
+         strideTable->setOutputDir(outputDir); }
 };
 
 };
