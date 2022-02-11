@@ -71,6 +71,7 @@ void StrideTable::write()
     /*output, cycle wise complete run: L/S, H/M, EIP, ADDRESS, CYCLE#*/
     std::fstream outfile;
     cycleInfoOutput=outputDirName+cycleInfoOutput;
+    printf("file:%s\n", cycleInfoOutput.c_str());
     outfile.open(cycleInfoOutput.c_str(), std::ios_base::out);
     if(outfile.is_open())
     {
