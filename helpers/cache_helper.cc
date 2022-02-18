@@ -6,6 +6,14 @@ using namespace cache_helper;
 
 void StrideTable::write()
 {
+    std::fstream pcBasedClusterFile, pcBasedClusterStrideFile;
+    String pcBasedClusterFilePath=outputDirName+pcBasedCluster;
+    String pcBasedClusterStrideFilePath=outputDirName+pcBasedClusterStride;
+    pcBasedClusterFile.open(pcBasedClusterFilePath.c_str(), std::ios_base::app);
+    pcBasedClusterStrideFile.open(pcBasedClusterStrideFilePath.c_str(), std::ios_base::app);
+    pcBasedClusterFile<<"pc,address,count\n";
+    pcBasedClusterStrideFile<<"pc,stride\n";
+   
     std::map<String, Add2Data>::iterator pit = table.begin();// iterator on eip add2data
     std::set<String>::iterator sit; // iterator on set of stride from StrideCluster
     std::map<String, StrideCluster>::iterator rit;
@@ -23,6 +31,7 @@ void StrideTable::write()
                     DataInfo* dataInfo = qit->second;
                     _LOG_PRINT_CUSTOM(Log::Warning, "EIP=%s,ADDR=%s,LD=%ld,ST=%ld, T=%ld\n",
                     pit->first.c_str(), qit->first.c_str(), dataInfo->getCount(1), dataInfo->getCount(0), dataInfo->getCount(-1));
+                    pcBasedClusterFile<<pit->first.c_str()<<","<<qit->first.c_str()<<","<<dataInfo->getCount(-1)<<'\n';
                 }
         }
         _LOG_PRINT_CUSTOM(Log::Warning, "EIP=%s STRIDE=[", pit->first.c_str());
@@ -36,11 +45,16 @@ void StrideTable::write()
                 // _LOG_PRINT(Log::Warning, "%ld, ",dataInfo->stride[i]);
                 const char* p = &(*sit)[0];
                 _LOG_PRINT_CUSTOM(Log::Warning, "%s, ", p);
+
+                pcBasedClusterStrideFile<<pit->first<<","<<p<<'\n';
             }
             // _LOG_PRINT(Log::Warning, "load=%ld store=%ld",dataInfo->typeCount[1], dataInfo->typeCount[0]);
         }
         _LOG_PRINT_CUSTOM(Log::Warning, "]\n");
     }
+
+    pcBasedClusterFile.close();
+    pcBasedClusterStrideFile.close();
 
     _LOG_PRINT_CUSTOM(Log::Warning, "*********************************PATH-2-ADDRESSES*******************************\n");
 
@@ -72,12 +86,13 @@ void StrideTable::write()
     std::fstream outfile;
     cycleInfoOutput=outputDirName+cycleInfoOutput;
     printf("file:%s\n", cycleInfoOutput.c_str());
-    outfile.open(cycleInfoOutput.c_str(), std::ios_base::out);
+    outfile.open(cycleInfoOutput.c_str(), std::ios_base::app);
     if(outfile.is_open())
     {
+        outfile<<"type,status,object,pc,address,cycle\n";
         for(int i=0; i< cycleInfo.size(); i++)//cycleInfo is a vector
         {
-           outfile<<cycleInfo[i]<<'\n';
+            outfile<<cycleInfo[i][0]<<","<<cycleInfo[i][1]<<","<<cycleInfo[i][2]<<","<<cycleInfo[i][3]<<","<<cycleInfo[i][4]<<","<<cycleInfo[i][5]<<'\n';
         }
         outfile.close();
     }
@@ -89,7 +104,7 @@ void StrideTable::write()
 
     /*output, stride order followed on particular EIP: EIP, ORDER[address (access_count),...]*/
     strideAddrOrderOutput=outputDirName+strideAddrOrderOutput;
-    outfile.open(strideAddrOrderOutput.c_str(), std::ios_base::out);
+    outfile.open(strideAddrOrderOutput.c_str(), std::ios_base::app);
     if(outfile.is_open())
     {
         rit = strideClusterInfo.begin();//eip to StrideCluster
@@ -136,26 +151,32 @@ void StrideTable::write()
     String eipFreqFilePath=outputDirName+eipFreqInfo;
     String addrFreqFilePath=outputDirName+addFreFileInfo;
     String addrClusterFilePath=outputDirName+addrClusterFileInfo;
+    String addrClusterFile_csvPath=outputDirName+addrClusterFileInfo_csv;
 
     // filestream objects
-    std::fstream eipNodesFile, edgesFile, addrNodesFile, eipFreqFile, addrFreFile, addrClusterFile;
+    std::fstream eipNodesFile, edgesFile, addrNodesFile, eipFreqFile, 
+    addrFreFile, addrClusterFile, addrClusterFile_csv;
+    
     // open files
-    eipNodesFile.open(eipNodesFilePath.c_str(), std::ios_base::out);
-    addrNodesFile.open(addrNodesFilePath.c_str(), std::ios_base::out);
-    edgesFile.open(edgesFilePath.c_str(), std::ios_base::out);
-    eipFreqFile.open(eipFreqFilePath.c_str(), std::ios_base::out);
-    addrFreFile.open(addrFreqFilePath.c_str(), std::ios_base::out);
-    addrClusterFile.open(addrClusterFilePath.c_str(), std::ios_base::out);
+    eipNodesFile.open(eipNodesFilePath.c_str(), std::ios_base::app);
+    addrNodesFile.open(addrNodesFilePath.c_str(), std::ios_base::app);
+    edgesFile.open(edgesFilePath.c_str(), std::ios_base::app);
+    eipFreqFile.open(eipFreqFilePath.c_str(), std::ios_base::app);
+    addrFreFile.open(addrFreqFilePath.c_str(), std::ios_base::app);
+    addrClusterFile.open(addrClusterFilePath.c_str(), std::ios_base::app);
+    addrClusterFile_csv.open(addrClusterFile_csvPath.c_str(), std::ios_base::app);
 
     // eip frequency
     std::map<String, Count>::iterator eipFreIt = uniqueEIP.begin();
-    eipFreqFile<<"EIP,Frequency\n";
+    eipFreqFile<<"pc,frequency\n";
     for(;eipFreIt!=uniqueEIP.end(); eipFreIt++)
     {
         eipFreqFile<<eipFreIt->first<<","<<eipFreIt->second.getCount()<<"\n";
         //eip nodes
         eipNodesFile<<eipFreIt->first<<"\n";
     }
+    eipNodesFile.close();
+    eipFreqFile.close();
 
     // address frequency
     std::map<String, Count>::iterator addrFreIt;
@@ -187,7 +208,7 @@ void StrideTable::write()
         diff = next_addInt - addInt;
         if(diff<0)
             diff=-1*diff;
-        std::cout<<addr<<"="<<addInt<<","<<next_addr<<"="<<next_addInt<<","<<prev<<","<<diff<<'\n';
+        // std::cout<<addr<<"="<<addInt<<","<<next_addr<<"="<<next_addInt<<","<<prev<<","<<diff<<'\n';
 
         if(prev==-1){
             prev=diff;
@@ -213,7 +234,6 @@ void StrideTable::write()
             bag.push_back(addr);
     }
 
-    std::cout<<"cluster size="<<clusters.size()<<'\n';
     std::map<String, Count>::iterator vvcit;
     for(int i=0; i< clusters.size(); i++)
     {
@@ -227,6 +247,7 @@ void StrideTable::write()
         }
     }
     
+    addrClusterFile_csv<<"clusterNo,address\n";
     for(int i=0; i< clusters.size(); i++)
     {
         addrClusterFile<<i<<" [";
@@ -238,11 +259,14 @@ void StrideTable::write()
                 vvcit->second.setCluster(i);
             }
             addrClusterFile<<clusters[i][j]<<"  ";
+            addrClusterFile_csv<<i<<","<<clusters[i][j]<<'\n';
         }
         addrClusterFile<<"]\n";
     }
+    addrClusterFile.close();
+    addrClusterFile_csv.close();
 
-    addrFreFile<<"Address,Frequency,Cluster#,ClusterSize\n";
+    addrFreFile<<"address,frequency,clusterNo,clusterSize\n";
     for(addrFreIt = uniqueAddr.begin(); addrFreIt!=uniqueAddr.end(); addrFreIt++)
     {
         int clusterNumber = addrFreIt->second.getCluster();
@@ -251,21 +275,17 @@ void StrideTable::write()
         //addr nodes
         addrNodesFile<<addrFreIt->first<<"\n";
     }
+    addrNodesFile.close();
+    addrFreFile.close();
 
     // edge
     std::map<String, String>::iterator edgeIt = uniqueEdgePair.begin();
-    edgesFile<<"EIP,Address\n";
+    edgesFile<<"pc,address\n";
     for(; edgeIt!=uniqueEdgePair.end(); edgeIt++)
     {
         edgesFile<<edgeIt->first<<","<<edgeIt->second<<"\n";
     }
-
-    // close all files
     edgesFile.close(); 
-    addrNodesFile.close();
-    eipNodesFile.close();
-    addrFreFile.close();
-    eipFreqFile.close(); 
 
 }
 
@@ -288,8 +308,8 @@ bool accessResult)
     else {accessResStr = "M";}
 
     String accessTypeStr = access_type==1?"L":"S";
-    String cycleInfoString = Misc::AppendWithSpace(accessTypeStr, accessResStr, path, hindex, haddr, hcycle);
-    cycleInfo.push_back(cycleInfoString);
+    // String cycleInfoString = Misc::AppendWithSpace(accessTypeStr, accessResStr, path, hindex, haddr, hcycle);
+    cycleInfo.push_back({accessTypeStr,accessResStr,path,hindex,haddr,hcycle});
 
     // iteratros
     std::map<String, Add2Data>::iterator tableIt;
