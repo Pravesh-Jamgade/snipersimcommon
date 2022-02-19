@@ -387,7 +387,7 @@ void CacheHelper::addRequest(IntPtr eip, IntPtr addr, String objname, Cache* cac
     {
         // for cache access, i am taking into account cache size, blocksize and calculating indexing information
     }
-    IntPtr forStride = addr;
+    IntPtr forStride = addr >> 6;
 
     request.push(new Access(index, forStride, objname, cycleCount, accessType, accessResult));
 }
