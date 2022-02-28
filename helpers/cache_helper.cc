@@ -11,11 +11,11 @@ void StrideTable::write()
     String pcBasedClusterStrideFilePath=outputDirName+pcBasedClusterStride;
     pcBasedClusterFile.open(pcBasedClusterFilePath.c_str(), std::ios_base::app);
     pcBasedClusterStrideFile.open(pcBasedClusterStrideFilePath.c_str(), std::ios_base::app);
-    pcBasedClusterFile<<"pc,address,count\n";
-    pcBasedClusterStrideFile<<"pc,stride\n";
+    pcBasedClusterFile<<"pc,address,count,core\n";
+    pcBasedClusterStrideFile<<"pc,stride,stride-fre,core\n";
    
     std::map<String, Add2Data>::iterator pit = table.begin();// iterator on eip add2data
-    std::set<String>::iterator sit; // iterator on set of stride from StrideCluster
+    std::map<String,StrideInfo>::iterator sit; // iterator on set of stride from StrideCluster
     std::map<String, StrideCluster>::iterator rit;
     std::vector<StrideOrder>::iterator strideOrderVecIt;
 
@@ -31,22 +31,21 @@ void StrideTable::write()
                     DataInfo* dataInfo = qit->second;
                     _LOG_PRINT_CUSTOM(Log::Warning, "EIP=%s,ADDR=%s,LD=%ld,ST=%ld, T=%ld\n",
                     pit->first.c_str(), qit->first.c_str(), dataInfo->getCount(1), dataInfo->getCount(0), dataInfo->getCount(-1));
-                    pcBasedClusterFile<<pit->first.c_str()<<","<<qit->first.c_str()<<","<<dataInfo->getCount(-1)<<'\n';
+                    pcBasedClusterFile<<pit->first.c_str()<<","<<qit->first.c_str()<<","<<dataInfo->getCount(-1)<<","<<dataInfo->getCore()<<'\n';
                 }
         }
         _LOG_PRINT_CUSTOM(Log::Warning, "EIP=%s STRIDE=[", pit->first.c_str());
         rit = strideClusterInfo.find(pit->first);
         if(rit!=strideClusterInfo.end())
         {
-            std::set<String>strideList = rit->second.getStrideList();
+            std::map<String,StrideInfo>strideList = rit->second.getStrideList();
             sit = strideList.begin();
             for(;sit!=strideList.end();sit++)
             {
                 // _LOG_PRINT(Log::Warning, "%ld, ",dataInfo->stride[i]);
-                const char* p = &(*sit)[0];
+                const char* p = &sit->first[0];
                 _LOG_PRINT_CUSTOM(Log::Warning, "%s, ", p);
-
-                pcBasedClusterStrideFile<<pit->first<<","<<p<<'\n';
+                pcBasedClusterStrideFile<<pit->first<<","<<p<<","<<sit->second.getCount()<<","<<sit->second.getCore()<<'\n';
             }
             // _LOG_PRINT(Log::Warning, "load=%ld store=%ld",dataInfo->typeCount[1], dataInfo->typeCount[0]);
         }
@@ -89,10 +88,10 @@ void StrideTable::write()
     outfile.open(cycleInfoOutput.c_str(), std::ios_base::app);
     if(outfile.is_open())
     {
-        outfile<<"type,status,object,pc,address,cycle\n";
+        outfile<<"type,status,object,pc,address,cycle,core\n";
         for(int i=0; i< cycleInfo.size(); i++)//cycleInfo is a vector
         {
-            outfile<<cycleInfo[i][0]<<","<<cycleInfo[i][1]<<","<<cycleInfo[i][2]<<","<<cycleInfo[i][3]<<","<<cycleInfo[i][4]<<","<<cycleInfo[i][5]<<'\n';
+            outfile<<cycleInfo[i][0]<<","<<cycleInfo[i][1]<<","<<cycleInfo[i][2]<<","<<cycleInfo[i][3]<<","<<cycleInfo[i][4]<<","<<cycleInfo[i][5]<<","<<cycleInfo[i][6]<<'\n';
         }
         outfile.close();
     }
@@ -289,12 +288,17 @@ void StrideTable::write()
 
 }
 
-void StrideTable::lookupAndUpdate(int access_type, IntPtr eip, IntPtr addr, String path, UInt64 cycleNumber, 
-bool accessResult)
+void StrideTable::lookupAndUpdate(Access* access)
 {   
+    int access_type=access->getAccessType(); 
+    IntPtr eip=access->getEip(),addr=access->getAddr(); 
+    String path=access->getObjectName(); 
+    UInt64 cycleNumber=access->getCycleCount(); 
+    bool accessResult=access->getAccessResult();
+    int core=access->getCore();
     total++;
 
-    String hindex, haddr, hcycle;
+    String hindex, haddr, hcycle, hcore;
     hcycle = itostr(cycleNumber);
 
     IntPtr index = eip;
@@ -302,6 +306,7 @@ bool accessResult)
     std::stringstream ss;
     ss << std::hex << index; ss >> hindex; ss.clear();
     ss << std::hex << addr; ss >> haddr; ss.clear();
+    ss << core; ss >> hcore; ss.clear();
     
     String accessResStr;
     if(accessResult){accessResStr="H";}
@@ -309,7 +314,7 @@ bool accessResult)
 
     String accessTypeStr = access_type==1?"L":"S";
     // String cycleInfoString = Misc::AppendWithSpace(accessTypeStr, accessResStr, path, hindex, haddr, hcycle);
-    cycleInfo.push_back({accessTypeStr,accessResStr,path,hindex,haddr,hcycle});
+    cycleInfo.push_back({accessTypeStr,accessResStr,path,hindex,haddr,hcycle,hcore});
 
     // iteratros
     std::map<String, Add2Data>::iterator tableIt;
@@ -341,12 +346,13 @@ bool accessResult)
             DataInfo* dataInfo = addrIt->second;
             // update datainfo
             dataInfo->incrTypeCount(access_type);
-            dataInfo->incrTotalCount();            
+            dataInfo->incrTotalCount();
+            dataInfo->setCore(core);            
         }
         else // eip seeen before but addr is new
         {
             add2data->insert( 
-                    { haddr, new DataInfo(access_type) } 
+                    { haddr, new DataInfo(access_type, core) } 
             );
         }
 
@@ -356,13 +362,13 @@ bool accessResult)
             std::cout<<"EIP is not here\n";
             exit(0);
         }
-        strideIt->second.setStride(addr,haddr);
+        strideIt->second.setStride(addr,haddr,core);
     }
     else
     {
-        StrideCluster strideCluster(addr,haddr);
+        StrideCluster strideCluster(addr,haddr,core);
         strideClusterInfo[hindex]= strideCluster;
-        table[hindex][haddr]=new DataInfo(access_type);
+        table[hindex][haddr]=new DataInfo(access_type, core);
     }
 
     std::map<String, UInt32>::iterator icn = countByNameInfo.find(path);
@@ -375,7 +381,7 @@ bool accessResult)
     }
 }
 
-void CacheHelper::addRequest(IntPtr eip, IntPtr addr, String objname, Cache* cache, UInt64 cycleCount, bool accessType, bool accessResult){
+void CacheHelper::addRequest(IntPtr eip, IntPtr addr, String objname, Cache* cache, UInt64 cycleCount, int core, bool accessType, bool accessResult){
     IntPtr index = eip; // use lsb 20 bits for indexing, possible all instructions are in few blocks
 
     //todo: i can take some contant to generate these inforamtion regardless of where access is comming from
@@ -389,7 +395,7 @@ void CacheHelper::addRequest(IntPtr eip, IntPtr addr, String objname, Cache* cac
     }
     IntPtr forStride = addr >> 6;
 
-    request.push(new Access(index, forStride, objname, cycleCount, accessType, accessResult));
+    request.push(new Access(index, forStride, objname, cycleCount, accessType, accessResult, core));
 }
 void CacheHelper::addRequest(Access* access){request.push(access);}
 
@@ -400,9 +406,7 @@ void CacheHelper::strideTableUpdate()
         Access* access = request.top(); 
         request.pop();
         char* p=&access->getObjectName()[0];
-        strideTable->lookupAndUpdate(access->getAccessType(), access->getEip(), access->getAddr(), 
-        access->getObjectName(), access->getCycleCount(), access->getAccessResult());
-        // std::cout<<access->getAccessType()<<" "<<access->getEip()<<" "<<access->getObjectName()<<" cycle="<<access->getCycleCount()<<std::endl;
+        strideTable->lookupAndUpdate(access);
         delete access;
     }
 }

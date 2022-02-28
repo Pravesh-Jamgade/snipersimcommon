@@ -535,7 +535,7 @@ MemoryManager::coreInitiateMemoryAccess(
          address, offset,
          data_buf, data_length,
          modeled == Core::MEM_MODELED_NONE || modeled == Core::MEM_MODELED_COUNT ? false : true,
-         modeled == Core::MEM_MODELED_NONE ? false : true,  eip, path);
+         modeled == Core::MEM_MODELED_NONE ? false : true,  eip, path, getCore()->getId());
 }
 
 void
@@ -696,7 +696,7 @@ MemoryManager::accessTLB(TLB * tlb, IntPtr address, bool isIfetch, Core::MemMode
    
    bool hit = tlb->lookup(address, getShmemPerfModel()->getElapsedTime(ShmemPerfModel::_USER_THREAD));
 
-   tlb->addRequest(eip,address,getCore()->getCycleCount(), hit);
+   tlb->addRequest(eip,address,getCore()->getCycleCount(), getCore()->getId(), hit);
 
    cache_helper::Misc::pathAppend(path, tlb->name);
    cache_helper::Misc::stateAppend(hit, path);

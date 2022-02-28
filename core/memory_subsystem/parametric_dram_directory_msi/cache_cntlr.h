@@ -397,7 +397,7 @@ namespace ParametricDramDirectoryMSI
                IntPtr ca_address, UInt32 offset,
                Byte* data_buf, UInt32 data_length,
                bool modeled,
-               bool count, IntPtr eip, String& path);
+               bool count, IntPtr eip, String& path, int core);
          void updateHits(Core::mem_op_t mem_op_type, UInt64 hits);
 
          // Notify next level cache of so it can update its sharing set
@@ -460,6 +460,10 @@ namespace ParametricDramDirectoryMSI
          IntPtr getEIP()
          {
             return this->eip;
+         }
+
+         int getCore(){
+            return m_core_id;
          }
          
          void loggingLevel(IntPtr addr, Core::mem_op_t mem_op_type, bool accessResult, bool isCache=true);

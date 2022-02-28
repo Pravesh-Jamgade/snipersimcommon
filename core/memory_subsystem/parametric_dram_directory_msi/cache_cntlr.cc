@@ -338,7 +338,7 @@ CacheCntlr::processMemOpFromCore(
       Byte* data_buf, UInt32 data_length,
       bool modeled,
       bool count,
-      IntPtr eip, String& path)
+      IntPtr eip, String& path, int core)
 {
 
    // [UPDATE]
@@ -2416,6 +2416,7 @@ CacheCntlr::loggingLevel(IntPtr addr, Core::mem_op_t mem_op_type, bool accessRes
 {
    String name = getName();
    IntPtr eip = getEIP();
+   int core = getCore();
    Cache* cache=NULL;
    if(isCache)
       cache=getCache();
@@ -2428,7 +2429,7 @@ CacheCntlr::loggingLevel(IntPtr addr, Core::mem_op_t mem_op_type, bool accessRes
       else stats.totalStores++;
       
       stats.totalAccess++;
-      cacheHelper->addRequest(eip, addr, name, cache, cycleCount, typeAccess, accessResult);
+      cacheHelper->addRequest(eip, addr, name, cache, cycleCount, core, typeAccess, accessResult);
    }
 }
 

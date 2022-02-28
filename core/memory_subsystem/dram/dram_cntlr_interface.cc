@@ -64,6 +64,6 @@ void  DramCntlrInterface::loggingDRAM(IntPtr addr, Core::mem_op_t mem_op, bool a
       else totalStores++;
 
       totalAccess++;
-      getCacheHelper()->addRequest(eip, addr, getName(), NULL, cycleCount, typeAccess, accessResult);
+      getCacheHelper()->addRequest(eip, addr, getName(), NULL, cycleCount, getMemoryManager()->getCore()->getId(), typeAccess, accessResult);
    }
 }
