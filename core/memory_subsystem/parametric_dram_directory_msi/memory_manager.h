@@ -15,8 +15,10 @@
 #include "subsecond_time.h"
 
 #include <map>
-#include "cache_helper.h"
 #include <memory>
+
+//[update]
+#include "cache_helper.h"
 
 class DramCache;
 class ShmemPerf;

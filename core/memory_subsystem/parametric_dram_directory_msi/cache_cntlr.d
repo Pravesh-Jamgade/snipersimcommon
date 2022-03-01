@@ -76,4 +76,5 @@
  /mnt/B/sniper/common/system/hooks_manager.h \
  /mnt/B/sniper/common/system/thread_manager.h \
  /mnt/B/sniper/common/core/memory_subsystem/parametric_dram_directory_msi/cache_atd.h \
- /mnt/B/sniper/common/core/memory_subsystem/cache/cache_set.h)
+ /mnt/B/sniper/common/core/memory_subsystem/cache/cache_set.h \
+ /mnt/B/sniper/common/helpers/general.h)

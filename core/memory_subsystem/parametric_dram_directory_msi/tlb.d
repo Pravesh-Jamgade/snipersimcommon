@@ -23,7 +23,7 @@
  /mnt/B/sniper/common/performance_model/hit_where.h \
  /mnt/B/sniper/common/fault_injection/fault_injection.h \
  /mnt/B/sniper/common/helpers/cache_helper.h \
- /mnt/B/sniper/common/misc/stats.h \
+ /mnt/B/sniper/common/helpers/general.h /mnt/B/sniper/common/misc/stats.h \
  /mnt/B/sniper/common/system/simulator.h \
  /mnt/B/sniper/common/misc/config.h \
  /mnt/B/sniper/common/system/clock_skew_minimization_object.h \

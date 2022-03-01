@@ -6,6 +6,7 @@
 
 //[update]
 #include "cache_helper.h"
+#include "general.h"
 
 namespace ParametricDramDirectoryMSI
 {
@@ -46,7 +47,7 @@ namespace ParametricDramDirectoryMSI
             if((objectNameDebug!="" && objectNameDebug==name) || objectNameDebug=="")
             {
                totalAccess++;
-               cacheHelper->addRequest(eip,addr,name, &m_cache, cycleCount, true, accessResult);//its a load; tlb lookup() passes LOAD
+               cacheHelper->addRequest(eip,addr,name, cycleCount, true, accessResult);//its a load; tlb lookup() passes LOAD
             }
          }
 

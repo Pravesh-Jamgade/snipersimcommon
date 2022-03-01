@@ -3,6 +3,7 @@
 #include "shmem_msg.h"
 #include "shmem_perf.h"
 #include "log.h"
+#include "general.h"
 
 void DramCntlrInterface::handleMsgFromTagDirectory(core_id_t sender, PrL1PrL2DramDirectoryMSI::ShmemMsg* shmem_msg)
 {
@@ -64,6 +65,6 @@ void  DramCntlrInterface::loggingDRAM(IntPtr addr, Core::mem_op_t mem_op, bool a
       else totalStores++;
 
       totalAccess++;
-      getCacheHelper()->addRequest(eip, addr, getName(), NULL, cycleCount, typeAccess, accessResult);
+      getCacheHelper()->addRequest(eip, addr, getName(), cycleCount, typeAccess, accessResult);
    }
 }

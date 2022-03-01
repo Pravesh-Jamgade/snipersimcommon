@@ -73,6 +73,7 @@
  /mnt/B/sniper/common/core/memory_subsystem/dram/dram_cache.h \
  /mnt/B/sniper/common/core/memory_subsystem/dram/dram_cntlr_interface.h \
  /mnt/B/sniper/common/core/memory_subsystem/parametric_dram_directory_msi/tlb.h \
+ /mnt/B/sniper/common/helpers/general.h \
  /mnt/B/sniper/common/system/dvfs_manager.h \
  /mnt/B/sniper/common/misc/itostr.h \
  /mnt/B/sniper/common/performance_model/instruction.h \

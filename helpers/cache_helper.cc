@@ -375,18 +375,9 @@ bool accessResult)
     }
 }
 
-void CacheHelper::addRequest(IntPtr eip, IntPtr addr, String objname, Cache* cache, UInt64 cycleCount, bool accessType, bool accessResult){
+void CacheHelper::addRequest(IntPtr eip, IntPtr addr, String objname, UInt64 cycleCount, bool accessType, bool accessResult){
     IntPtr index = eip; // use lsb 20 bits for indexing, possible all instructions are in few blocks
 
-    //todo: i can take some contant to generate these inforamtion regardless of where access is comming from
-    if(cache==NULL)
-    {
-        // for dram access, i dont know how to mask it yet;
-    }
-    else
-    {
-        // for cache access, i am taking into account cache size, blocksize and calculating indexing information
-    }
     IntPtr forStride = addr >> 6;
 
     request.push(new Access(index, forStride, objname, cycleCount, accessType, accessResult));

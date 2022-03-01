@@ -8,6 +8,7 @@
 
 #include "boost/tuple/tuple.hpp"
 #include "cache_helper.h"
+#include "core.h"
 
 class MemoryManagerBase;
 class ShmemPerfModel;

@@ -11,6 +11,8 @@
 
 #include <cstring>
 
+#include "general.h"
+
 // Define to allow private L2 caches not to take the stack lock.
 // Works in most cases, but seems to have some more bugs or race conditions, preventing it from being ready for prime time.
 //#define PRIVATE_L2_OPTIMIZATION
@@ -2428,7 +2430,7 @@ CacheCntlr::loggingLevel(IntPtr addr, Core::mem_op_t mem_op_type, bool accessRes
       else stats.totalStores++;
       
       stats.totalAccess++;
-      cacheHelper->addRequest(eip, addr, name, cache, cycleCount, typeAccess, accessResult);
+      cacheHelper->addRequest(eip, addr, name, cycleCount, typeAccess, accessResult);
    }
 }
 

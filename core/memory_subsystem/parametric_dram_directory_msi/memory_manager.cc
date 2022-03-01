@@ -14,7 +14,7 @@
 #include "topology_info.h"
 
 #include <algorithm>
-#include "cache_helper.h"//[update]
+
 #include "config.h"
 #include "mem_component.h"
 
