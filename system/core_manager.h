@@ -12,6 +12,9 @@
 #include <map>
 #include <vector>
 
+#include "cache_helper.h"
+#include<memory>
+
 class Core;
 
 class CoreManager
@@ -51,6 +54,7 @@ class CoreManager
       bool amiCoreThread();
       bool amiSimThread();
    private:
+      std::shared_ptr<cache_helper::CacheHelper> cacheHelper;
 
       UInt32 *tid_map;
       TLS *m_core_tls;

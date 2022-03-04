@@ -17,6 +17,7 @@
 #include "topology_info.h"
 #include "cheetah_manager.h"
 
+#include "cache_helper.h"
 #include <cstring>
 
 #if 0
@@ -64,7 +65,7 @@ Lock Core::m_global_core_lock;
 UInt64 Core::g_instructions_hpi_global = 0;
 UInt64 Core::g_instructions_hpi_global_callback = 0;
 
-Core::Core(SInt32 id)
+Core::Core(SInt32 id, std::shared_ptr<cache_helper::CacheHelper> cacheHelper)
    : m_core_id(id)
    , m_dvfs_domain(Sim()->getDvfsManager()->getCoreDomain(id))
    , m_thread(NULL)
@@ -98,6 +99,10 @@ Core::Core(SInt32 id)
 
    m_shmem_perf_model = new ShmemPerfModel();
 
+    //[update]
+   this->cacheHelper = cacheHelper.get();
+   this->cacheHelper->setOutputDir(Sim()->getConfig()->getOutputDirectory());
+   
    LOG_PRINT("instantiated memory manager model");
    m_memory_manager = MemoryManagerBase::createMMU(
          Sim()->getCfg()->getString("caching_protocol/type"),

@@ -289,7 +289,7 @@ namespace ParametricDramDirectoryMSI
          String memLevelDebug;
          bool toDRAM;
 
-         cache_helper::CacheHelper *cacheHelper;
+         cache_helper::CacheHelper* cacheHelper=new cache_helper::CacheHelper();
 
          // Core-interfacing stuff
          void accessCache(

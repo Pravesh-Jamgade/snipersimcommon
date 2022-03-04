@@ -27,7 +27,7 @@ namespace ParametricDramDirectoryMSI
          //[update]
          UInt64 totalAccess;
          //[udpate]
-         cache_helper::CacheHelper* cacheHelper;
+         cache_helper::CacheHelper* cacheHelper=new cache_helper::CacheHelper();
 
       public:
          
@@ -42,12 +42,12 @@ namespace ParametricDramDirectoryMSI
          {
             this->objectNameDebug = objectNameDebug;
          }
-         void addRequest(IntPtr eip, IntPtr addr, UInt64 cycleCount, bool accessResult)
+         void addRequest(IntPtr eip, IntPtr addr, UInt64 cycleCount, int core, bool accessResult)
          {
             if((objectNameDebug!="" && objectNameDebug==name) || objectNameDebug=="")
             {
                totalAccess++;
-               cacheHelper->addRequest(eip,addr,name, cycleCount, true, accessResult);//its a load; tlb lookup() passes LOAD
+               cacheHelper->addRequest(eip,addr,name, cycleCount, core, true, accessResult);//its a load; tlb lookup() passes LOAD
             }
          }
 

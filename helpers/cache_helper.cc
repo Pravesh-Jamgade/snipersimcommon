@@ -9,15 +9,15 @@ void StrideTable::write()
     std::fstream pcBasedClusterFile, pcBasedClusterStrideFile;
     String pcBasedClusterFilePath=outputDirName+pcBasedCluster;
     String pcBasedClusterStrideFilePath=outputDirName+pcBasedClusterStride;
-    pcBasedClusterFile.open(pcBasedClusterFilePath.c_str(), std::ios_base::app);
-    pcBasedClusterStrideFile.open(pcBasedClusterStrideFilePath.c_str(), std::ios_base::app);
+    pcBasedClusterFile.open(pcBasedClusterFilePath.c_str(), std::ofstream::out | std::ofstream::app);
+    pcBasedClusterStrideFile.open(pcBasedClusterStrideFilePath.c_str(), std::ofstream::out | std::ofstream::app);
     pcBasedClusterFile<<"pc,address,count\n";
-    pcBasedClusterStrideFile<<"pc,stride\n";
+    pcBasedClusterStrideFile<<"pc,stride,count\n";
    
     std::map<String, Add2Data>::iterator pit = table.begin();// iterator on eip add2data
-    std::set<String>::iterator sit; // iterator on set of stride from StrideCluster
+    std::map<String,Count>::iterator sit; // iterator on set of stride from StrideCluster
     std::map<String, StrideCluster>::iterator rit;
-    std::vector<StrideOrder>::iterator strideOrderVecIt;
+    std::list<AddressFrequencyAndOrder>::iterator strideOrderVecIt;
 
     for(;pit!=table.end();pit++)
     {
@@ -38,15 +38,15 @@ void StrideTable::write()
         rit = strideClusterInfo.find(pit->first);
         if(rit!=strideClusterInfo.end())
         {
-            std::set<String>strideList = rit->second.getStrideList();
+            std::map<String,Count>strideList = rit->second.getStrideList();
             sit = strideList.begin();
             for(;sit!=strideList.end();sit++)
             {
                 // _LOG_PRINT(Log::Warning, "%ld, ",dataInfo->stride[i]);
-                const char* p = &(*sit)[0];
+                const char* p = &(sit->first[0]);
                 _LOG_PRINT_CUSTOM(Log::Warning, "%s, ", p);
 
-                pcBasedClusterStrideFile<<pit->first<<","<<p<<'\n';
+                pcBasedClusterStrideFile<<pit->first<<","<<p<<","<<sit->second.getCount()<<'\n';
             }
             // _LOG_PRINT(Log::Warning, "load=%ld store=%ld",dataInfo->typeCount[1], dataInfo->typeCount[0]);
         }
@@ -86,13 +86,14 @@ void StrideTable::write()
     std::fstream outfile;
     cycleInfoOutput=outputDirName+cycleInfoOutput;
     printf("file:%s\n", cycleInfoOutput.c_str());
-    outfile.open(cycleInfoOutput.c_str(), std::ios_base::app);
+    outfile.open(cycleInfoOutput.c_str(), std::ofstream::out | std::ofstream::app);
     if(outfile.is_open())
     {
-        outfile<<"type,status,object,pc,address,cycle\n";
-        for(int i=0; i< cycleInfo.size(); i++)//cycleInfo is a vector
+        outfile<<"type,status,object,pc,address,cycle,core\n";
+        std::list<std::vector<String>>::iterator it;
+        for(auto cycle : cycleInfo)//cycleInfo is a vector
         {
-            outfile<<cycleInfo[i][0]<<","<<cycleInfo[i][1]<<","<<cycleInfo[i][2]<<","<<cycleInfo[i][3]<<","<<cycleInfo[i][4]<<","<<cycleInfo[i][5]<<'\n';
+            outfile<<cycle[0]<<","<<cycle[1]<<","<<cycle[2]<<","<<cycle[3]<<","<<cycle[4]<<","<<cycle[5]<<","<<cycle[6]<<'\n';
         }
         outfile.close();
     }
@@ -104,16 +105,16 @@ void StrideTable::write()
 
     /*output, stride order followed on particular EIP: EIP, ORDER[address (access_count),...]*/
     strideAddrOrderOutput=outputDirName+strideAddrOrderOutput;
-    outfile.open(strideAddrOrderOutput.c_str(), std::ios_base::app);
+    outfile.open(strideAddrOrderOutput.c_str(), std::ofstream::out | std::ofstream::app);
     if(outfile.is_open())
     {
         rit = strideClusterInfo.begin();//eip to StrideCluster
-                                        // strideCluster has info about: stride, StrideOrder
-                                        // StrideOrder has info about: address pattern, address count(to optimize for analysis)
+                                        // strideCluster has info about: stride, AddressFrequencyAndOrder
+                                        // AddressFrequencyAndOrder has info about: address pattern, address count(to optimize for analysis)
         for(;rit!=strideClusterInfo.end();rit++)
         {
             outfile<<rit->first<<" ORDER=[";
-            std::vector<StrideOrder> strideOrder = rit->second.getStrideOrder();
+            std::list<AddressFrequencyAndOrder> strideOrder = rit->second.getAddressFrequencyAndOrder();
             strideOrderVecIt = strideOrder.begin();
 
             String eip=rit->first;
@@ -158,13 +159,13 @@ void StrideTable::write()
     addrFreFile, addrClusterFile, addrClusterFile_csv;
     
     // open files
-    eipNodesFile.open(eipNodesFilePath.c_str(), std::ios_base::app);
-    addrNodesFile.open(addrNodesFilePath.c_str(), std::ios_base::app);
-    edgesFile.open(edgesFilePath.c_str(), std::ios_base::app);
-    eipFreqFile.open(eipFreqFilePath.c_str(), std::ios_base::app);
-    addrFreFile.open(addrFreqFilePath.c_str(), std::ios_base::app);
-    addrClusterFile.open(addrClusterFilePath.c_str(), std::ios_base::app);
-    addrClusterFile_csv.open(addrClusterFile_csvPath.c_str(), std::ios_base::app);
+    eipNodesFile.open(eipNodesFilePath.c_str(), std::ofstream::out | std::ofstream::app);
+    addrNodesFile.open(addrNodesFilePath.c_str(), std::ofstream::out | std::ofstream::app);
+    edgesFile.open(edgesFilePath.c_str(), std::ofstream::out | std::ofstream::app);
+    eipFreqFile.open(eipFreqFilePath.c_str(), std::ofstream::out | std::ofstream::app);
+    addrFreFile.open(addrFreqFilePath.c_str(), std::ofstream::out | std::ofstream::app);
+    addrClusterFile.open(addrClusterFilePath.c_str(), std::ofstream::out | std::ofstream::app);
+    addrClusterFile_csv.open(addrClusterFile_csvPath.c_str(), std::ofstream::out | std::ofstream::app);
 
     // eip frequency
     std::map<String, Count>::iterator eipFreIt = uniqueEIP.begin();
@@ -290,7 +291,7 @@ void StrideTable::write()
 }
 
 void StrideTable::lookupAndUpdate(int access_type, IntPtr eip, IntPtr addr, String path, UInt64 cycleNumber, 
-bool accessResult)
+bool accessResult, int core)
 {   
     total++;
 
@@ -309,7 +310,7 @@ bool accessResult)
 
     String accessTypeStr = access_type==1?"L":"S";
     // String cycleInfoString = Misc::AppendWithSpace(accessTypeStr, accessResStr, path, hindex, haddr, hcycle);
-    cycleInfo.push_back({accessTypeStr,accessResStr,path,hindex,haddr,hcycle});
+    cycleInfo.emplace_back(std::vector<String>{accessTypeStr,accessResStr,path,hindex,haddr,hcycle,itostr(core)});
 
     // iteratros
     std::map<String, Add2Data>::iterator tableIt;
@@ -375,26 +376,36 @@ bool accessResult)
     }
 }
 
-void CacheHelper::addRequest(IntPtr eip, IntPtr addr, String objname, UInt64 cycleCount, bool accessType, bool accessResult){
+void CacheHelper::addRequest(IntPtr eip, IntPtr addr, String objname, UInt64 cycleCount, int core, bool accessType, bool accessResult)
+{
     IntPtr index = eip; // use lsb 20 bits for indexing, possible all instructions are in few blocks
-
     IntPtr forStride = addr >> 6;
-
-    request.push(new Access(index, forStride, objname, cycleCount, accessType, accessResult));
+    request.push_back(new Access(eip,forStride,objname,cycleCount,accessType,accessResult,core));
+    strideTable->lookupAndUpdate(
+        accessType,
+        eip,
+        forStride,
+        objname,
+        cycleCount,
+        accessResult,
+        core
+        );
 }
-void CacheHelper::addRequest(Access* access){request.push(access);}
 
 void CacheHelper::strideTableUpdate()
 {
-    while(!getRequestStack().empty())
-    {   
-        Access* access = request.top(); 
-        request.pop();
-        char* p=&access->getObjectName()[0];
-        strideTable->lookupAndUpdate(access->getAccessType(), access->getEip(), access->getAddr(), 
-        access->getObjectName(), access->getCycleCount(), access->getAccessResult());
-        // std::cout<<access->getAccessType()<<" "<<access->getEip()<<" "<<access->getObjectName()<<" cycle="<<access->getCycleCount()<<std::endl;
-        delete access;
-    }
+    // for(auto e : request)
+    // {   
+    //     strideTable->lookupAndUpdate(
+    //         e->getAccessType(), 
+    //         e->getEip(), 
+    //         e->getAddr(), 
+    //         e->getObjectName(), 
+    //         e->getCycleCount(), 
+    //         e->getAccessResult(), 
+    //         e->getCoreId()
+    //     );
+    // }
+    // request.erase(request.begin());
 }
 

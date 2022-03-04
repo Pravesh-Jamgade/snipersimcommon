@@ -664,8 +664,17 @@ MYLOG("access done");
    if (Sim()->getConfig()->getCacheEfficiencyCallbacks().notify_access_func)
       Sim()->getConfig()->getCacheEfficiencyCallbacks().call_notify_access(cache_block_info->getOwner(), mem_op_type, hit_where);
 
-   //[update]
-   cacheHelper->strideTableUpdate();
+   // //[update]
+   // try{
+   //    if(cacheHelper==nullptr || cacheHelper==NULL){
+   //       std::cout<<"hola";
+   //       exit(0);
+   //    }
+   //    cacheHelper->strideTableUpdate();
+   // }
+   // catch(std::exception e){
+   //    std::cout<<e.what()<<std::endl;
+   // }
 
    MYLOG("returning %s, latency %lu ns", HitWhereString(hit_where), total_latency.getNS());
    return hit_where;
@@ -2418,9 +2427,6 @@ CacheCntlr::loggingLevel(IntPtr addr, Core::mem_op_t mem_op_type, bool accessRes
 {
    String name = getName();
    IntPtr eip = getEIP();
-   Cache* cache=NULL;
-   if(isCache)
-      cache=getCache();
    if((memLevelDebug!="" && getMemLevelDebug() == name)||memLevelDebug=="")
    {
       UInt64 cycleCount=getMemoryManager()->getCore()->getCycleCount();
@@ -2430,7 +2436,7 @@ CacheCntlr::loggingLevel(IntPtr addr, Core::mem_op_t mem_op_type, bool accessRes
       else stats.totalStores++;
       
       stats.totalAccess++;
-      cacheHelper->addRequest(eip, addr, name, cycleCount, typeAccess, accessResult);
+      cacheHelper->addRequest(eip, addr, name, cycleCount, getMemoryManager()->getCore()->getId(), typeAccess, accessResult);
    }
 }
 

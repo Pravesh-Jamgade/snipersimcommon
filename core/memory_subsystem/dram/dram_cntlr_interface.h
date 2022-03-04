@@ -30,7 +30,8 @@ class DramCntlrInterface
    IntPtr eip;
    String name;
    String memLevelDebug;
-   cache_helper::CacheHelper* cacheHelper;
+   cache_helper::CacheHelper* cacheHelper=new cache_helper::CacheHelper();
+
 
    public:
       //[update]

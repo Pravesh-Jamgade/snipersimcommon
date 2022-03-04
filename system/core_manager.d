@@ -10,6 +10,7 @@
  /mnt/B/sniper/common/misc/subsecond_time_c.h \
  /mnt/B/sniper/common/core/bbv_count.h /mnt/B/sniper/common/misc/cpuid.h \
  /mnt/B/sniper/common/performance_model/hit_where.h \
+ /mnt/B/sniper/common/helpers/cache_helper.h \
  /mnt/B/sniper/common/network/network.h \
  /mnt/B/sniper/common/network/packet_type.h \
  /mnt/B/sniper/common/misc/cond.h \

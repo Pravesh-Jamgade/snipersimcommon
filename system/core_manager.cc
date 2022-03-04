@@ -15,6 +15,10 @@
 
 #include "log.h"
 
+//[update]
+#include "cache_helper.h"
+#include<memory>
+
 CoreManager::CoreManager()
       : m_core_tls(TLS::create())
       , m_thread_type_tls(TLS::create())
@@ -23,9 +27,14 @@ CoreManager::CoreManager()
 {
    LOG_PRINT("Starting CoreManager Constructor.");
 
+
+   //[update]
+   cacheHelper=std::make_shared<cache_helper::CacheHelper>();
+
    for (UInt32 i = 0; i < Config::getSingleton()->getTotalCores(); i++)
    {
-      m_cores.push_back(new Core(i));
+      Core* core = new Core(i,cacheHelper);//[update]
+      m_cores.push_back(core);
    }
 
    LOG_PRINT("Finished CoreManager Constructor.");
@@ -33,9 +42,10 @@ CoreManager::CoreManager()
 
 CoreManager::~CoreManager()
 {
-   for (std::vector<Core *>::iterator i = m_cores.begin(); i != m_cores.end(); i++)
+   for (std::vector<Core *>::iterator i = m_cores.begin(); i != m_cores.end(); i++){
       delete *i;
-
+   }
+   cacheHelper->writeOutput();
    delete m_core_tls;
    delete m_thread_type_tls;
 }

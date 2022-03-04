@@ -20,6 +20,7 @@ class CheetahManager;
 #include "bbv_count.h"
 #include "cpuid.h"
 #include "hit_where.h"
+#include "cache_helper.h"
 
 struct MemoryResult {
    HitWhere::where_t hit_where;
@@ -80,7 +81,7 @@ class Core
 
       static const char * CoreStateString(State state);
 
-      Core(SInt32 id);
+      Core(SInt32 id, std::shared_ptr<cache_helper::CacheHelper> cacheHelper);
       ~Core();
 
       // Query and update branch predictor, return true on mispredict
@@ -134,7 +135,9 @@ class Core
       }
 
       //[update]
+      cache_helper::CacheHelper* getCacheHelper(){return this->cacheHelper;}
       UInt64 getCycleCount();
+      cache_helper::CacheHelper* cacheHelper=nullptr;
 
    private:
       core_id_t m_core_id;

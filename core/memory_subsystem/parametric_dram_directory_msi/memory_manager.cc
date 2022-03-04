@@ -47,6 +47,10 @@ MemoryManager::MemoryManager(Core* core,
    m_dram_cntlr_present(false),
    m_enabled(false)
 {
+
+   cacheHelper=new cache_helper::CacheHelper();
+   cacheHelper = core->getCacheHelper();
+   
    // Read Parameters from the Config file
    std::map<MemComponent::component_t, CacheParameters> cache_parameters;
    std::map<MemComponent::component_t, String> cache_names;
@@ -284,8 +288,10 @@ MemoryManager::MemoryManager(Core* core,
       }
    }
 
-   //[update]
-   cacheHelper.setOutputDir(Sim()->getConfig()->getOutputDirectory());
+   /*There are 2 names for objects: config name and object name. We pass config name from cfg file. For that we find its object name.
+   we then set that object name to all structures (call it target object name), we also set real object name of all structures (real object name).
+   So when i want to log all l1d acccess, at l1 i will simply check if targetobjectname == realobjectname if yes then log. if targetobjectname=="" as in cfg 
+   we pass empty configuration. Then we log all access to all objects in these case targetobjectname == "". should have simplified it! */   
    // normalizing either controller or cache of dram as dram access only
    String objectNameDebug,configNameDebug;
    // get objectName from configName, set objectName to each mem level. will be use to enbale debug/log
@@ -328,7 +334,7 @@ MemoryManager::MemoryManager(Core* core,
       );
       
       //[update]
-      cache_cntlr->setCacheHelper(&cacheHelper);
+      cache_cntlr->setCacheHelper(cacheHelper);
       cache_cntlr->setEIP(-1);
       cache_cntlr->setName(cache_names[(MemComponent::component_t)i]);
       cache_cntlr->setMemLevelDebug(objectNameDebug);  // set objectName at all cacheCntrl to compare it with name of cache
@@ -347,29 +353,29 @@ MemoryManager::MemoryManager(Core* core,
    if(m_dram_cntlr){
       m_dram_cntlr->setName(dramCntrlConfigName);// structures own name
       m_dram_cntlr->setMemLevelDebug(objectNameDebug);// debug levelname target name
-      m_dram_cntlr->setCacheHelper(&cacheHelper);
+      m_dram_cntlr->setCacheHelper(cacheHelper);
    }
       
    if(m_dram_cache){
       m_dram_cache->setName(dramCacheConfigName);// structures own name
       m_dram_cache->setMemLevelDebug(objectNameDebug);// debug levelname target name
-      m_dram_cache->setCacheHelper(&cacheHelper);
+      m_dram_cache->setCacheHelper(cacheHelper);
    }
 
    if(m_stlb)
    {
       m_stlb->setMemLevelDebug(objectNameDebug);// debug levelname target name
-      m_stlb->setCacheHelper(&cacheHelper);
+      m_stlb->setCacheHelper(cacheHelper);
    }
    if(m_dtlb)
    {
       m_dtlb->setMemLevelDebug(objectNameDebug);
-      m_dtlb->setCacheHelper(&cacheHelper);
+      m_dtlb->setCacheHelper(cacheHelper);
    }
    if(m_itlb)
    {
       m_itlb->setMemLevelDebug(objectNameDebug);
-      m_itlb->setCacheHelper(&cacheHelper);
+      m_itlb->setCacheHelper(cacheHelper);
    }
 
    m_cache_cntlrs[MemComponent::L1_ICACHE]->setNextCacheCntlr(m_cache_cntlrs[MemComponent::L2_CACHE]);
@@ -457,8 +463,6 @@ MemoryManager::MemoryManager(Core* core,
 
 MemoryManager::~MemoryManager()
 {
-   //[update]
-   cacheHelper.writeOutput();
 
    UInt32 i;
 
@@ -696,7 +700,7 @@ MemoryManager::accessTLB(TLB * tlb, IntPtr address, bool isIfetch, Core::MemMode
    
    bool hit = tlb->lookup(address, getShmemPerfModel()->getElapsedTime(ShmemPerfModel::_USER_THREAD));
 
-   tlb->addRequest(eip,address,getCore()->getCycleCount(), hit);
+   tlb->addRequest(eip,address,getCore()->getCycleCount(), getCore()->getId(), hit);
 
    cache_helper::Misc::pathAppend(path, tlb->name);
    cache_helper::Misc::stateAppend(hit, path);

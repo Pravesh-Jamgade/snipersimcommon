@@ -7,6 +7,7 @@
 #include "performance_model.h"
 #include "shmem_perf_model.h"
 #include "pr_l1_pr_l2_dram_directory_msi/shmem_msg.h"
+#include "cache_helper.h"
 
 void MemoryManagerNetworkCallback(void* obj, NetPacket packet);
 
@@ -99,6 +100,9 @@ class MemoryManagerBase
             Core* core,
             Network* network,
             ShmemPerfModel* shmem_perf_model);
-};
+      
+      // std::shared_ptr<cache_helper::CacheHelper> cacheHelper;
+      // void setCacheHelper( std::shared_ptr<cache_helper::CacheHelper> cacheHelper){this->cacheHelper=cacheHelper;}
+};    
 
 #endif /* __MEMORY_MANAGER_BASE_H__ */

@@ -14,6 +14,7 @@
         #include <unistd.h>
         #include<stack>
         #include<vector>
+        #include<list>
         #include<memory>
         #include<sqlite3.h>
 
@@ -159,33 +160,32 @@ class Count
     int getCluster(){return this->cluster;}
 };
 
-class StrideOrder
+/*Addresses in-order and their count if they are consecutive: Part of StrideCluster, cluster by PC or EIP*/
+class AddressFrequencyAndOrder
 {
     String address;
     uint32_t count;
     public:
-    StrideOrder(String addr):address(addr), count(1){} 
+    AddressFrequencyAndOrder(String addr):address(addr), count(1){} 
 
-    bool operator==(StrideOrder pre) {return address==pre.address;}
+    bool operator==(AddressFrequencyAndOrder pre) {return address==pre.address;}
     void incrCount() {count++;}
     String getAddress(){return address;}
     uint32_t getAddrCount(){return count;}
 };
 
-/*Data regarding access pattern of particular eip, stroes stride seen by eip on behalf of addresses,
- (StrideOrder) access order of addresses and times the address has been accessed*/
+/*List of Stride seen by particular PC or EIP based on addresses it has accesed, 
+Order of addreses (if address is acceses consecutive then its count accounted by AddressFrequencyAndOrder class) as well */
 class StrideCluster
 {
-    std::set<String> strideList;//tracks only stride
-    std::vector<StrideOrder> strideOrderList;//tracks addresses responsible for stride
+    std::map<String,Count> strideList;//tracks only stride
+    std::list<AddressFrequencyAndOrder> strideOrderList;//tracks addresses responsible for stride
     IntPtr lastSeenAddr=0;//tracks last seen address, to calculate stride for next access
     public:
     StrideCluster(){}
     StrideCluster(IntPtr initAddr, String haddr){ 
-        String initAddrStr = itostr(initAddr);
-        strideList.insert(initAddrStr); //stride from incoming address
-        StrideOrder newStrideOrderElement(haddr); // create new strideOrder and track it, in hex form
-        strideOrderList.push_back(newStrideOrderElement);//incoming address order
+        AddressFrequencyAndOrder newAddressFrequencyAndOrderElement(haddr); // create new strideOrder and track it, in hex form
+        strideOrderList.emplace_back(newAddressFrequencyAndOrderElement);//incoming address order
         lastSeenAddr=initAddr; 
     }
     ~StrideCluster(){};
@@ -199,16 +199,20 @@ class StrideCluster
         lastSeenAddr=newAddr;
 
         String diffStr = itostr(diff);
-        strideList.insert(diffStr); 
+        std::map<String,Count>::iterator it=strideList.find(diffStr);
+        if(it!=strideList.end()){
+            it->second.incrCount();
+        }
+        else strideList[diffStr]=Count(); 
 
-        StrideOrder newstrideOrderElement(haddr);
+        AddressFrequencyAndOrder newstrideOrderElement(haddr);
         if(newstrideOrderElement==strideOrderList.back()){
             strideOrderList.back().incrCount();
             return;}//if prev strideorder == newstrideorder skip, otherwise track
-        strideOrderList.push_back(newstrideOrderElement);
+        strideOrderList.emplace_back(newstrideOrderElement);
     }
-    std::set<String> getStrideList(){return strideList;}
-    std::vector<StrideOrder> getStrideOrder(){return strideOrderList;}
+    std::map<String, Count> getStrideList(){return strideList;}
+    std::list<AddressFrequencyAndOrder> getAddressFrequencyAndOrder(){return strideOrderList;}
 };
 
  class DataInfo
@@ -263,19 +267,16 @@ class StrideTable
     std::map<String, UInt32> countByNameInfo;
 
     //* eip address cycle#
-    std::vector<std::vector<String>> cycleInfo;
+    std::list<std::vector<String>> cycleInfo;
     String cycleInfoOutput="/CSV_CycleTrace.csv";
     String strideAddrOrderOutput="/StatEipBasedAddrOrder.out";
 
     String outputDirName;
-    Storage *storage;
-    StrideTable() {
-        storage = new Storage();
-    }
 
+    StrideTable() {}
     ~StrideTable() {}
 
-    void lookupAndUpdate(int access_type, IntPtr eip, IntPtr addr, String path, UInt64 cycleNumber, bool accessResult);
+    void lookupAndUpdate(int access_type, IntPtr eip, IntPtr addr, String path, UInt64 cycleNumber, bool accessResult, int core);
     void write();
     void setOutputDir(String outputDir){this->outputDirName=outputDir;}
 };
@@ -287,41 +288,39 @@ class Access
     UInt64 cycleCount;
     bool instAccessType;// st=0 ld=1
     bool accessResult;
+    int core;
     public:
-    Access(IntPtr eip, IntPtr addr, String objectName, UInt64 cycleCount, bool accessType, bool accessResult){
+    Access(IntPtr eip, IntPtr addr, String objectName, UInt64 cycleCount, bool accessType, bool accessResult, int core){
         this->eip=eip; this->addr=addr; this->objectName=objectName; this->instAccessType=accessType;
-        this->cycleCount=cycleCount; this->accessResult=accessResult;
+        this->cycleCount=cycleCount; this->accessResult=accessResult; this->core=core;
     }
 
-    String getObjectName(){return objectName;}
-    IntPtr getEip(){return eip;}
+    String& getObjectName(){return this->objectName;}
+    IntPtr getEip(){return this->eip;}
     bool getAccessType(){return this->instAccessType;}
     IntPtr getAddr(){return this->addr;}
     UInt64 getCycleCount(){return this->cycleCount;}
     bool getAccessResult(){return this->accessResult;}
+    int getCoreId(){return this->core;}
 };
 
 class CacheHelper
 {
-    std::stack<Access*> request;
-    StrideTable *strideTable = new StrideTable();
-    bool memAccessType;// cache=0 dram=1
-   
+    std::list<Access*> request;
+    StrideTable* strideTable;
+    
     public:
-    CacheHelper(){}
-    ~CacheHelper(){delete strideTable;}
+    CacheHelper(){
+        strideTable = new StrideTable();
+    }
     void writeOutput(){ strideTable->write();}
     void strideTableUpdate();
-    void addRequest(Access* access);
-    void addRequest(IntPtr eip, IntPtr addr, String objname, UInt64 cycleCount, bool accessType, bool accessResult);
-    std::stack<Access*> getRequestStack(){return this->request;}
+    void addRequest(IntPtr eip, IntPtr addr, String objname, UInt64 cycleCount, int core, bool accessType, bool accessResult);
+    std::list<Access*> getRequestStack(){return request;}
+    int getReqStackSize(){return request.size();}
     void setOutputDir(String outputDir){
-        if(strideTable==NULL)
-        {
-            printf("nUll error");
-            exit(0);
-        }
-         strideTable->setOutputDir(outputDir); }
+        strideTable->setOutputDir(outputDir); 
+    }
 };
 
 };
