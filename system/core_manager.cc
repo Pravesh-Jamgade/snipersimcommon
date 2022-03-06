@@ -46,6 +46,7 @@ CoreManager::~CoreManager()
       delete *i;
    }
    cacheHelper->writeOutput();
+   cacheHelper.reset();
    delete m_core_tls;
    delete m_thread_type_tls;
 }

@@ -100,7 +100,7 @@ Core::Core(SInt32 id, std::shared_ptr<cache_helper::CacheHelper> cacheHelper)
    m_shmem_perf_model = new ShmemPerfModel();
 
     //[update]
-   this->cacheHelper = cacheHelper.get();
+   this->cacheHelper = cacheHelper;
    this->cacheHelper->setOutputDir(Sim()->getConfig()->getOutputDirectory());
    
    LOG_PRINT("instantiated memory manager model");
@@ -113,6 +113,7 @@ Core::Core(SInt32 id, std::shared_ptr<cache_helper::CacheHelper> cacheHelper)
 
 Core::~Core()
 {
+   cacheHelper.reset();
    if (m_cheetah_manager)
       delete m_cheetah_manager;
    delete m_topology_info;

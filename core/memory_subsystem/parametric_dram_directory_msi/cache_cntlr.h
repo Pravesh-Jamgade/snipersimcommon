@@ -289,7 +289,7 @@ namespace ParametricDramDirectoryMSI
          String memLevelDebug;
          bool toDRAM;
 
-         cache_helper::CacheHelper* cacheHelper=new cache_helper::CacheHelper();
+         std::shared_ptr<cache_helper::CacheHelper> cacheHelper;
 
          // Core-interfacing stuff
          void accessCache(
@@ -442,7 +442,7 @@ namespace ParametricDramDirectoryMSI
             this->memLevelDebug = memLevelDebug;
          }
          
-         void setCacheHelper(cache_helper::CacheHelper* cacheHelper)
+         void setCacheHelper(std::shared_ptr<cache_helper::CacheHelper> cacheHelper)
          {
             this->cacheHelper = cacheHelper;
          }

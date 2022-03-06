@@ -273,8 +273,16 @@ class StrideTable
 
     String outputDirName;
 
-    StrideTable() {}
-    ~StrideTable() {}
+    std::fstream onlineoutput;
+
+    StrideTable() {
+        cycleInfoOutput=outputDirName+cycleInfoOutput;
+        std::cout<<"open file to write:"<<cycleInfoOutput<<'\n';
+        // onlineoutput.open(cycleInfoOutput.c_str(), std::ofstream::out | std::ofstream::app);
+    }
+    ~StrideTable() {
+        onlineoutput.close();
+    }
 
     void lookupAndUpdate(int access_type, IntPtr eip, IntPtr addr, String path, UInt64 cycleNumber, bool accessResult, int core);
     void write();
@@ -313,8 +321,11 @@ class CacheHelper
     CacheHelper(){
         strideTable = new StrideTable();
     }
+    ~CacheHelper(){
+        delete strideTable;
+    }
+
     void writeOutput(){ strideTable->write();}
-    void strideTableUpdate();
     void addRequest(IntPtr eip, IntPtr addr, String objname, UInt64 cycleCount, int core, bool accessType, bool accessResult);
     std::list<Access*> getRequestStack(){return request;}
     int getReqStackSize(){return request.size();}

@@ -48,7 +48,6 @@ MemoryManager::MemoryManager(Core* core,
    m_enabled(false)
 {
 
-   cacheHelper=new cache_helper::CacheHelper();
    cacheHelper = core->getCacheHelper();
    
    // Read Parameters from the Config file
@@ -499,6 +498,7 @@ MemoryManager::~MemoryManager()
       delete m_dram_cntlr;
    if (m_dram_directory_cntlr)
       delete m_dram_directory_cntlr;
+   
 }
 
 HitWhere::where_t

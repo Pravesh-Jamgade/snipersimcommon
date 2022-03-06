@@ -135,9 +135,9 @@ class Core
       }
 
       //[update]
-      cache_helper::CacheHelper* getCacheHelper(){return this->cacheHelper;}
+      std::shared_ptr<cache_helper::CacheHelper> getCacheHelper(){return this->cacheHelper;}
       UInt64 getCycleCount();
-      cache_helper::CacheHelper* cacheHelper=nullptr;
+      std::shared_ptr<cache_helper::CacheHelper> cacheHelper;
 
    private:
       core_id_t m_core_id;

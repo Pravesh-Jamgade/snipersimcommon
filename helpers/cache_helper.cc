@@ -29,12 +29,12 @@ void StrideTable::write()
                 if(qit->second)
                 {
                     DataInfo* dataInfo = qit->second;
-                    _LOG_PRINT_CUSTOM(Log::Warning, "EIP=%s,ADDR=%s,LD=%ld,ST=%ld, T=%ld\n",
-                    pit->first.c_str(), qit->first.c_str(), dataInfo->getCount(1), dataInfo->getCount(0), dataInfo->getCount(-1));
+                    //_LOG_PRINT_CUSTOM(Log::Warning, "EIP=%s,ADDR=%s,LD=%ld,ST=%ld, T=%ld\n",
+                    //pit->first.c_str(), qit->first.c_str(), dataInfo->getCount(1), dataInfo->getCount(0), dataInfo->getCount(-1));
                     pcBasedClusterFile<<pit->first.c_str()<<","<<qit->first.c_str()<<","<<dataInfo->getCount(-1)<<'\n';
                 }
         }
-        _LOG_PRINT_CUSTOM(Log::Warning, "EIP=%s STRIDE=[", pit->first.c_str());
+        // _LOG_PRINT_CUSTOM(Log::Warning, "EIP=%s STRIDE=[", pit->first.c_str());
         rit = strideClusterInfo.find(pit->first);
         if(rit!=strideClusterInfo.end())
         {
@@ -44,32 +44,32 @@ void StrideTable::write()
             {
                 // _LOG_PRINT(Log::Warning, "%ld, ",dataInfo->stride[i]);
                 const char* p = &(sit->first[0]);
-                _LOG_PRINT_CUSTOM(Log::Warning, "%s, ", p);
+                // _LOG_PRINT_CUSTOM(Log::Warning, "%s, ", p);
 
                 pcBasedClusterStrideFile<<pit->first<<","<<p<<","<<sit->second.getCount()<<'\n';
             }
             // _LOG_PRINT(Log::Warning, "load=%ld store=%ld",dataInfo->typeCount[1], dataInfo->typeCount[0]);
         }
-        _LOG_PRINT_CUSTOM(Log::Warning, "]\n");
+        // _LOG_PRINT_CUSTOM(Log::Warning, "]\n");
     }
 
     pcBasedClusterFile.close();
     pcBasedClusterStrideFile.close();
 
-    _LOG_PRINT_CUSTOM(Log::Warning, "*********************************PATH-2-ADDRESSES*******************************\n");
+    // _LOG_PRINT_CUSTOM(Log::Warning, "*********************************PATH-2-ADDRESSES*******************************\n");
 
-    std::map<String, std::set<String>>::iterator pasit = path2haddrStorageInfo.begin();
-    for(;pasit!=path2haddrStorageInfo.end();pasit++)
-    {
-        _LOG_PRINT_CUSTOM(Log::Warning, "%s\t=[",pasit->first.c_str());
-        std::set<String> addresses = pasit->second;
-        // std::set<String>::iterator it = addresses.begin();
-        for(auto address : addresses)
-        {
-            _LOG_PRINT_CUSTOM(Log::Warning, "%s,", address.c_str());
-        }
-        _LOG_PRINT_CUSTOM(Log::Warning, "]\n");
-    }
+    // std::map<String, std::set<String>>::iterator pasit = path2haddrStorageInfo.begin();
+    // for(;pasit!=path2haddrStorageInfo.end();pasit++)
+    // {
+    //     _LOG_PRINT_CUSTOM(Log::Warning, "%s\t=[",pasit->first.c_str());
+    //     std::set<String> addresses = pasit->second;
+    //     // std::set<String>::iterator it = addresses.begin();
+    //     for(auto address : addresses)
+    //     {
+    //         _LOG_PRINT_CUSTOM(Log::Warning, "%s,", address.c_str());
+    //     }
+    //     _LOG_PRINT_CUSTOM(Log::Warning, "]\n");
+    // }
 
     printf("Total Access=%d\n", total);
 
@@ -83,21 +83,21 @@ void StrideTable::write()
     }
 
     /*output, cycle wise complete run: L/S, H/M, EIP, ADDRESS, CYCLE#*/
-    std::fstream outfile;
-    cycleInfoOutput=outputDirName+cycleInfoOutput;
-    printf("file:%s\n", cycleInfoOutput.c_str());
-    outfile.open(cycleInfoOutput.c_str(), std::ofstream::out | std::ofstream::app);
-    if(outfile.is_open())
-    {
-        outfile<<"type,status,object,pc,address,cycle,core\n";
-        std::list<std::vector<String>>::iterator it;
-        for(auto cycle : cycleInfo)//cycleInfo is a vector
-        {
-            outfile<<cycle[0]<<","<<cycle[1]<<","<<cycle[2]<<","<<cycle[3]<<","<<cycle[4]<<","<<cycle[5]<<","<<cycle[6]<<'\n';
-        }
-        outfile.close();
-    }
-    else std::cout<<"cycleLog.dat is not open"<<'\n';
+    // std::fstream outfile;
+    // cycleInfoOutput=outputDirName+cycleInfoOutput;
+    // printf("file:%s\n", cycleInfoOutput.c_str());
+    // outfile.open(cycleInfoOutput.c_str(), std::ofstream::out | std::ofstream::app);
+    // if(outfile.is_open())
+    // {
+    //     outfile<<"type,status,object,pc,address,cycle,core\n";
+    //     std::list<std::vector<String>>::iterator it;
+    //     for(auto cycle : cycleInfo)//cycleInfo is a vector
+    //     {
+    //         outfile<<cycle[0]<<","<<cycle[1]<<","<<cycle[2]<<","<<cycle[3]<<","<<cycle[4]<<","<<cycle[5]<<","<<cycle[6]<<'\n';
+    //     }
+    //     outfile.close();
+    // }
+    // else std::cout<<"cycleLog.dat is not open"<<'\n';
 
     // collect unique eip and addr
     std::map<String, Count> uniqueEIP, uniqueAddr;
@@ -105,6 +105,7 @@ void StrideTable::write()
 
     /*output, stride order followed on particular EIP: EIP, ORDER[address (access_count),...]*/
     strideAddrOrderOutput=outputDirName+strideAddrOrderOutput;
+    std::fstream outfile;
     outfile.open(strideAddrOrderOutput.c_str(), std::ofstream::out | std::ofstream::app);
     if(outfile.is_open())
     {
@@ -310,8 +311,12 @@ bool accessResult, int core)
 
     String accessTypeStr = access_type==1?"L":"S";
     // String cycleInfoString = Misc::AppendWithSpace(accessTypeStr, accessResStr, path, hindex, haddr, hcycle);
-    cycleInfo.emplace_back(std::vector<String>{accessTypeStr,accessResStr,path,hindex,haddr,hcycle,itostr(core)});
+    // cycleInfo.emplace_back(std::vector<String>{accessTypeStr,accessResStr,path,hindex,haddr,hcycle,itostr(core)});
 
+    //onlineoutput<<accessTypeStr<<","<<accessResStr<<","<<path<<","<<hindex<<","<<haddr<<","<<hcycle<<","<<itostr(core)<<std::endl;
+
+    _LOG_PRINT_CUSTOM(Log::Warning, "%s,%s,%s,%s,%s,%s,%s\n", accessTypeStr.c_str(),
+    accessResStr.c_str(),path.c_str(),hindex.c_str(),haddr.c_str(),hcycle.c_str(),itostr(core).c_str());
     // iteratros
     std::map<String, Add2Data>::iterator tableIt;
     Add2Data:: iterator addrIt;
@@ -391,21 +396,3 @@ void CacheHelper::addRequest(IntPtr eip, IntPtr addr, String objname, UInt64 cyc
         core
         );
 }
-
-void CacheHelper::strideTableUpdate()
-{
-    // for(auto e : request)
-    // {   
-    //     strideTable->lookupAndUpdate(
-    //         e->getAccessType(), 
-    //         e->getEip(), 
-    //         e->getAddr(), 
-    //         e->getObjectName(), 
-    //         e->getCycleCount(), 
-    //         e->getAccessResult(), 
-    //         e->getCoreId()
-    //     );
-    // }
-    // request.erase(request.begin());
-}
-

@@ -30,8 +30,7 @@ class DramCntlrInterface
    IntPtr eip;
    String name;
    String memLevelDebug;
-   cache_helper::CacheHelper* cacheHelper=new cache_helper::CacheHelper();
-
+   std::shared_ptr<cache_helper::CacheHelper> cacheHelper;
 
    public:
       //[update]
@@ -59,8 +58,8 @@ class DramCntlrInterface
       void handleMsgFromTagDirectory(core_id_t sender, PrL1PrL2DramDirectoryMSI::ShmemMsg* shmem_msg);
 
       //[update]
-      void setCacheHelper(cache_helper::CacheHelper* cacheHelper){this->cacheHelper = cacheHelper;}
-      cache_helper::CacheHelper* getCacheHelper(){return cacheHelper;}
+      void setCacheHelper(std::shared_ptr<cache_helper::CacheHelper> cacheHelper){this->cacheHelper = cacheHelper;}
+      std::shared_ptr<cache_helper::CacheHelper> getCacheHelper(){return cacheHelper;}
 
       void setEIP(IntPtr eip) {this->eip=eip;}
       IntPtr getEIP(){return this->eip;}

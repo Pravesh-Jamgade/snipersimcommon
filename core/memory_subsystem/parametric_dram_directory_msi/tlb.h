@@ -27,7 +27,7 @@ namespace ParametricDramDirectoryMSI
          //[update]
          UInt64 totalAccess;
          //[udpate]
-         cache_helper::CacheHelper* cacheHelper=new cache_helper::CacheHelper();
+         std::shared_ptr<cache_helper::CacheHelper> cacheHelper;
 
       public:
          
@@ -51,7 +51,7 @@ namespace ParametricDramDirectoryMSI
             }
          }
 
-         void setCacheHelper(cache_helper::CacheHelper* cacheHelper)
+         void setCacheHelper(std::shared_ptr<cache_helper::CacheHelper> cacheHelper)
          {
             this->cacheHelper=cacheHelper;
          }
