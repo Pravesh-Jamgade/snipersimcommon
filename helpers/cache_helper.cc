@@ -16,64 +16,43 @@ void StrideTable::write()
    
     std::map<String, Add2Data>::iterator pit = table.begin();// iterator on eip add2data
     std::map<String,Count>::iterator sit; // iterator on set of stride from StrideCluster
-    std::map<String, StrideCluster>::iterator rit;
+    std::map<String, StrideCluster*>::iterator rit;
     std::list<AddressFrequencyAndOrder>::iterator strideOrderVecIt;
 
-    for(;pit!=table.end();pit++)
+    for(;pit!=table.end();pit++)//pc or eip
     {
         Add2Data add2data = pit->second;
         Add2Data::iterator qit = add2data.begin(); // iterator on add2data
         
-        for(;qit!=add2data.end(); qit++)
+        for(;qit!=add2data.end(); qit++)// addr
         {
                 if(qit->second)
                 {
                     DataInfo* dataInfo = qit->second;
-                    //_LOG_PRINT_CUSTOM(Log::Warning, "EIP=%s,ADDR=%s,LD=%ld,ST=%ld, T=%ld\n",
-                    //pit->first.c_str(), qit->first.c_str(), dataInfo->getCount(1), dataInfo->getCount(0), dataInfo->getCount(-1));
+                    // pc or eip, addr, count
                     pcBasedClusterFile<<pit->first.c_str()<<","<<qit->first.c_str()<<","<<dataInfo->getCount(-1)<<'\n';
                 }
         }
-        // _LOG_PRINT_CUSTOM(Log::Warning, "EIP=%s STRIDE=[", pit->first.c_str());
-        rit = strideClusterInfo.find(pit->first);
+        rit = strideClusterInfo.find(pit->first);// for pc or eip find stridecluster
         if(rit!=strideClusterInfo.end())
         {
-            std::map<String,Count>strideList = rit->second.getStrideList();
+            // stride and count
+            std::map<String,Count>strideList = rit->second->getStrideList(); // get strideList for pc or eip
             sit = strideList.begin();
             for(;sit!=strideList.end();sit++)
             {
-                // _LOG_PRINT(Log::Warning, "%ld, ",dataInfo->stride[i]);
-                const char* p = &(sit->first[0]);
-                // _LOG_PRINT_CUSTOM(Log::Warning, "%s, ", p);
-
-                pcBasedClusterStrideFile<<pit->first<<","<<p<<","<<sit->second.getCount()<<'\n';
+                // pc or eip, stride, count
+                pcBasedClusterStrideFile<<pit->first<<","<<sit->first<<","<<sit->second.getCount()<<'\n';
             }
-            // _LOG_PRINT(Log::Warning, "load=%ld store=%ld",dataInfo->typeCount[1], dataInfo->typeCount[0]);
         }
-        // _LOG_PRINT_CUSTOM(Log::Warning, "]\n");
     }
 
     pcBasedClusterFile.close();
     pcBasedClusterStrideFile.close();
 
-    // _LOG_PRINT_CUSTOM(Log::Warning, "*********************************PATH-2-ADDRESSES*******************************\n");
-
-    // std::map<String, std::set<String>>::iterator pasit = path2haddrStorageInfo.begin();
-    // for(;pasit!=path2haddrStorageInfo.end();pasit++)
-    // {
-    //     _LOG_PRINT_CUSTOM(Log::Warning, "%s\t=[",pasit->first.c_str());
-    //     std::set<String> addresses = pasit->second;
-    //     // std::set<String>::iterator it = addresses.begin();
-    //     for(auto address : addresses)
-    //     {
-    //         _LOG_PRINT_CUSTOM(Log::Warning, "%s,", address.c_str());
-    //     }
-    //     _LOG_PRINT_CUSTOM(Log::Warning, "]\n");
-    // }
-
     printf("Total Access=%d\n", total);
-
     printf("Total Access by Access Type\n");
+
     std::map<String, UInt32>::iterator icn = countByNameInfo.begin();
     for(;icn!=countByNameInfo.end();icn++)
     {
@@ -81,23 +60,6 @@ void StrideTable::write()
         char* p=&name[0];
         printf("%s = %d\n", p, icn->second);
     }
-
-    /*output, cycle wise complete run: L/S, H/M, EIP, ADDRESS, CYCLE#*/
-    // std::fstream outfile;
-    // cycleInfoOutput=outputDirName+cycleInfoOutput;
-    // printf("file:%s\n", cycleInfoOutput.c_str());
-    // outfile.open(cycleInfoOutput.c_str(), std::ofstream::out | std::ofstream::app);
-    // if(outfile.is_open())
-    // {
-    //     outfile<<"type,status,object,pc,address,cycle,core\n";
-    //     std::list<std::vector<String>>::iterator it;
-    //     for(auto cycle : cycleInfo)//cycleInfo is a vector
-    //     {
-    //         outfile<<cycle[0]<<","<<cycle[1]<<","<<cycle[2]<<","<<cycle[3]<<","<<cycle[4]<<","<<cycle[5]<<","<<cycle[6]<<'\n';
-    //     }
-    //     outfile.close();
-    // }
-    // else std::cout<<"cycleLog.dat is not open"<<'\n';
 
     // collect unique eip and addr
     std::map<String, Count> uniqueEIP, uniqueAddr;
@@ -109,34 +71,42 @@ void StrideTable::write()
     outfile.open(strideAddrOrderOutput.c_str(), std::ofstream::out | std::ofstream::app);
     if(outfile.is_open())
     {
-        rit = strideClusterInfo.begin();//eip to StrideCluster
+        rit = strideClusterInfo.begin();//eip to StrideCluster std::map<String,StrideCluster>
                                         // strideCluster has info about: stride, AddressFrequencyAndOrder
                                         // AddressFrequencyAndOrder has info about: address pattern, address count(to optimize for analysis)
         for(;rit!=strideClusterInfo.end();rit++)
         {
             outfile<<rit->first<<" ORDER=[";
-            std::list<AddressFrequencyAndOrder> strideOrder = rit->second.getAddressFrequencyAndOrder();
+            std::list<AddressFrequencyAndOrder> strideOrder = rit->second->getAddressFrequencyAndOrder();
             strideOrderVecIt = strideOrder.begin();
 
+            // eip (or pc)
             String eip=rit->first;
             if(uniqueEIP.find(eip)==uniqueEIP.end())
             {
-                Count count;
-                uniqueEIP[eip]=count;
+                uniqueEIP[eip]=Count(0); // not seen before setting count (to 1 intially)
             }
 
+            // iterating on objcet of AddressFrequencyAndOrder vector
             for(;strideOrderVecIt!=strideOrder.end();strideOrderVecIt++)
             {
-                uniqueEIP[eip].setCount(strideOrderVecIt->getAddrCount());
+                // eip has been seen for these address and count of these address is available
+                // setting count for eip using address count (to give eip<->frequency in output)
+
+                uniqueEIP[eip].incrCount(strideOrderVecIt->getAddrCount());
 
                 outfile<<"("<<strideOrderVecIt->getAddress()<<","<<strideOrderVecIt->getAddrCount()<<"), ";
 
+                // address fequency is also counted
+                // address frquency can counted in two ways 1) how many eip has accessed these addresses
+                // 2) how many total accesses are done collectively by summing all eip acceses to these address
+                // using only (2), initally i didnt know about that while analyzing data i found these mistake (1)
+                // but (1) could be also useful
                 if(uniqueAddr.find(strideOrderVecIt->getAddress())==uniqueAddr.end())
                 {
-                    Count count;
-                    uniqueAddr[strideOrderVecIt->getAddress()]=count;
+                    uniqueAddr[strideOrderVecIt->getAddress()]=Count();
                 }
-                else uniqueAddr[strideOrderVecIt->getAddress()].incrCount();
+                else uniqueAddr[strideOrderVecIt->getAddress()].incrCount(strideOrderVecIt->getAddrCount());
 
                 uniqueEdgePair.insert({eip, strideOrderVecIt->getAddress()});
             }
@@ -190,7 +160,7 @@ void StrideTable::write()
     std::vector<std::vector<String>> clusters;
     std::vector<std::pair<String, Count>> addrCountVec;
     addrCountVec.assign(uniqueAddr.begin(), uniqueAddr.end());
-    addrCountVec.push_back({"0x0", Count()});
+    addrCountVec.insert(addrCountVec.begin(),{"0x0", Count()});
     prev=-1;
 
     bag.push_back(addrCountVec[0].first);
@@ -320,7 +290,7 @@ bool accessResult, int core)
     // iteratros
     std::map<String, Add2Data>::iterator tableIt;
     Add2Data:: iterator addrIt;
-    std::map<String, StrideCluster>::iterator strideIt;
+    std::map<String, StrideCluster*>::iterator strideIt;
     
     //store access path name to address
     path2haddrStorageInfo[path].insert(haddr);
@@ -355,21 +325,20 @@ bool accessResult, int core)
                     { haddr, new DataInfo(access_type) } 
             );
         }
-
-        strideIt = strideClusterInfo.find(hindex);
-        if(strideIt==strideClusterInfo.end())
-        {
-            std::cout<<"EIP is not here\n";
-            exit(0);
-        }
-        strideIt->second.setStride(addr,haddr);
     }
     else
     {
-        StrideCluster strideCluster(addr,haddr);
-        strideClusterInfo[hindex]= strideCluster;
+        strideClusterInfo[hindex]=new StrideCluster(addr,haddr);
         table[hindex][haddr]=new DataInfo(access_type);
     }
+
+    
+    strideIt = strideClusterInfo.find(hindex);
+    if(strideIt==strideClusterInfo.end())
+    {
+      strideClusterInfo.insert({hindex,new StrideCluster(addr,haddr)});
+    }
+    else strideIt->second->setStride(addr,haddr);
 
     std::map<String, UInt32>::iterator icn = countByNameInfo.find(path);
     if(icn!=countByNameInfo.end())

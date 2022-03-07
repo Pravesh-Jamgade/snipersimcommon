@@ -149,29 +149,30 @@ class Storage
 
 class Count
 {
-    uint count;
+    UInt32 count;
     int cluster;
     public:
+    Count(int zero){this->count=0, this->cluster=-1;}
     Count(){this->count=1; this->cluster=-1;}
     void incrCount(){count++;}
-    uint getCount(){return count;}
-    void setCount(uint count){this->count+=count;}
-    void setCluster(int cluster){this->cluster=cluster;}
-    int getCluster(){return this->cluster;}
+    void incrCount(int x){count=count+x;}
+    UInt32 getCount(){return count;}
+    void setCluster(int y){cluster=y;}
+    int getCluster(){return cluster;}
 };
 
 /*Addresses in-order and their count if they are consecutive: Part of StrideCluster, cluster by PC or EIP*/
 class AddressFrequencyAndOrder
 {
     String address;
-    uint32_t count;
+    UInt32 count;
     public:
     AddressFrequencyAndOrder(String addr):address(addr), count(1){} 
 
     bool operator==(AddressFrequencyAndOrder pre) {return address==pre.address;}
     void incrCount() {count++;}
     String getAddress(){return address;}
-    uint32_t getAddrCount(){return count;}
+    UInt32 getAddrCount(){return count;}
 };
 
 /*List of Stride seen by particular PC or EIP based on addresses it has accesed, 
@@ -208,14 +209,15 @@ class StrideCluster
         AddressFrequencyAndOrder newstrideOrderElement(haddr);
         if(newstrideOrderElement==strideOrderList.back()){
             strideOrderList.back().incrCount();
-            return;}//if prev strideorder == newstrideorder skip, otherwise track
+            return;
+        }//if prev strideorder == newstrideorder skip, otherwise track
         strideOrderList.emplace_back(newstrideOrderElement);
     }
     std::map<String, Count> getStrideList(){return strideList;}
     std::list<AddressFrequencyAndOrder> getAddressFrequencyAndOrder(){return strideOrderList;}
 };
 
- class DataInfo
+class DataInfo
 {
     UInt32 typeCount[2] = {0};
     UInt32 total_access;
@@ -225,9 +227,9 @@ class StrideCluster
         this->typeCount[access_type]+=1;
         this->total_access=1;
     }
-    void incrTotalCount(){total_access++;}
-    void incrTypeCount(int accessType){typeCount[accessType]+=1;}
-    UInt32 getCount(int type){ if(type<0){return total_access;}else{return typeCount[type];} }
+    void incrTotalCount(){this->total_access++;}
+    void incrTypeCount(int accessType){this->typeCount[accessType]+=1;}
+    UInt32 getCount(int type){ if(type<0){return this->total_access;}else{return this->typeCount[type];} }
 };
 
 class StrideTable
@@ -246,6 +248,9 @@ class StrideTable
     String addrClusterFileInfo = "/StatAddrCluster.csv";
     String pcBasedCluster = "/CSV_PcbasedCluster.csv";
     String pcBasedClusterStride = "/CSV_PcbasedClusterStride.csv";
+    String cycleInfoOutput="/CSV_CycleTrace.csv";
+    String strideAddrOrderOutput="/StatEipBasedAddrOrder.out";
+
 
     // addr to datainfo
     typedef std::map<String, DataInfo*> Add2Data;
@@ -254,7 +259,7 @@ class StrideTable
     std::map<String, Add2Data> table;
 
     //
-    std::map<String, StrideCluster> strideClusterInfo;
+    std::map<String, StrideCluster*> strideClusterInfo;
 
     UInt32 last=0;
 
@@ -268,9 +273,7 @@ class StrideTable
 
     //* eip address cycle#
     std::list<std::vector<String>> cycleInfo;
-    String cycleInfoOutput="/CSV_CycleTrace.csv";
-    String strideAddrOrderOutput="/StatEipBasedAddrOrder.out";
-
+   
     String outputDirName;
 
     std::fstream onlineoutput;
