@@ -61,10 +61,6 @@ void StrideTable::write()
         printf("%s = %d\n", p, icn->second);
     }
 
-    // collect unique eip and addr
-    std::map<String, Count> uniqueEIP, uniqueAddr;
-    std::map<String, String> uniqueEdgePair;
-
     /*output, stride order followed on particular EIP: EIP, ORDER[address (access_count),...]*/
     strideAddrOrderOutput=outputDirName+strideAddrOrderOutput;
     std::fstream outfile;
@@ -106,8 +102,11 @@ void StrideTable::write()
                 {
                     uniqueAddr[strideOrderVecIt->getAddress()]=Count();
                 }
-                else uniqueAddr[strideOrderVecIt->getAddress()].incrCount(strideOrderVecIt->getAddrCount());
-
+                else
+                {
+                    uniqueAddr[strideOrderVecIt->getAddress()].incrCount(strideOrderVecIt->getAddrCount());
+                }
+                    
                 uniqueEdgePair.insert({eip, strideOrderVecIt->getAddress()});
             }
 
@@ -160,11 +159,12 @@ void StrideTable::write()
     std::vector<std::vector<String>> clusters;
     std::vector<std::pair<String, Count>> addrCountVec;
     addrCountVec.assign(uniqueAddr.begin(), uniqueAddr.end());
-    addrCountVec.insert(addrCountVec.begin(),{"0x0", Count()});
+    addrCountVec.push_back({"0x0", Count()});
     prev=-1;
 
     bag.push_back(addrCountVec[0].first);
-    for(int i=0; i<= addrCountVec.size()-2; i++)
+
+    for(int i=0; i<= addrCountVec.size()-2 && addrCountVec.size()>3; i++)
     {
         String addr = addrCountVec[i].first;
         String next_addr = addrCountVec[i+1].first;

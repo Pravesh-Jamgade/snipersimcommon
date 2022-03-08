@@ -273,7 +273,12 @@ class StrideTable
 
     //* eip address cycle#
     std::list<std::vector<String>> cycleInfo;
-   
+    
+    // collect unique eip and addr
+    std::map<String, Count> uniqueEIP, uniqueAddr;
+    std::map<String, String> uniqueEdgePair;
+
+
     String outputDirName;
 
     std::fstream onlineoutput;
@@ -325,10 +330,10 @@ class CacheHelper
         strideTable = new StrideTable();
     }
     ~CacheHelper(){
+        write();
         delete strideTable;
     }
 
-    void writeOutput(){ strideTable->write();}
     void addRequest(IntPtr eip, IntPtr addr, String objname, UInt64 cycleCount, int core, bool accessType, bool accessResult);
     std::list<Access*> getRequestStack(){return request;}
     int getReqStackSize(){return request.size();}

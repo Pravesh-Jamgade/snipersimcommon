@@ -45,7 +45,6 @@ CoreManager::~CoreManager()
    for (std::vector<Core *>::iterator i = m_cores.begin(); i != m_cores.end(); i++){
       delete *i;
    }
-   cacheHelper->writeOutput();
    cacheHelper.reset();
    delete m_core_tls;
    delete m_thread_type_tls;
