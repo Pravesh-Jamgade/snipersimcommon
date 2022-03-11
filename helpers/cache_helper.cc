@@ -26,12 +26,14 @@ void StrideTable::write()
         
         for(;qit!=add2data.end(); qit++)// addr
         {
-                if(qit->second)
-                {
-                    DataInfo* dataInfo = qit->second;
-                    // pc or eip, addr, count
-                    pcBasedClusterFile<<pit->first.c_str()<<","<<qit->first.c_str()<<","<<dataInfo->getCount(-1)<<'\n';
-                }
+            uniqueEdgePair.push_back({pit->first, qit->first});
+
+            if(qit->second)
+            {
+                DataInfo* dataInfo = qit->second;
+                // pc or eip, addr, count
+                pcBasedClusterFile<<pit->first.c_str()<<","<<qit->first.c_str()<<","<<dataInfo->getCount(-1)<<'\n';
+            }
         }
         rit = strideClusterInfo.find(pit->first);// for pc or eip find stridecluster
         if(rit!=strideClusterInfo.end())
@@ -76,38 +78,10 @@ void StrideTable::write()
             std::list<AddressFrequencyAndOrder> strideOrder = rit->second->getAddressFrequencyAndOrder();
             strideOrderVecIt = strideOrder.begin();
 
-            // eip (or pc)
-            String eip=rit->first;
-            if(uniqueEIP.find(eip)==uniqueEIP.end())
-            {
-                uniqueEIP[eip]=Count(0); // not seen before setting count (to 1 intially)
-            }
-
             // iterating on objcet of AddressFrequencyAndOrder vector
             for(;strideOrderVecIt!=strideOrder.end();strideOrderVecIt++)
             {
-                // eip has been seen for these address and count of these address is available
-                // setting count for eip using address count (to give eip<->frequency in output)
-
-                uniqueEIP[eip].incrCount(strideOrderVecIt->getAddrCount());
-
                 outfile<<"("<<strideOrderVecIt->getAddress()<<","<<strideOrderVecIt->getAddrCount()<<"), ";
-
-                // address fequency is also counted
-                // address frquency can counted in two ways 1) how many eip has accessed these addresses
-                // 2) how many total accesses are done collectively by summing all eip acceses to these address
-                // using only (2), initally i didnt know about that while analyzing data i found these mistake (1)
-                // but (1) could be also useful
-                if(uniqueAddr.find(strideOrderVecIt->getAddress())==uniqueAddr.end())
-                {
-                    uniqueAddr[strideOrderVecIt->getAddress()]=Count();
-                }
-                else
-                {
-                    uniqueAddr[strideOrderVecIt->getAddress()].incrCount(strideOrderVecIt->getAddrCount());
-                }
-                    
-                uniqueEdgePair.insert({eip, strideOrderVecIt->getAddress()});
             }
 
             outfile<<"]\n";
@@ -123,10 +97,11 @@ void StrideTable::write()
     String addrFreqFilePath=outputDirName+addFreFileInfo;
     String addrClusterFilePath=outputDirName+addrClusterFileInfo;
     String addrClusterFile_csvPath=outputDirName+addrClusterFileInfo_csv;
+    String accessCountOfCluster_csvPath=outputDirName+accessCountOfCluster;
 
     // filestream objects
     std::fstream eipNodesFile, edgesFile, addrNodesFile, eipFreqFile, 
-    addrFreFile, addrClusterFile, addrClusterFile_csv;
+    addrFreFile, addrClusterFile, addrClusterFile_csv, accessCountClusterFile;
     
     // open files
     eipNodesFile.open(eipNodesFilePath.c_str(), std::ofstream::out | std::ofstream::app);
@@ -136,6 +111,7 @@ void StrideTable::write()
     addrFreFile.open(addrFreqFilePath.c_str(), std::ofstream::out | std::ofstream::app);
     addrClusterFile.open(addrClusterFilePath.c_str(), std::ofstream::out | std::ofstream::app);
     addrClusterFile_csv.open(addrClusterFile_csvPath.c_str(), std::ofstream::out | std::ofstream::app);
+    accessCountClusterFile.open(accessCountOfCluster_csvPath.c_str(),std::ofstream::out | std::ofstream::app);
 
     // eip frequency
     std::map<String, Count>::iterator eipFreIt = uniqueEIP.begin();
@@ -218,10 +194,13 @@ void StrideTable::write()
             }
         }
     }
-    
+
+    accessCountClusterFile<<"clusterNo, accessFrequency\n";
     addrClusterFile_csv<<"clusterNo,address\n";
     for(int i=0; i< clusters.size(); i++)
     {
+        int totalAddressAccessForCluster_i=0;
+        // cluster number
         addrClusterFile<<i<<" [";
         for(int j=0; j< clusters[i].size(); j++)
         {
@@ -229,10 +208,16 @@ void StrideTable::write()
             if(vvcit!=uniqueAddr.end())
             {
                 vvcit->second.setCluster(i);
+                totalAddressAccessForCluster_i=totalAddressAccessForCluster_i+vvcit->second.getCount();
             }
+            // address belonging to cluster
             addrClusterFile<<clusters[i][j]<<"  ";
+
+            // clusterNo, addresss
             addrClusterFile_csv<<i<<","<<clusters[i][j]<<'\n';
         }
+        //cluster number, total access done by pc on addresses which are part of cluster
+        accessCountClusterFile<<i<<","<<totalAddressAccessForCluster_i<<'\n';
         addrClusterFile<<"]\n";
     }
     addrClusterFile.close();
@@ -249,9 +234,10 @@ void StrideTable::write()
     }
     addrNodesFile.close();
     addrFreFile.close();
+    accessCountClusterFile.close();
 
     // edge
-    std::map<String, String>::iterator edgeIt = uniqueEdgePair.begin();
+    std::list<std::pair<String, String>>::iterator edgeIt = uniqueEdgePair.begin();
     edgesFile<<"pc,address\n";
     for(; edgeIt!=uniqueEdgePair.end(); edgeIt++)
     {
@@ -326,28 +312,26 @@ bool accessResult, int core)
             );
         }
     }
-    else
-    {
-        strideClusterInfo[hindex]=new StrideCluster(addr,haddr);
-        table[hindex][haddr]=new DataInfo(access_type);
-    }
+    else table[hindex][haddr]=new DataInfo(access_type);
 
-    
     strideIt = strideClusterInfo.find(hindex);
-    if(strideIt==strideClusterInfo.end())
-    {
-      strideClusterInfo.insert({hindex,new StrideCluster(addr,haddr)});
-    }
+    if(strideIt==strideClusterInfo.end()) strideClusterInfo.insert({hindex,new StrideCluster(addr,haddr)});
     else strideIt->second->setStride(addr,haddr);
 
+    std::map<String, Count>::iterator uniqIt;
+
+    uniqIt=uniqueAddr.find(haddr);
+    if(uniqIt!=uniqueAddr.end()) uniqIt->second.incrCount();
+    else uniqueAddr.insert({haddr, Count()});
+
+    uniqIt=uniqueEIP.end();
+    uniqIt=uniqueEIP.find(hindex);
+    if(uniqIt!=uniqueEIP.end()) uniqIt->second.incrCount();
+    else uniqueEIP.insert({hindex, Count()});
+
     std::map<String, UInt32>::iterator icn = countByNameInfo.find(path);
-    if(icn!=countByNameInfo.end())
-    {
-        icn->second++;
-    }
-    else{
-        countByNameInfo.insert({path, 1});
-    }
+    if(icn!=countByNameInfo.end()) icn->second++;
+    else countByNameInfo.insert({path, 1});
 }
 
 void CacheHelper::addRequest(IntPtr eip, IntPtr addr, String objname, UInt64 cycleCount, int core, bool accessType, bool accessResult)

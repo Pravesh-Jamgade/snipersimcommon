@@ -250,7 +250,7 @@ class StrideTable
     String pcBasedClusterStride = "/CSV_PcbasedClusterStride.csv";
     String cycleInfoOutput="/CSV_CycleTrace.csv";
     String strideAddrOrderOutput="/StatEipBasedAddrOrder.out";
-
+    String accessCountOfCluster="/CSV_AccessCountOfCluster.csv";
 
     // addr to datainfo
     typedef std::map<String, DataInfo*> Add2Data;
@@ -276,7 +276,7 @@ class StrideTable
     
     // collect unique eip and addr
     std::map<String, Count> uniqueEIP, uniqueAddr;
-    std::map<String, String> uniqueEdgePair;
+    std::list<std::pair<String, String>> uniqueEdgePair;
 
 
     String outputDirName;
@@ -330,7 +330,7 @@ class CacheHelper
         strideTable = new StrideTable();
     }
     ~CacheHelper(){
-        write();
+        strideTable->write();
         delete strideTable;
     }
 
