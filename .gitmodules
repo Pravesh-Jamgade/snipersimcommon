@@ -1,0 +1,3 @@
+[submodule "libpqueue"]
+	path = libpqueue
+	url = https://github.com/vy/libpqueue
