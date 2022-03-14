@@ -204,7 +204,7 @@ class StrideCluster
         if(it!=strideList.end()){
             it->second.incrCount();
         }
-        else strideList[diffStr]=Count(); 
+        else strideList.insert(std::pair<String,cache_helper::Count>{diffStr,Count()}); 
 
         AddressFrequencyAndOrder newstrideOrderElement(haddr);
         if(newstrideOrderElement==strideOrderList.back()){

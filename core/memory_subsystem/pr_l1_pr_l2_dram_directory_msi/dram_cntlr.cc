@@ -55,7 +55,7 @@ DramCntlr::~DramCntlr()
 }
 
 boost::tuple<SubsecondTime, HitWhere::where_t>
-DramCntlr::getDataFromDram(IntPtr address, core_id_t requester, Byte* data_buf, SubsecondTime now, ShmemPerf *perf, IntPtr eip)
+DramCntlr::getDataFromDram(IntPtr address, core_id_t requester, Byte* data_buf, SubsecondTime now, ShmemPerf *perf)
 {
    if (Sim()->getFaultinjectionManager())
    {
@@ -87,7 +87,7 @@ DramCntlr::getDataFromDram(IntPtr address, core_id_t requester, Byte* data_buf, 
 }
 
 boost::tuple<SubsecondTime, HitWhere::where_t>
-DramCntlr::putDataToDram(IntPtr address, core_id_t requester, Byte* data_buf, SubsecondTime now, IntPtr eip)
+DramCntlr::putDataToDram(IntPtr address, core_id_t requester, Byte* data_buf, SubsecondTime now)
 {
    if (Sim()->getFaultinjectionManager())
    {

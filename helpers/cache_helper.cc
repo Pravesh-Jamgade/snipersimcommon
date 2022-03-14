@@ -338,7 +338,6 @@ void CacheHelper::addRequest(IntPtr eip, IntPtr addr, String objname, UInt64 cyc
 {
     IntPtr index = eip; // use lsb 20 bits for indexing, possible all instructions are in few blocks
     IntPtr forStride = addr >> 6;
-    request.push_back(new Access(eip,forStride,objname,cycleCount,accessType,accessResult,core));
     strideTable->lookupAndUpdate(
         accessType,
         eip,

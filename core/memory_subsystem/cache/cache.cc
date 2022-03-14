@@ -32,6 +32,7 @@ Cache::Cache(
       m_sets[i] = CacheSet::createCacheSet(cfgname, core_id, replacement_policy, m_cache_type, m_associativity, m_blocksize, m_set_info);
    }
 
+   pcTable = new CacheAddonSpace::PCHistoryTable();
    #ifdef ENABLE_SET_USAGE_HIST
    m_set_usage_hist = new UInt64[m_num_sets];
    for (UInt32 i = 0; i < m_num_sets; i++)
@@ -83,8 +84,12 @@ Cache::invalidateSingleLine(IntPtr addr)
 
 CacheBlockInfo*
 Cache::accessSingleLine(IntPtr addr, access_t access_type,
-      Byte* buff, UInt32 bytes, SubsecondTime now, bool update_replacement, IntPtr eip, String path)
+      Byte* buff, UInt32 bytes, SubsecondTime now, bool update_replacement, String path)
 {
+   printf("accessSingle Line\n");
+   //[update]
+   processPCEntry(getEIP(),addr);
+
    IntPtr tag;
    UInt32 set_index;
    UInt32 line_index = -1;
@@ -123,14 +128,22 @@ void
 Cache::insertSingleLine(IntPtr addr, Byte* fill_buff,
       bool* eviction, IntPtr* evict_addr,
       CacheBlockInfo* evict_block_info, Byte* evict_buff,
-      SubsecondTime now, CacheCntlr *cntlr, IntPtr eip)
+      SubsecondTime now, CacheCntlr *cntlr)
 {
+   printf("insertSingle Line\n");
+   //[update]
+   processPCEntry(getEIP(),addr);
+
    IntPtr tag;
    UInt32 set_index;
    splitAddress(addr, tag, set_index);
 
    CacheBlockInfo* cache_block_info = CacheBlockInfo::create(m_cache_type);
    cache_block_info->setTag(tag);
+   
+   //[update]
+   // set cacheblockinfog to hotline
+   cache_block_info->setOption(CacheBlockInfo::HOT_LINE);
 
    m_sets[set_index]->insert(cache_block_info, fill_buff,
          eviction, evict_block_info, evict_buff, cntlr);
@@ -183,4 +196,42 @@ Cache::updateHits(Core::mem_op_t mem_op_type, UInt64 hits)
       m_num_accesses += hits;
       m_num_hits += hits;
    }
+}
+
+void Cache::processPCEntry(IntPtr pc, IntPtr addr)
+{
+   // add pc and address
+   IntPtr retPC, retAddr;
+   pcTable->addEntry(getEIP(),addr,retPC,retAddr);
+   
+   // cleaning stuff, if invalid then LRU on table or entries
+   while(retPC!=-1 || retAddr!=-1)
+   {
+      printf("processPCEntry\n");
+      IntPtr retAddr1=-1;
+      // implies, table was full, reset cacheblockinfo for all addresses coresponding to pc,
+     // delete pc, addEntry again to actually add it
+      if(retPC!=-1)
+      {
+         for(auto e: pcTable->getAddress(retPC))
+         {
+            CacheBlockInfo *cache_block_info = getCacheBlockInfoFromAddr(e.second);
+            if(cache_block_info!=NULL)
+               cache_block_info->clearOption(CacheBlockInfo::HOT_LINE);
+         }
+         pcTable->eraseEntry(retPC);
+         retPC=-1;
+         pcTable->addEntry(getEIP(),addr,retPC,retAddr1);//to now acutually add as table is one less to full capacity
+      }
+      // implies, pc found, but corresponding address capacity is full. hence reset hotline for lowest count address
+      if(retAddr!=-1)
+      {
+         CacheBlockInfo *cache_block_info = getCacheBlockInfoFromAddr(retAddr);
+         if(cache_block_info!=NULL)
+            cache_block_info->clearOption(CacheBlockInfo::HOT_LINE);
+         retAddr=-1;
+      }
+      retAddr=retAddr1;
+   }
+   printf("out\n");
 }

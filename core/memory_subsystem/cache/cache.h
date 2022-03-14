@@ -11,6 +11,7 @@
 #include "log.h"
 #include "core.h"
 #include "fault_injection.h"
+#include "cache_addon.h"
 
 
 // Define to enable the set usage histogram
@@ -31,6 +32,10 @@ class Cache : public CacheBase
       CacheSetInfo* m_set_info;
 
       FaultInjector *m_fault_injector;
+
+      CacheAddonSpace::PCHistoryTable* pcTable;
+
+      IntPtr eip;
 
       #ifdef ENABLE_SET_USAGE_HIST
       UInt64* m_set_usage_hist;
@@ -58,11 +63,11 @@ class Cache : public CacheBase
       // [ORIGINAL]
       CacheBlockInfo* accessSingleLine(IntPtr addr,
             access_t access_type, Byte* buff, UInt32 bytes, SubsecondTime now, bool update_replacement, 
-            IntPtr eip=-1, String path="");
+            String path="");
       
       void insertSingleLine(IntPtr addr, Byte* fill_buff,
             bool* eviction, IntPtr* evict_addr,
-            CacheBlockInfo* evict_block_info, Byte* evict_buff, SubsecondTime now, CacheCntlr *cntlr = NULL, IntPtr eip =0);
+            CacheBlockInfo* evict_block_info, Byte* evict_buff, SubsecondTime now, CacheCntlr *cntlr = NULL);
       
 
       CacheBlockInfo* peekSingleLine(IntPtr addr);
@@ -75,6 +80,20 @@ class Cache : public CacheBase
 
       void enable() { m_enabled = true; }
       void disable() { m_enabled = false; }
+
+      //[update]
+      void setEIP(IntPtr eip){this->eip=eip;}
+      IntPtr getEIP(){return this->eip;}
+      CacheBlockInfo* getCacheBlockInfoFromAddr(IntPtr addr){
+            IntPtr tag;
+            UInt32 set_index;
+            UInt32 line_index;
+            splitAddress(addr, tag, set_index);
+            CacheSet* set = m_sets[set_index];
+            CacheBlockInfo* cache_block_info = set->find(tag, &line_index);
+            return cache_block_info;
+      }
+      void processPCEntry(IntPtr pc, IntPtr addr);
 };
 
 template <class T>

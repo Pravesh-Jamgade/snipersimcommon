@@ -1233,12 +1233,12 @@ CacheCntlr::accessDRAM(Core::mem_op_t mem_op_type, IntPtr address, bool isPrefet
    switch (mem_op_type)
    {
       case Core::READ:
-         boost::tie(dram_latency, hit_where) = m_master->m_dram_cntlr->getDataFromDram(address, m_core_id_master, data_buf, t_issue, m_shmem_perf, eip);
+         boost::tie(dram_latency, hit_where) = m_master->m_dram_cntlr->getDataFromDram(address, m_core_id_master, data_buf, t_issue, m_shmem_perf);
          break;
 
       case Core::READ_EX:
       case Core::WRITE:
-         boost::tie(dram_latency, hit_where) = m_master->m_dram_cntlr->putDataToDram(address, m_core_id_master, data_buf, t_issue, eip);
+         boost::tie(dram_latency, hit_where) = m_master->m_dram_cntlr->putDataToDram(address, m_core_id_master, data_buf, t_issue);
          break;
 
       default:
@@ -1323,7 +1323,7 @@ CacheCntlr::processExReqToDirectory(IntPtr address)
          getHome(address) /* receiver */,
          address,
          NULL, 0,
-         HitWhere::UNKNOWN, m_shmem_perf, ShmemPerfModel::_USER_THREAD, eip);
+         HitWhere::UNKNOWN, m_shmem_perf, ShmemPerfModel::_USER_THREAD);
 }
 
 void
@@ -1342,7 +1342,7 @@ CacheCntlr::processUpgradeReqToDirectory(IntPtr address, ShmemPerf *perf, ShmemP
          getHome(address) /* receiver */,
          address,
          NULL, 0,
-         HitWhere::UNKNOWN, perf, thread_num, eip);
+         HitWhere::UNKNOWN, perf, thread_num);
 }
 
 void
@@ -1355,7 +1355,7 @@ MYLOG("SH REQ @ %lx", address);
          getHome(address) /* receiver */,
          address,
          NULL, 0,
-         HitWhere::UNKNOWN, m_shmem_perf, ShmemPerfModel::_USER_THREAD, eip);
+         HitWhere::UNKNOWN, m_shmem_perf, ShmemPerfModel::_USER_THREAD);
 }
 
 
@@ -1411,13 +1411,13 @@ CacheCntlr::accessCache(
       case Core::READ_EX:
          m_master->m_cache->accessSingleLine(ca_address + offset, Cache::LOAD, data_buf, data_length,
                                              getShmemPerfModel()->getElapsedTime(ShmemPerfModel::_USER_THREAD), 
-                                             update_replacement, eip, path);
+                                             update_replacement, path);
          break;
 
       case Core::WRITE:
          m_master->m_cache->accessSingleLine(ca_address + offset, Cache::STORE, data_buf, data_length,
                                              getShmemPerfModel()->getElapsedTime(ShmemPerfModel::_USER_THREAD),
-                                             update_replacement, eip, path);
+                                             update_replacement, path);
          // Write-through cache - Write the next level cache also
          if (m_cache_writethrough) {
             LOG_ASSERT_ERROR(m_next_cache_cntlr, "Writethrough enabled on last-level cache !?");
@@ -1488,7 +1488,7 @@ bool update_replacement, String path)
 {
    __attribute__((unused)) SharedCacheBlockInfo* cache_block_info = (SharedCacheBlockInfo*) m_master->m_cache->accessSingleLine(
       address, Cache::LOAD, data_buf, getCacheBlockSize(), getShmemPerfModel()->getElapsedTime(thread_num), 
-      update_replacement, eip, path);
+      update_replacement, path);
    LOG_ASSERT_ERROR(cache_block_info != NULL, "Expected block to be there but it wasn't");
 }
 
@@ -1510,7 +1510,7 @@ MYLOG("insertCacheBlock l%d @ %lx as %c (now %c)", m_mem_component, address, CSt
 
    m_master->m_cache->insertSingleLine(address, data_buf,
          &eviction, &evict_address, &evict_block_info, evict_buf,
-         getShmemPerfModel()->getElapsedTime(thread_num), this, eip);
+         getShmemPerfModel()->getElapsedTime(thread_num), this);
    SharedCacheBlockInfo* cache_block_info = setCacheState(address, cstate);
 
    if (Sim()->getInstrumentationMode() == InstMode::CACHE_ONLY)
@@ -1848,7 +1848,7 @@ assert(data_length==getCacheBlockSize());
          memcpy(m_master->m_evicting_buf + offset, data_buf, data_length);
    } else {
       __attribute__((unused)) SharedCacheBlockInfo* cache_block_info = (SharedCacheBlockInfo*) m_master->m_cache->accessSingleLine(
-         address + offset, Cache::STORE, data_buf, data_length, getShmemPerfModel()->getElapsedTime(thread_num), false, eip);
+         address + offset, Cache::STORE, data_buf, data_length, getShmemPerfModel()->getElapsedTime(thread_num), false);
       LOG_ASSERT_ERROR(cache_block_info, "writethrough expected a hit at next-level cache but got miss");
       LOG_ASSERT_ERROR(cache_block_info->getCState() == CacheState::MODIFIED, "Got writeback for non-MODIFIED line");
    }

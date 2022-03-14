@@ -430,6 +430,7 @@ namespace ParametricDramDirectoryMSI
          void setEIP(IntPtr eip)
          {
             this->eip = eip;
+            this->getCache()->setEIP(eip);
          }
 
          void setName(String name)

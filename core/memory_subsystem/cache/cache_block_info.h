@@ -12,7 +12,8 @@ class CacheBlockInfo
       {
          PREFETCH,
          WARMUP,
-         NUM_OPTIONS
+         NUM_OPTIONS,
+         HOT_LINE,
       };
 
       static const UInt8 BitsUsedOffset = 3;  // Track usage on 1<<BitsUsedOffset granularity (per 64-bit / 8-byte)

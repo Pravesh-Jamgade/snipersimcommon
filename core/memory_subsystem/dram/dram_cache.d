@@ -25,6 +25,7 @@
  /mnt/B/sniper/common/performance_model/cache_perf_model.h \
  /mnt/B/sniper/common/performance_model/shmem_perf_model.h \
  /mnt/B/sniper/common/fault_injection/fault_injection.h \
+ /mnt/B/sniper/common/helpers/cache_addon.h \
  /mnt/B/sniper/common/performance_model/contention_model.h \
  /mnt/B/sniper/common/system/simulator.h \
  /mnt/B/sniper/common/misc/config.h \

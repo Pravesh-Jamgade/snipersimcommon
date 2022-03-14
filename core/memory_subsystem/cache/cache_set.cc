@@ -233,8 +233,10 @@ CacheSet::parsePolicyType(String policy)
 
 bool CacheSet::isValidReplacement(UInt32 index)
 {
-   if (m_cache_block_info_array[index]->getCState() == CacheState::SHARED_UPGRADING)
+   if (m_cache_block_info_array[index]->getCState() == CacheState::SHARED_UPGRADING 
+   || m_cache_block_info_array[index]->hasOption(CacheBlockInfo::HOT_LINE) == CacheBlockInfo::HOT_LINE)
    {
+      printf("Cache line is HOT_LINE\n");
       return false;
    }
    else
