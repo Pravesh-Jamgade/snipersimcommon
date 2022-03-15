@@ -25,6 +25,7 @@
  /mnt/B/sniper/common/performance_model/shmem_perf_model.h \
  /mnt/B/sniper/common/fault_injection/fault_injection.h \
  /mnt/B/sniper/common/helpers/cache_addon.h \
+ /mnt/B/sniper/common/helpers/libpqueue/src/pqueue.h \
  /mnt/B/sniper/common/core/memory_subsystem/parametric_dram_directory_msi/prefetcher.h \
  /mnt/B/sniper/common/core/memory_subsystem/cache/shared_cache_block_info.h \
  /mnt/B/sniper/common/core/memory_subsystem/address_home_lookup.h \

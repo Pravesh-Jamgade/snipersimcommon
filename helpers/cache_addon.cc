@@ -1,96 +1,53 @@
 #include "cache_addon.h"
+#include "pqueue.h"
 #include <algorithm>
 #include <map>
 
 using namespace CacheAddonSpace;
 
-void PCHistoryTable::addEntry(IntPtr pc, IntPtr addr, IntPtr& returnPC, IntPtr& returnAddr){
+void PCHistoryTable::insert(IntPtr pc, IntPtr addr, IntPtr& returnPC, IntPtr& returnAddr){
     std::map<IntPtr, AddressHistory*>::iterator it;
     returnPC=returnAddr=-1;
     bool notfound=true;
-    if(!valid())
+    if(valid())
     {
-          // do table replacement
-          // LRU
-          int mN=1e9;
-          // finding replacable pc based on lowest count of total addresses 
-          for(auto e: table)
-          {
-              int count=e.second->getTotalAccessCount();
-              mN=std::min(mN, count);
-              if(count != mN)
-              {
-                  returnPC=e.first;
-              }
-          }
-          // if lowest address count pc found, delete it, then allow to insert new entry
-          if(returnPC!=-1)
-          {
-            //   deletion will be done after resetting hot-line for corresponding addresses
-            //   table.erase(table.find(returnPC));
-          }
-    }
-    else
-    {
+        // maintain priority queue
+        addEntry(pc);
+
+        // maintain table structure 
         it=table.find(pc);
         if(it!=table.end()){
-            notfound=true;
-            returnAddr=it->second->addEntry(addr);
+            notfound=false;
+            returnAddr=it->second->insert(addr);
         }
         else
         {
             table.insert({pc, new AddressHistory()});
         }
     }
-}
-
-IntPtr AddressHistory::addEntry(IntPtr addr)
-{
-    IntPtr retAddr=-1;
-    bool notFound=true;
-    if(!valid())
-    {
-        //do entry replacements
-        // LRU
-        UInt32 mN = 1e9;
-        std::pair<UInt32,IntPtr> tmp;
-        std::list<std::pair<UInt32,IntPtr>>::iterator it1;
-        addrAndCount.sort();
-        it1=addrAndCount.begin();
-        cumulativeAccess=cumulativeAccess-tmp.first;
-        retAddr=tmp.second;
-        addrAndCount.erase(it1);
-    }
     else
     {
-        cumulativeAccess++;
-        for(auto obj: addrAndCount)
-        {
-            if(obj.second == addr)
-            {
-                obj.first=obj.first+1;
-                notFound=false;
-                break;
-            }
-        }
-    }
+        // replacement
+        // LFU
 
-    if(notFound)
-    {
-        addrAndCount.push_back({1,addr});
+        // less freuent node
+        node_t *ns=(node_t*)pqueue_peek(pq);//remove min element, as pri is negative value. less frq pc will be at top
+        
+        returnPC=ns->val;// pc
+        //reset less frequent pc
+        priority[ns->pos]=0;// at pos index reset as we have removed these entry from priority queue
+        pcStore[ns->pos]=0;
+        validTableEntry[ns->pos]=false;
+        pqueue_remove(pq,ns);
     }
-    return retAddr;// cacheblockinfo corresponding to these return address must be reset from hotline 
 }
 
-
-std::list<std::pair<UInt32,IntPtr>> PCHistoryTable::getAddress(IntPtr pc)
+IntPtr* PCHistoryTable::getAddress(IntPtr pc)
 {
-    std::list<std::pair<UInt32,IntPtr>> tmplist;
     std::map<IntPtr, AddressHistory*>::iterator it;
     it=table.find(pc);
     if(it!=table.end())
     {
-        tmplist=it->second->getAddress();
+        return it->second->getAddress();
     }
-    return tmplist;
 }

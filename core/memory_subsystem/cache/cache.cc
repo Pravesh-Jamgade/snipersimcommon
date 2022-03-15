@@ -202,30 +202,32 @@ void Cache::processPCEntry(IntPtr pc, IntPtr addr)
 {
    // add pc and address
    IntPtr retPC, retAddr;
-   pcTable->addEntry(getEIP(),addr,retPC,retAddr);
+   pcTable->insert(getEIP(),addr,retPC,retAddr);
    
    // cleaning stuff, if invalid then LRU on table or entries
    while(retPC!=-1 || retAddr!=-1)
    {
-      printf("processPCEntry\n");
       IntPtr retAddr1=-1;
       // implies, table was full, reset cacheblockinfo for all addresses coresponding to pc,
      // delete pc, addEntry again to actually add it
       if(retPC!=-1)
       {
-         for(auto e: pcTable->getAddress(retPC))
+         IntPtr* addrStore = pcTable->getAddress(retPC);
+         for(int i=0; addrStore!=NULL && i< sizeof(addrStore)/sizeof(addrStore[0]);i++)
          {
-            CacheBlockInfo *cache_block_info = getCacheBlockInfoFromAddr(e.second);
+            printf(" %ld, ", addrStore[i]);
+            CacheBlockInfo *cache_block_info = getCacheBlockInfoFromAddr(addrStore[i]);
             if(cache_block_info!=NULL)
                cache_block_info->clearOption(CacheBlockInfo::HOT_LINE);
          }
          pcTable->eraseEntry(retPC);
          retPC=-1;
-         pcTable->addEntry(getEIP(),addr,retPC,retAddr1);//to now acutually add as table is one less to full capacity
+         pcTable->insert(getEIP(),addr,retPC,retAddr1);//to now acutually add as table is one less to full capacity
       }
       // implies, pc found, but corresponding address capacity is full. hence reset hotline for lowest count address
       if(retAddr!=-1)
       {
+         printf("%ld, ", retAddr);
          CacheBlockInfo *cache_block_info = getCacheBlockInfoFromAddr(retAddr);
          if(cache_block_info!=NULL)
             cache_block_info->clearOption(CacheBlockInfo::HOT_LINE);
@@ -233,5 +235,4 @@ void Cache::processPCEntry(IntPtr pc, IntPtr addr)
       }
       retAddr=retAddr1;
    }
-   printf("out\n");
 }
