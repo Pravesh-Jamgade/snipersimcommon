@@ -127,7 +127,6 @@ namespace CacheAddonSpace
                 currSize--;
                 //apply replacement on address entries
                 // LFU
-                printf("AddressHistory (before remove):size=%d\n", pq->size);
                 ns =(node_t*)malloc(sizeof(node_t));
                 ns=(node_t*)pqueue_peek(pq);//remove min element
 
@@ -143,6 +142,7 @@ namespace CacheAddonSpace
         }
 
         bool valid(){ return pq->size < entryLimit;}
+        int getEntrySize(){ return pq->size;}
 
         IntPtr* getAddress(){
             return addrStore;
@@ -222,6 +222,14 @@ namespace CacheAddonSpace
                 table.erase(pc);
             }
         }
+        
+        int tableEntrySize(IntPtr pc, IntPtr addr){
+            if(table[pc])
+            {
+                table[pc]->getEntrySize();
+            }
+        }
+        int tableSize(){return table.size();}
     };
 };
 #endif

@@ -86,9 +86,6 @@ CacheBlockInfo*
 Cache::accessSingleLine(IntPtr addr, access_t access_type,
       Byte* buff, UInt32 bytes, SubsecondTime now, bool update_replacement, String path)
 {
-   printf("accessSingle Line\n");
-   //[update]
-   processPCEntry(getEIP(),addr);
 
    IntPtr tag;
    UInt32 set_index;
@@ -103,6 +100,9 @@ Cache::accessSingleLine(IntPtr addr, access_t access_type,
    if (cache_block_info == NULL){
       return NULL;
    }
+
+   //[update]
+   processPCEntry(getEIP(),addr);
      
    if (access_type == LOAD)
    {
@@ -130,7 +130,6 @@ Cache::insertSingleLine(IntPtr addr, Byte* fill_buff,
       CacheBlockInfo* evict_block_info, Byte* evict_buff,
       SubsecondTime now, CacheCntlr *cntlr)
 {
-   printf("insertSingle Line\n");
    //[update]
    processPCEntry(getEIP(),addr);
 
@@ -200,6 +199,10 @@ Cache::updateHits(Core::mem_op_t mem_op_type, UInt64 hits)
 
 void Cache::processPCEntry(IntPtr pc, IntPtr addr)
 {
+   if(getName() != "L1-D")
+      return;
+   
+   printf("%ld,%ld,%d,%d",pc,addr,pcTable->tableSize(), pcTable->tableEntrySize(pc,addr));
    // add pc and address
    IntPtr retPC, retAddr;
    pcTable->insert(getEIP(),addr,retPC,retAddr);
