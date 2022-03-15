@@ -1,6 +1,6 @@
-/home/user/station/version/sniper/common/config/config.o /home/user/station/version/sniper/common/config/config.d: $(wildcard /home/user/station/version/sniper/common/config/config.cpp \
- /home/user/station/version/sniper/common/config/config.hpp \
- /home/user/station/version/sniper/common/misc/fixed_types.h \
- /home/user/station/version/sniper/common/config/key.hpp \
- /home/user/station/version/sniper/common/config/section.hpp \
- /home/user/station/version/sniper/common/config/config_exceptions.hpp)
+/mnt/B/sniper/common/config/config.o /mnt/B/sniper/common/config/config.d: $(wildcard /mnt/B/sniper/common/config/config.cpp \
+ /mnt/B/sniper/common/config/config.hpp \
+ /mnt/B/sniper/common/misc/fixed_types.h \
+ /mnt/B/sniper/common/config/key.hpp \
+ /mnt/B/sniper/common/config/section.hpp \
+ /mnt/B/sniper/common/config/config_exceptions.hpp)

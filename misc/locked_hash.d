@@ -1,6 +1,4 @@
-/home/user/station/version/sniper/common/misc/locked_hash.o /home/user/station/version/sniper/common/misc/locked_hash.d: $(wildcard \
- /home/user/station/version/sniper/common/misc/locked_hash.cc \
- /home/user/station/version/sniper/common/misc/locked_hash.h \
- /home/user/station/version/sniper/common/misc/fixed_types.h \
- /home/user/station/version/sniper/common/misc/lock.h \
- /home/user/station/version/sniper/common/misc/itostr.h)
+/mnt/B/sniper/common/misc/locked_hash.o /mnt/B/sniper/common/misc/locked_hash.d: $(wildcard /mnt/B/sniper/common/misc/locked_hash.cc \
+ /mnt/B/sniper/common/misc/locked_hash.h \
+ /mnt/B/sniper/common/misc/fixed_types.h /mnt/B/sniper/common/misc/lock.h \
+ /mnt/B/sniper/common/misc/itostr.h)
