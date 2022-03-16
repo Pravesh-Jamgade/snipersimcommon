@@ -26,8 +26,15 @@ class Log
          Error,
       };
 
+      enum LogDst
+      {
+         AddressAnalyzer=0,
+         END,
+      };
+
       void log(ErrorState err, const char *source_file, SInt32 source_line, const char* format, ...);
       void log( const char *format, ...);
+      void log(Log::LogDst logDst, const char *format, ...);
 
       bool isEnabled(const char* module);
       bool isLoggingEnabled() const { return _anyLoggingEnabled; }
@@ -59,8 +66,8 @@ class Log
       Lock _systemLock;
 
       // [update]
-      FILE** _loggers;
-      Lock* _loggerLocks;
+      FILE** _loggerFiles;
+      Lock** _loggerLocks;
 
       core_id_t _coreCount;
       UInt64 _startTime;
@@ -117,6 +124,11 @@ class Log
    {                                                                    \
       Log::getSingleton()->log( __VA_ARGS__); \
    }   
+
+#define _LOG_CUSTOM_LOGGER(err, ty,  ...)                                            \
+   {                                                                    \
+      Log::getSingleton()->log( ty, __VA_ARGS__); \
+   }  
 
 #define _LOG_PRINT(err, ...)                                            \
    {                                                                    \

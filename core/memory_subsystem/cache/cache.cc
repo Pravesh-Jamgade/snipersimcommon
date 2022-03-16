@@ -104,12 +104,11 @@ Cache::accessSingleLine(IntPtr addr, access_t access_type,
    //[update]
    if(processPCEntry(getEIP(),addr))
    {
-      printf("lock=%ld\n",addr);
+      printf("[1] lock=%ld, cache=%s, size=%d\n",addr, getName().c_str(),pcTable->tableSize());
       cache_block_info->setOption(CacheBlockInfo::HOT_LINE);
    }
+   else printf("[0] cache=%s\n",getName().c_str());
 
-   cache_block_info->setOption(CacheBlockInfo::HOT_LINE);
-     
    if (access_type == LOAD)
    {
       // NOTE: assumes error occurs in memory. If we want to model bus errors, insert the error into buff instead
@@ -148,10 +147,10 @@ Cache::insertSingleLine(IntPtr addr, Byte* fill_buff,
    // set cacheblockinfog to hotline
    if(processPCEntry(getEIP(),addr))
    {
-      printf("lock=%ld\n",addr);
+      printf("[1] lock=%ld, cache=%s, size=%d\n",addr, getName().c_str(),pcTable->tableSize());
       cache_block_info->setOption(CacheBlockInfo::HOT_LINE);
    }
-   
+   else printf("[0] cache=%s\n",getName().c_str());
    m_sets[set_index]->insert(cache_block_info, fill_buff,
          eviction, evict_block_info, evict_buff, cntlr);
    *evict_addr = tagToAddress(evict_block_info->getTag());
@@ -207,51 +206,11 @@ Cache::updateHits(Core::mem_op_t mem_op_type, UInt64 hits)
 
 bool Cache::processPCEntry(IntPtr pc, IntPtr addr)
 {
+   IntPtr retAddr,retPC;
+   retAddr=retPC=-1;
    if(getName() != "L1-D")
       return false;
+   pcTable->insert(pc,addr,retAddr,retPC);
    
-   // printf("%ld,%ld,%d,%d",pc,addr,pcTable->tableSize(), pcTable->tableEntrySize(pc,addr));
-   // add pc and address
-   IntPtr retPC, retAddr;
-   pcTable->insert(getEIP(),addr,retPC,retAddr);
-   
-   int i=0;
-   // cleaning stuff, if invalid then LRU on table or entries
-   while(retPC!=-1 || retAddr!=-1)
-   {
-      printf("loop=%d, pc=%ld, addr=%ld\n", i++,retPC,retAddr);
-      IntPtr retAddr1=-1;
-      // implies, table was full, reset cacheblockinfo for all addresses coresponding to pc,
-     // delete pc, addEntry again to actually add it
-      if(retPC!=-1)
-      {
-         std::vector<IntPtr> addrStore = pcTable->getAddress(retPC);
-         for(int i=0;i< addrStore.size();i++)
-         {
-            CacheBlockInfo *cache_block_info = getCacheBlockInfoFromAddr(addrStore[i]);
-            if(cache_block_info!=NULL){
-               printf("yes=%ld\n",addrStore[i]);
-               cache_block_info->clearOption(CacheBlockInfo::HOT_LINE);
-            }
-            else printf("no=%ld\n",addrStore[i]);
-         }
-         pcTable->eraseEntry(retPC);
-         retPC=-1;
-         pcTable->insert(getEIP(),addr,retPC,retAddr1);//to now acutually add as table is one less to full capacity
-      }
-      // implies, pc found, but corresponding address capacity is full. hence reset hotline for lowest count address
-      if(retAddr!=-1)
-      {
-         printf("%ld, ", retAddr);
-         CacheBlockInfo *cache_block_info = getCacheBlockInfoFromAddr(retAddr);
-         if(cache_block_info!=NULL){
-            printf("yes=%d\n",retAddr);
-            cache_block_info->clearOption(CacheBlockInfo::HOT_LINE);
-         }
-         else printf("no=%d\n",retAddr);
-         retAddr=-1;
-      }
-      retAddr=retAddr1;
-   }
-   return true;
+     return true;
 }

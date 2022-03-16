@@ -87,6 +87,13 @@ void Log::initFileDescriptors()
    _coreFiles = new FILE* [_coreCount];
    _simFiles = new FILE* [_coreCount];
 
+   int size=LogDst::END - LogDst::AddressAnalyzer + 1;
+   _loggerFiles = new FILE*[size];
+   for(int i=0;i<size;i++){
+      _loggerFiles[i]=NULL;
+      _loggerLocks[i]= new Lock[i];
+   }
+
    for (core_id_t i = 0; i < _coreCount; i++)
    {
       _coreFiles[i] = NULL;
@@ -379,34 +386,12 @@ void Log::log(const char *format, ...)
    FILE *file;
    Lock *lock;
 
-   getFile(-1, sim_thread, &file, &lock);
+   getFile(core_id, sim_thread, &file, &lock);
    int tid = syscall(__NR_gettid);
 
 
    char message[512];
    char *p = message;
-
-  
-      //  // This is ugly, but it just prints the time stamp, core number, source file/line
-      // if (core_id != INVALID_CORE_ID) // valid core id
-      //    p += sprintf(p, "%-10llu [%5d]  [%2i]%s[%s:%4d]  ", (long long unsigned int) getTimestamp(), tid, core_id, (sim_thread ? "* " : "  "), source_file, source_line);
-      // else // who knows
-      //    p += sprintf(p, "%-10llu [%5d]  [  ]  [%s:%4d]  ", (long long unsigned int) getTimestamp(), tid, source_file, source_line);
-  
-   // switch (err)
-   // {
-   // case None:
-   // default:
-   //    break;
-
-   // case Warning:
-   //    p += sprintf(p, "*WARNING* ");
-   //    break;
-
-   // case Error:
-   //    p += sprintf(p, "*ERROR* ");
-   //    break;
-   // };
 
    va_list args;
    va_start(args, format);
@@ -423,3 +408,59 @@ void Log::log(const char *format, ...)
    lock->release();
 
 }
+
+
+void Log::log(Log::LogDst logDst, const char *format, ...)
+{
+   printf("helloooo_%d---------------\n", logDst);
+   core_id_t core_id;
+   bool sim_thread;
+   discoverCore(&core_id, &sim_thread);
+
+   FILE *file;
+   Lock *lock;
+
+   // getFile(-1, sim_thread, &file, &lock);
+   assert(core_id < _coreCount);
+   char filename[256];
+   
+
+   for (int logtype=LogDst::AddressAnalyzer; logtype<= LogDst::END; logtype++)
+   {
+      if(logtype==logDst)
+      {
+         
+         if(_loggerFiles[logDst]==NULL)
+         {
+            sprintf(filename, "customLog_%u.log", logDst);
+            _loggerFiles[logDst]=fopen(formatFileName(filename).c_str(), "w");
+         }
+         file=_loggerFiles[logDst];
+         lock=_loggerLocks[logDst];
+         break;
+      }
+   }
+   if(file==NULL and lock==NULL)
+   {
+      printf("break as object is NULL\n");
+   }
+    
+   int tid = syscall(__NR_gettid);
+
+
+   char message[512];
+   char *p = message;
+
+   va_list args;
+   va_start(args, format);
+   p += vsprintf(p, format, args);
+   va_end(args);
+
+   // lock->acquire();
+   fputs(message, file);
+   fflush(file);
+
+   // lock->release();
+
+}
+
