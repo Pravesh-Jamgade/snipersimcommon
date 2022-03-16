@@ -386,7 +386,7 @@ void Log::log(const char *format, ...)
    FILE *file;
    Lock *lock;
 
-   getFile(core_id, sim_thread, &file, &lock);
+   getFile(-1, sim_thread, &file, &lock);
    int tid = syscall(__NR_gettid);
 
 

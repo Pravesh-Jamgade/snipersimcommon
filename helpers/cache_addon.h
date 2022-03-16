@@ -3,10 +3,9 @@
 
 #include "fixed_types.h"
 #include <iostream>
-#include <vector>
-#include <map>
-#include <list>
+#include <unordered_map>
 #include "pqueue.h"
+#include "lock.h"
 
 namespace CacheAddonSpace
 {   
@@ -55,162 +54,41 @@ namespace CacheAddonSpace
         }
     };
 
+    class Counter
+    {
+        UInt64 count;
+        public:
+        Counter(int init=1){this->count=count;}
+        void increase(){count++;}
+        void increase(UInt64 byk){count=count+byk;}
+        UInt64 getCount(){return count;}
+        void decrease(){count--;}
+        void decrease(UInt64 byk){count=count-byk;}
+    };
+
     class AddressHistory
     {
-        // count - address
-        pqueue_t *pq;
-        node_t *ns; 
-        int currSize;
-        int entryLimit;
-        IntPtr addrStore[10]; // address
-        UInt32 priority[10]={0};  // address count as priority
-        bool validEntry[10]={false};
-
-        void addEntry(IntPtr addr){
-            bool notfound=true;
-            int i=0;
-            for(;i< entryLimit; i++)// check if already exists
-            {
-                if(!validEntry[i])
-                    continue;
-                if(addrStore[i]==addr)
-                {
-                    priority[i]--;
-
-                    // found index of addr now increase count in priority queue
-                    ns =(node_t*)malloc(sizeof(node_t));
-                    ns->pri=priority[i];
-                    ns->val=i;
-                    pqueue_incr_priority(pq, &ns);
-
-                    notfound=false;
-                    break;
-                }
-            }
-
-            if(notfound)//if not already exists
-            {
-                addrStore[i]=addr;
-                priority[i]=-1;
-                validEntry[i]=true;
-                
-                ns=(node_t*)malloc(sizeof(node_t));
-                ns->pri=-1;// intialize priority for new entry to 1
-                ns->val=i;// val is our array index
-                pqueue_insert(pq, &ns);
-            }
-        }
-      
+        std::unordered_map<IntPtr,Counter> addressCount;
         public:
-
-        AddressHistory()
-        {
-            currSize=0;
-            entryLimit=10;
-            pq=pqueue_init(10, Function::cmp_pri, Function::get_pri, Function::set_pri, Function::get_pos, Function::set_pos);
+        AddressHistory(IntPtr addr){
+            addressCount[addr]=Counter();
         }
-
-        ~AddressHistory()
-        {
-            delete pq;
-            delete ns;
-        }
-        
-        IntPtr insert(IntPtr addr);
-        bool valid(){ return pq->size < entryLimit;}
-        int getEntrySize(){ return pq->size;}
-
-        std::vector<IntPtr> getAddress(){
-            std::vector<IntPtr> addr;
-            for(int i=0;i<10;i++)
-            {
-                addr.emplace_back(addrStore[i]);
-            }
-            return addr;
-        }
+        bool insert(IntPtr addr);// when true then only count; counting for new memory address only
     };
 
     class PCHistoryTable
     {
-        // pc - list(pair(count - address))
-        std::map<IntPtr, AddressHistory*> table;
-        int tableLimit;
-        IntPtr pcStore[500];  // pc
-        UInt32 priority[500]={0}; // pc count as priority
-        bool validTableEntry[500]={false};
-
-        void addEntry(IntPtr pc){
-            bool notfound=true;
-            int i=0;
-            for(;i< tableLimit; i++)
-            {
-                if(!validTableEntry[i])
-                    continue;
-                if(pcStore[i]==pc)
-                {
-                    priority[i]--;
-
-                    // found index of addr now increase count in priority queue
-                    ns =(node_t*)malloc(sizeof(node_t));
-                    ns->pri=priority[i];
-                    ns->val=pc;
-                    ns->pos=i;
-
-                    pqueue_incr_priority(pq, &ns);
-
-                    notfound=false;
-                    break;
-                }
-            }
-
-            if(notfound)
-            {
-                pcStore[i]=pc;
-                priority[i]=-1;
-                validTableEntry[i]=true;
-                
-                ns=(node_t*)malloc(sizeof(node_t));
-                ns->val=pc;// val is our array index
-                ns->pri=-1;// intialize priority for new entry to 1
-                ns->pos=i;
-                pqueue_insert(pq, &ns);
-            }
-        }
-
+        Counter addressCounter;
+        Counter pcCounter;
+        std::unordered_map<IntPtr, AddressHistory> table;
+        Lock *lock;
         public:
-        pqueue_t *pq;
-        node_t *ns;
-        
         PCHistoryTable(){
-            tableLimit=500;
-            pq=pqueue_init(500, Function::cmp_pri, Function::get_pri, Function::set_pri, Function::get_pos, Function::set_pos);
-            ns=(node_t*)malloc(sizeof(node_t));
+            lock = new Lock();
         }
-        ~PCHistoryTable(){
-            delete pq;
-            delete ns;
-        }
-
-        bool valid(){ return pq->size<tableLimit;}
-
-        void insert(IntPtr pc, IntPtr addr, IntPtr& retPC, IntPtr& retAddr);
-
-        std::vector<IntPtr> getAddress(IntPtr pc);
-
-        void eraseEntry(IntPtr pc){
-            std::map<IntPtr, AddressHistory*>::iterator it = table.find(pc);
-            if(it!=table.end()){
-                table.erase(pc);
-            }
-        }
-        
-        int tableEntrySize(IntPtr pc, IntPtr addr){
-            if(table[pc])
-            {
-                table[pc]->getEntrySize();
-            }
-        }
-        int tableSize(){return table.size();}
+        void insert(IntPtr pc, IntPtr addr);
+        UInt64 getPCCount(){return pcCounter.getCount();}
+        UInt64 getAddrCount(){return addressCounter.getCount();}
     };
 };
 #endif

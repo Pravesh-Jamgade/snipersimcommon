@@ -101,14 +101,18 @@ Cache::accessSingleLine(IntPtr addr, access_t access_type,
       return NULL;
    }
 
-   //[update]
-   if(processPCEntry(getEIP(),addr))
-   {
-      printf("[1] lock=%ld, cache=%s, size=%d\n",addr, getName().c_str(),pcTable->tableSize());
-      cache_block_info->setOption(CacheBlockInfo::HOT_LINE);
-   }
-   else printf("[0] cache=%s\n",getName().c_str());
-
+   // //[update]
+   // String tmp;
+   // processPCEntry(getEIP(),addr);
+   // if(cache_block_info->hasOption(CacheBlockInfo::HOT_LINE))
+   //    tmp="A";
+   // else
+   //    tmp="S";
+   //    cache_block_info->setOption(CacheBlockInfo::HOT_LINE);
+   
+   // _LOG_CUSTOM_LOGGER(Log::Warning, Log::AddressAnalyzer, "%ld,%ld,%s,%ld,%ld\n",
+   //  getEIP(),addr,tmp.c_str(),pcTable->getPCCount(),pcTable->getAddrCount());
+   
    if (access_type == LOAD)
    {
       // NOTE: assumes error occurs in memory. If we want to model bus errors, insert the error into buff instead
@@ -145,12 +149,16 @@ Cache::insertSingleLine(IntPtr addr, Byte* fill_buff,
    
    //[update]
    // set cacheblockinfog to hotline
-   if(processPCEntry(getEIP(),addr))
-   {
-      printf("[1] lock=%ld, cache=%s, size=%d\n",addr, getName().c_str(),pcTable->tableSize());
+   String status="";
+   processPCEntry(getEIP(),addr);
+   if(cache_block_info->hasOption(CacheBlockInfo::HOT_LINE))
+      status="A";
+   else
+      status="S";
       cache_block_info->setOption(CacheBlockInfo::HOT_LINE);
-   }
-   else printf("[0] cache=%s\n",getName().c_str());
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::AddressAnalyzer, "%ld,%ld,%ld,%s,%ld,%ld\n", 
+      getEIP(), addr,cache_block_info->getTag(), status.c_str(),pcTable->getPCCount(),pcTable->getAddrCount());
+   
    m_sets[set_index]->insert(cache_block_info, fill_buff,
          eviction, evict_block_info, evict_buff, cntlr);
    *evict_addr = tagToAddress(evict_block_info->getTag());
@@ -210,7 +218,7 @@ bool Cache::processPCEntry(IntPtr pc, IntPtr addr)
    retAddr=retPC=-1;
    if(getName() != "L1-D")
       return false;
-   pcTable->insert(pc,addr,retAddr,retPC);
+   pcTable->insert(pc,addr);
    
      return true;
 }
