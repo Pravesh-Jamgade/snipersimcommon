@@ -102,7 +102,13 @@ Cache::accessSingleLine(IntPtr addr, access_t access_type,
    }
 
    //[update]
-   processPCEntry(getEIP(),addr);
+   if(processPCEntry(getEIP(),addr))
+   {
+      printf("lock=%ld\n",addr);
+      cache_block_info->setOption(CacheBlockInfo::HOT_LINE);
+   }
+
+   cache_block_info->setOption(CacheBlockInfo::HOT_LINE);
      
    if (access_type == LOAD)
    {
@@ -130,8 +136,6 @@ Cache::insertSingleLine(IntPtr addr, Byte* fill_buff,
       CacheBlockInfo* evict_block_info, Byte* evict_buff,
       SubsecondTime now, CacheCntlr *cntlr)
 {
-   //[update]
-   processPCEntry(getEIP(),addr);
 
    IntPtr tag;
    UInt32 set_index;
@@ -142,8 +146,12 @@ Cache::insertSingleLine(IntPtr addr, Byte* fill_buff,
    
    //[update]
    // set cacheblockinfog to hotline
-   cache_block_info->setOption(CacheBlockInfo::HOT_LINE);
-
+   if(processPCEntry(getEIP(),addr))
+   {
+      printf("lock=%ld\n",addr);
+      cache_block_info->setOption(CacheBlockInfo::HOT_LINE);
+   }
+   
    m_sets[set_index]->insert(cache_block_info, fill_buff,
          eviction, evict_block_info, evict_buff, cntlr);
    *evict_addr = tagToAddress(evict_block_info->getTag());
@@ -197,31 +205,35 @@ Cache::updateHits(Core::mem_op_t mem_op_type, UInt64 hits)
    }
 }
 
-void Cache::processPCEntry(IntPtr pc, IntPtr addr)
+bool Cache::processPCEntry(IntPtr pc, IntPtr addr)
 {
    if(getName() != "L1-D")
-      return;
+      return false;
    
-   printf("%ld,%ld,%d,%d",pc,addr,pcTable->tableSize(), pcTable->tableEntrySize(pc,addr));
+   // printf("%ld,%ld,%d,%d",pc,addr,pcTable->tableSize(), pcTable->tableEntrySize(pc,addr));
    // add pc and address
    IntPtr retPC, retAddr;
    pcTable->insert(getEIP(),addr,retPC,retAddr);
    
+   int i=0;
    // cleaning stuff, if invalid then LRU on table or entries
    while(retPC!=-1 || retAddr!=-1)
    {
+      printf("loop=%d, pc=%ld, addr=%ld\n", i++,retPC,retAddr);
       IntPtr retAddr1=-1;
       // implies, table was full, reset cacheblockinfo for all addresses coresponding to pc,
      // delete pc, addEntry again to actually add it
       if(retPC!=-1)
       {
-         IntPtr* addrStore = pcTable->getAddress(retPC);
-         for(int i=0; addrStore!=NULL && i< sizeof(addrStore)/sizeof(addrStore[0]);i++)
+         std::vector<IntPtr> addrStore = pcTable->getAddress(retPC);
+         for(int i=0;i< addrStore.size();i++)
          {
-            printf(" %ld, ", addrStore[i]);
             CacheBlockInfo *cache_block_info = getCacheBlockInfoFromAddr(addrStore[i]);
-            if(cache_block_info!=NULL)
+            if(cache_block_info!=NULL){
+               printf("yes=%ld\n",addrStore[i]);
                cache_block_info->clearOption(CacheBlockInfo::HOT_LINE);
+            }
+            else printf("no=%ld\n",addrStore[i]);
          }
          pcTable->eraseEntry(retPC);
          retPC=-1;
@@ -232,10 +244,14 @@ void Cache::processPCEntry(IntPtr pc, IntPtr addr)
       {
          printf("%ld, ", retAddr);
          CacheBlockInfo *cache_block_info = getCacheBlockInfoFromAddr(retAddr);
-         if(cache_block_info!=NULL)
+         if(cache_block_info!=NULL){
+            printf("yes=%d\n",retAddr);
             cache_block_info->clearOption(CacheBlockInfo::HOT_LINE);
+         }
+         else printf("no=%d\n",retAddr);
          retAddr=-1;
       }
       retAddr=retAddr1;
    }
+   return true;
 }

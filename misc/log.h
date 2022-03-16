@@ -58,6 +58,10 @@ class Log
       FILE* _systemFile;
       Lock _systemLock;
 
+      // [update]
+      FILE** _loggers;
+      Lock* _loggerLocks;
+
       core_id_t _coreCount;
       UInt64 _startTime;
       std::set<String> _disabledModules;

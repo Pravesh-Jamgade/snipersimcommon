@@ -115,37 +115,18 @@ namespace CacheAddonSpace
             delete pq;
             delete ns;
         }
-
-        IntPtr insert(IntPtr addr){
-            IntPtr retAddr=-1;
-            if(valid())
-            {
-                currSize++;
-                addEntry(addr);
-            }
-            else{
-                currSize--;
-                //apply replacement on address entries
-                // LFU
-                ns =(node_t*)malloc(sizeof(node_t));
-                ns=(node_t*)pqueue_peek(pq);//remove min element
-
-                retAddr=addrStore[ns->val];
-                //reset
-                priority[ns->val]=0;
-                addrStore[ns->val]=0;
-                validEntry[ns->val]=false;
-                //remove
-                pqueue_remove(pq,ns);
-            }
-            return retAddr;
-        }
-
+        
+        IntPtr insert(IntPtr addr);
         bool valid(){ return pq->size < entryLimit;}
         int getEntrySize(){ return pq->size;}
 
-        IntPtr* getAddress(){
-            return addrStore;
+        std::vector<IntPtr> getAddress(){
+            std::vector<IntPtr> addr;
+            for(int i=0;i<10;i++)
+            {
+                addr.emplace_back(addrStore[i]);
+            }
+            return addr;
         }
     };
 
@@ -214,7 +195,7 @@ namespace CacheAddonSpace
 
         void insert(IntPtr pc, IntPtr addr, IntPtr& retPC, IntPtr& retAddr);
 
-        IntPtr* getAddress(IntPtr pc);
+        std::vector<IntPtr> getAddress(IntPtr pc);
 
         void eraseEntry(IntPtr pc){
             std::map<IntPtr, AddressHistory*>::iterator it = table.find(pc);

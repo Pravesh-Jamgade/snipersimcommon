@@ -93,7 +93,7 @@ class Cache : public CacheBase
             CacheBlockInfo* cache_block_info = set->find(tag, &line_index);
             return cache_block_info;
       }
-      void processPCEntry(IntPtr pc, IntPtr addr);
+      bool processPCEntry(IntPtr pc, IntPtr addr);
 };
 
 template <class T>
