@@ -8,11 +8,21 @@ const char* CacheBlockInfo::option_names[] =
 {
    "prefetch",
    "warmup",
+   "hot",
 };
 
 const char* CacheBlockInfo::getOptionName(option_t option)
 {
    static_assert(CacheBlockInfo::NUM_OPTIONS == sizeof(CacheBlockInfo::option_names) / sizeof(char*), "Not enough values in CacheBlockInfo::option_names");
+
+   if (option < NUM_OPTIONS)
+      return option_names[option];
+   else
+      return "invalid";
+}
+
+const char* CacheBlockInfo::getOptionName(int option)
+{
 
    if (option < NUM_OPTIONS)
       return option_names[option];

@@ -412,7 +412,6 @@ void Log::log(const char *format, ...)
 
 void Log::log(Log::LogDst logDst, const char *format, ...)
 {
-   printf("helloooo_%d---------------\n", logDst);
    core_id_t core_id;
    bool sim_thread;
    discoverCore(&core_id, &sim_thread);

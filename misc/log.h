@@ -29,6 +29,7 @@ class Log
       enum LogDst
       {
          AddressAnalyzer=0,
+         VerifyAddressAnalyzer,
          END,
       };
 

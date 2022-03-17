@@ -12,8 +12,8 @@ class CacheBlockInfo
       {
          PREFETCH,
          WARMUP,
-         NUM_OPTIONS,
          HOT_LINE,
+         NUM_OPTIONS,
       };
 
       static const UInt8 BitsUsedOffset = 3;  // Track usage on 1<<BitsUsedOffset granularity (per 64-bit / 8-byte)
@@ -61,6 +61,20 @@ class CacheBlockInfo
       bool updateUsage(BitsUsedType used);
 
       static const char* getOptionName(option_t option);
+
+      //[update]
+      option_t optArray[10]={PREFETCH,WARMUP,HOT_LINE,NUM_OPTIONS};
+      const char* getOptionName(int option);
+      int getOptionIndex(){
+         for(int i=option_t::PREFETCH;i<option_t::NUM_OPTIONS;i++)
+         {
+            if(hasOption(optArray[i]))
+            {
+               return i;
+            }
+         }
+         return -1;
+      }
 };
 
 class CacheCntlr
