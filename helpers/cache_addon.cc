@@ -17,20 +17,22 @@ void PCHistoryTable::insert(IntPtr pc, IntPtr addr)
         table.insert({pc,AddressHistory(addr)});
         pcCounter.increase();// only counting new pc entry
     }
+    action(refreshCounter);//resetting table if counter == 0
+    lock->release();
 }
 
 bool AddressHistory::insert(IntPtr addr)
 {
-    std::unordered_map<IntPtr, Counter>::const_iterator const_it=addressCount.find(addr);
+    std::unordered_map<IntPtr, Helper::Counter>::const_iterator const_it=addressCount.find(addr);
     if(const_it!=addressCount.end())
     {
-        Counter count=const_it->second;
+        Helper::Counter count=const_it->second;
         count.increase();
         return false;
     }
     else
     {
-        addressCount.insert({addr,Counter()});
+        addressCount.insert({addr,Helper::Counter()});
         return true;
     }
 }
