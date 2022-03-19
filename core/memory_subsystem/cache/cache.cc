@@ -54,7 +54,7 @@ Cache::~Cache()
          {
             CacheBlockInfo* c_block=c_set->peekBlock(j);
             int tmp=c_block->getOptionIndex();
-               printf("unlocked cache block = %ld\n", c_block->getTag());
+               // printf("unlocked cache block = %ld\n", c_block->getTag());
                _LOG_CUSTOM_LOGGER(Log::Warning, Log::VerifyAddressAnalyzer, "%d, %ld, %ld, %d, %s\n", block_no++ ,c_block->getTag(), 
                tagToAddress(c_block->getTag()), c_block->isValid(), c_block->getOptionName(tmp) );
          }
@@ -120,18 +120,6 @@ Cache::accessSingleLine(IntPtr addr, access_t access_type,
       return NULL;
    }
 
-   // //[update]
-   // String tmp;
-   // processPCEntry(getEIP(),addr);
-   // if(cache_block_info->hasOption(CacheBlockInfo::HOT_LINE))
-   //    tmp="A";
-   // else
-   //    tmp="S";
-   //    cache_block_info->setOption(CacheBlockInfo::HOT_LINE);
-   
-   // _LOG_CUSTOM_LOGGER(Log::Warning, Log::AddressAnalyzer, "%ld,%ld,%s,%ld,%ld\n",
-   //  getEIP(),addr,tmp.c_str(),pcTable->getPCCount(),pcTable->getAddrCount());
-   
    if (access_type == LOAD)
    {
       // NOTE: assumes error occurs in memory. If we want to model bus errors, insert the error into buff instead
@@ -184,6 +172,14 @@ Cache::insertSingleLine(IntPtr addr, Byte* fill_buff,
    m_sets[set_index]->insert(cache_block_info, fill_buff,
          eviction, evict_block_info, evict_buff, cntlr);
    *evict_addr = tagToAddress(evict_block_info->getTag());
+
+   if(eviction)
+   {
+      if(cache_block_info->hasOption(CacheBlockInfo::HOT_LINE))
+      {
+         _LOG_CUSTOM_LOGGER(Log::Warning,Log::VerifyAA2,"%ld,%ld\n", getEIP(), addr);
+      }
+   }
 
    if (m_fault_injector) {
       // NOTE: no callback is generated for read of evicted data

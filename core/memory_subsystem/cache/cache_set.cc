@@ -104,8 +104,8 @@ CacheSet::insert(CacheBlockInfo* cache_block_info, Byte* fill_buff, bool* evicti
    assert(index < m_associativity);
 
    assert(eviction != NULL);
-
-   if (m_cache_block_info_array[index]->isValid())
+  
+   if (m_cache_block_info_array[index]->isValid() && m_cache_block_info_array[index]->isNotHotCacheLine())
    {
       *eviction = true;
       // FIXME: This is a hack. I dont know if this is the best way to do
@@ -233,8 +233,7 @@ CacheSet::parsePolicyType(String policy)
 
 bool CacheSet::isValidReplacement(UInt32 index)
 {
-   if (m_cache_block_info_array[index]->getCState() == CacheState::SHARED_UPGRADING 
-   || m_cache_block_info_array[index]->hasOption(CacheBlockInfo::HOT_LINE) == CacheBlockInfo::HOT_LINE)
+   if (m_cache_block_info_array[index]->getCState() == CacheState::SHARED_UPGRADING)
    {
       printf("Cache line is HOT_LINE\n");
       return false;

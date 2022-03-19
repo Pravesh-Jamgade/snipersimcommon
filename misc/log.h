@@ -30,6 +30,7 @@ class Log
       {
          AddressAnalyzer=0,
          VerifyAddressAnalyzer,
+         VerifyAA2,
          END,
       };
 

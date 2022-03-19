@@ -75,6 +75,9 @@ class CacheBlockInfo
          }
          return -1;
       }
+      bool isNotHotCacheLine(){
+         return !this->hasOption(CacheBlockInfo::HOT_LINE);
+      }
 };
 
 class CacheCntlr
