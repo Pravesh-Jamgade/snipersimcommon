@@ -286,8 +286,6 @@ bool accessResult, int core)
     // if eip found
     if(tableIt!=table.end())
     {
-        reeip++;
-
         // get accessinfo for correspnding eip
         Add2Data *add2data = &tableIt->second;
 
@@ -297,8 +295,6 @@ bool accessResult, int core)
         // if accessinfo found / addr seen before
         if(addrIt!=add2data->end())
         {
-            readdr++;
-
             // get datainfo
             DataInfo* dataInfo = addrIt->second;
             // update datainfo

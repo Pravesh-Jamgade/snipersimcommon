@@ -5,7 +5,6 @@ using namespace CacheAddonSpace;
 
 void PCHistoryTable::insert(IntPtr pc, IntPtr addr)
 {
-    lock->acquire();
     std::unordered_map<IntPtr,AddressHistory>::const_iterator const_it=table.find(pc);
     if(const_it!=table.end())
     {
@@ -18,7 +17,6 @@ void PCHistoryTable::insert(IntPtr pc, IntPtr addr)
         table.insert({pc,AddressHistory(addr)});
         pcCounter.increase();// only counting new pc entry
     }
-    lock->release();
 }
 
 bool AddressHistory::insert(IntPtr addr)

@@ -2425,17 +2425,17 @@ CacheCntlr::getNetworkThreadSemaphore()
 void 
 CacheCntlr::loggingLevel(IntPtr addr, Core::mem_op_t mem_op_type, bool accessResult, bool isCache)
 {
+   bool typeAccess = cache_helper::Misc::accessTypeInfo(mem_op_type);
+   if(typeAccess)
+      stats.totalLoads++;
+   else stats.totalStores++;
+   stats.totalAccess++;
+
    String name = getName();
    IntPtr eip = getEIP();
    if((memLevelDebug!="" && getMemLevelDebug() == name)||memLevelDebug=="")
    {
       UInt64 cycleCount=getMemoryManager()->getCore()->getCycleCount();
-      bool typeAccess = cache_helper::Misc::accessTypeInfo(mem_op_type);
-      if(typeAccess)
-         stats.totalLoads++;
-      else stats.totalStores++;
-      
-      stats.totalAccess++;
       cacheHelper->addRequest(eip, addr, name, cycleCount, getMemoryManager()->getCore()->getId(), typeAccess, accessResult);
    }
 }

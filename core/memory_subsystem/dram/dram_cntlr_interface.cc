@@ -55,17 +55,17 @@ void DramCntlrInterface::handleMsgFromTagDirectory(core_id_t sender, PrL1PrL2Dra
 
 void  DramCntlrInterface::loggingDRAM(IntPtr addr, Core::mem_op_t mem_op, bool accessResult)
 {
+
+   bool typeAccess = cache_helper::Misc::accessTypeInfo(mem_op);
+
+   if(typeAccess)
+      totalLoads++;
+   else totalStores++;
+
+   totalAccess++;
    if((getMemLevelDebug()!="" && getMemLevelDebug()==getName() ) || getMemLevelDebug()=="")
    {
       UInt64 cycleCount = getMemoryManager()->getCore()->getCycleCount();
-
-      bool typeAccess = cache_helper::Misc::accessTypeInfo(mem_op);
-
-      if(typeAccess)
-         totalLoads++;
-      else totalStores++;
-
-      totalAccess++;
       getCacheHelper()->addRequest(eip, addr, getName(), cycleCount, getMemoryManager()->getCore()->getId(), typeAccess, accessResult);
    }
 }
