@@ -59,10 +59,13 @@ void  DramCntlrInterface::loggingDRAM(IntPtr addr, Core::mem_op_t mem_op, bool a
    bool typeAccess = cache_helper::Misc::accessTypeInfo(mem_op);
 
    if(typeAccess)
-      totalLoads++;
-   else totalStores++;
+      stat.totalLoads++;
+   else stat.totalStores++;
+   if(accessResult)
+      stat.totalHits++;
+   else stat.totalMisses++;
 
-   totalAccess++;
+   stat.totalAccess++;
    if((getMemLevelDebug()!="" && getMemLevelDebug()==getName() ) || getMemLevelDebug()=="")
    {
       UInt64 cycleCount = getMemoryManager()->getCore()->getCycleCount();

@@ -56,10 +56,13 @@ DramCache::DramCache(MemoryManagerBase* memory_manager, ShmemPerfModel* shmem_pe
    m_prefetcher = Prefetcher::createPrefetcher(Sim()->getCfg()->getString("perf_model/dram/cache/prefetcher"), "dram/cache", m_core_id, 1);
    m_prefetch_on_prefetch_hit = Sim()->getCfg()->getBool("perf_model/dram/cache/prefetcher/prefetch_on_prefetch_hit");
 
+   bzero(&stat,sizeof(stat));
    //[update]
-   registerStatsMetric("dram-cache", m_core_id, "totalAccess", &totalAccess);
-   registerStatsMetric("dram-cache", m_core_id, "totalLoads", &totalLoads);
-   registerStatsMetric("dram-cache", m_core_id, "totalStores", &totalStores);
+   registerStatsMetric("dram-cache", m_core_id, "totalAccess", &stat.totalAccess);
+   registerStatsMetric("dram-cache", m_core_id, "totalLoads", &stat.totalLoads);
+   registerStatsMetric("dram-cache", m_core_id, "totalStores", &stat.totalStores);
+   registerStatsMetric("dram-cache", m_core_id, "totalMisses", &stat.totalMisses);
+   registerStatsMetric("dram-cache", m_core_id, "totalHits", &stat.totalHits);
 
    registerStatsMetric("dram-cache", m_core_id, "reads", &m_reads);
    registerStatsMetric("dram-cache", m_core_id, "writes", &m_writes);

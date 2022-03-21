@@ -34,9 +34,13 @@ class DramCntlrInterface
 
    public:
       //[update]
-      UInt64 totalAccess;
-      UInt64 totalLoads;
-      UInt64 totalStores;
+      struct {
+         UInt64 totalAccess;
+         UInt64 totalLoads;
+         UInt64 totalStores;
+         UInt64 totalMisses;
+         UInt64 totalHits;
+      } stat;
       
       typedef enum
       {

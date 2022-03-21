@@ -225,6 +225,8 @@ CacheCntlr::CacheCntlr(MemComponent::component_t mem_component,
    registerStatsMetric(name, core_id, "totalAccess", &stats.totalAccess);
    registerStatsMetric(name, core_id, "totalLoads", &stats.totalLoads);
    registerStatsMetric(name, core_id, "totalStores", &stats.totalStores);
+   registerStatsMetric(name, core_id, "totalMisses", &stats.totalMisses);
+   registerStatsMetric(name, core_id, "totalHits", &stats.totalHits);
 
    registerStatsMetric(name, core_id, "loads", &stats.loads);
    registerStatsMetric(name, core_id, "stores", &stats.stores);
@@ -2430,6 +2432,10 @@ CacheCntlr::loggingLevel(IntPtr addr, Core::mem_op_t mem_op_type, bool accessRes
       stats.totalLoads++;
    else stats.totalStores++;
    stats.totalAccess++;
+
+   if(accessResult)
+      stats.totalHits++;
+   else stats.totalMisses++;
 
    String name = getName();
    IntPtr eip = getEIP();
