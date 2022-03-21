@@ -18,7 +18,6 @@ void PCHistoryTable::insert(IntPtr pc, IntPtr addr)
         pcCounter.increase();// only counting new pc entry
     }
     action(refreshCounter);//resetting table if counter == 0
-    lock->release();
 }
 
 bool AddressHistory::insert(IntPtr addr)
