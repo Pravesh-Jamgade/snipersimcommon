@@ -42,25 +42,6 @@ Cache::Cache(
 
 Cache::~Cache()
 {
-   //verify cache block hot status
-   if(getName()=="L1-D")
-   {
-      int block_no=1;
-      for(int i=0;i<m_num_sets;i++)
-      {
-         CacheSet* c_set= m_sets[i];
-         
-         for(int j=0;j< c_set->getAssociativity();j++)
-         {
-            CacheBlockInfo* c_block=c_set->peekBlock(j);
-            int tmp=c_block->getOptionIndex();
-               // printf("unlocked cache block = %ld\n", c_block->getTag());
-               _LOG_CUSTOM_LOGGER(Log::Warning, Log::VerifyAddressAnalyzer, "%d, %ld, %ld, %d, %s\n", block_no++ ,c_block->getTag(), 
-               tagToAddress(c_block->getTag()), c_block->isValid(), c_block->getOptionName(tmp) );
-         }
-      }
-   }
-
    #ifdef ENABLE_SET_USAGE_HIST
    printf("Cache %s set usage:", m_name.c_str());
    for (SInt32 i = 0; i < (SInt32) m_num_sets; i++)
@@ -120,6 +101,16 @@ Cache::accessSingleLine(IntPtr addr, access_t access_type,
       return NULL;
    }
 
+   //[update]
+   // set cacheblockinfog to hotline
+   processPCEntry(getEIP(),addr);
+   if(!cache_block_info->hasOption(CacheBlockInfo::WARMUP))// if it's not a Warmup cache-block
+   {
+      if(cache_block_info->hasOption(CacheBlockInfo::HOT_LINE))
+      else
+         cache_block_info->setOption(CacheBlockInfo::HOT_LINE);
+   }
+
    if (access_type == LOAD)
    {
       // NOTE: assumes error occurs in memory. If we want to model bus errors, insert the error into buff instead
@@ -156,17 +147,12 @@ Cache::insertSingleLine(IntPtr addr, Byte* fill_buff,
    
    //[update]
    // set cacheblockinfog to hotline
-   String status="";
    processPCEntry(getEIP(),addr);
    if(!cache_block_info->hasOption(CacheBlockInfo::WARMUP))// if it's not a Warmup cache-block
    {
       if(cache_block_info->hasOption(CacheBlockInfo::HOT_LINE))
-         status="A";//Already hot A
       else
-         status="S";//Set hot S
          cache_block_info->setOption(CacheBlockInfo::HOT_LINE);
-      _LOG_CUSTOM_LOGGER(Log::Warning, Log::AddressAnalyzer, "%ld,%ld,%ld,%s,%ld,%ld\n", 
-         getEIP(), addr, cache_block_info->getTag(), status.c_str(), pcTable->getPCCount(), pcTable->getAddrCount());
    }
    
    m_sets[set_index]->insert(cache_block_info, fill_buff,
