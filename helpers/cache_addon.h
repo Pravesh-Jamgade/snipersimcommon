@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include "pqueue.h"
 #include "lock.h"
+#include "helpers.h"
 
 namespace CacheAddonSpace
 {   
@@ -54,32 +55,32 @@ namespace CacheAddonSpace
         }
     };
 
-    class Counter
-    {
-        UInt64 count;
-        public:
-        Counter(int init=1){this->count=count;}
-        void increase(){count++;}
-        void increase(UInt64 byk){count=count+byk;}
-        UInt64 getCount(){return count;}
-        void decrease(){count--;}
-        void decrease(UInt64 byk){count=count-byk;}
-    };
-
     class AddressHistory
     {
-        std::unordered_map<IntPtr,Counter> addressCount;
+        std::unordered_map<IntPtr,Helper::Counter> addressCount;
         public:
         AddressHistory(IntPtr addr){
-            addressCount[addr]=Counter();
+            addressCount[addr]=Helper::Counter();
         }
-        bool insert(IntPtr addr);// when true then only count; counting for new memory address only
+        bool insert(IntPtr addr);// true; counting for new entries of memory address only
     };
 
-    class PCHistoryTable
+    class PCMisc
     {
-        Counter addressCounter;
-        Counter pcCounter;
+        public:
+        Helper::Counter addressCounter;
+        Helper::Counter pcCounter;
+        Helper::Counter refreshCounter;
+        PCMisc(){
+            refreshCounter=Helper::Counter(10000);
+        }
+        UInt64 getPCCount(){return pcCounter.getCount();}//keep count of new pc only
+        UInt64 getAddrCount(){return addressCounter.getCount();}//keep count of new addresses only
+        virtual void action(Helper::Counter counter)=0;
+    };
+
+    class PCHistoryTable: virtual public PCMisc
+    {
         std::unordered_map<IntPtr, AddressHistory> table;
         Lock *lock;
         public:
@@ -87,8 +88,13 @@ namespace CacheAddonSpace
             lock = new Lock();
         }
         void insert(IntPtr pc, IntPtr addr);
-        UInt64 getPCCount(){return pcCounter.getCount();}
-        UInt64 getAddrCount(){return addressCounter.getCount();}
+        void action(Helper::Counter counter){
+            counter.decrease();
+            if(counter.getCount()<=0)
+            {
+                table.erase(table.begin(), table.end());
+            }
+        }
     };
 };
 #endif

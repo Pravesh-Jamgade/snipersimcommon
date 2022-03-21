@@ -224,7 +224,7 @@ class DataInfo
 
     public:
     DataInfo(bool access_type){
-        this->typeCount[access_type]+=1;
+        this->typeCount[access_type]=1;
         this->total_access=1;
     }
     void incrTotalCount(){this->total_access++;}
@@ -324,16 +324,19 @@ class CacheHelper
 {
     std::list<Access*> request;
     StrideTable* strideTable;
+    Lock* lock;
     
     public:
     CacheHelper(){
         strideTable = new StrideTable();
+        lock = new Lock();
     }
     ~CacheHelper(){
         strideTable->write();
         delete strideTable;
     }
 
+    /*pc, address, objectName, cycleNumber, core id, accessType (L/S), accessResult (H/M)*/
     void addRequest(IntPtr eip, IntPtr addr, String objname, UInt64 cycleCount, int core, bool accessType, bool accessResult);
     std::list<Access*> getRequestStack(){return request;}
     int getReqStackSize(){return request.size();}

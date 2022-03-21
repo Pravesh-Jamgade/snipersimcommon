@@ -37,6 +37,7 @@ class DramCntlrInterface
       UInt64 totalAccess;
       UInt64 totalLoads;
       UInt64 totalStores;
+      UInt64 totalMisses;
       
       typedef enum
       {
