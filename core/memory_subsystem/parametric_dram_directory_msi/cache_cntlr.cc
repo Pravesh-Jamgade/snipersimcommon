@@ -393,9 +393,6 @@ LOG_ASSERT_ERROR(offset + data_length <= getCacheBlockSize(), "access until %u >
    CacheBlockInfo *cache_block_info;
    bool cache_hit = operationPermissibleinCache(ca_address, mem_op_type, &cache_block_info), prefetch_hit = false;
 
-    // if debug level not specified, unlock to log all; or unlock individual level
-   this->loggingLevel(ca_address, mem_op_type, cache_hit);
-
    if (!cache_hit && m_perfect)
    {
       cache_hit = true;
@@ -420,11 +417,17 @@ LOG_ASSERT_ERROR(offset + data_length <= getCacheBlockSize(), "access until %u >
       ScopedLock sl(getLock());
       // Update the Cache Counters
       getCache()->updateCounters(cache_hit);
+
+      //[update]
+      // if debug level not specified, unlock to log all; or unlock individual level
+      this->loggingLevel(ca_address, mem_op_type, cache_hit);
+
       updateCounters(mem_op_type, ca_address, cache_hit, getCacheState(cache_block_info), Prefetch::NONE);
    }
 
    if (cache_hit)
    {
+   
       cache_helper::Misc::pathAdd(cache_hit, m_mem_component, "A", path);
 MYLOG("L1 hit");
       getMemoryManager()->incrElapsedTime(m_mem_component, CachePerfModel::ACCESS_CACHE_DATA_AND_TAGS, ShmemPerfModel::_USER_THREAD);
@@ -479,7 +482,6 @@ MYLOG("L1 hit");
       // path+=MemComponent2String(m_mem_component);
       // cache_helper::Misc::stateAppend(0,path);
       cache_helper::Misc::pathAdd(cache_hit, m_mem_component, "B1", tmp1);
-
 
       /* cache miss: either wrong coherency state or not present in the cache */
 MYLOG("L1 miss");
@@ -877,10 +879,6 @@ SubsecondTime t_issue, bool have_write_lock, String& path)
    HitWhere::where_t hit_where = HitWhere::MISS;
    SharedCacheBlockInfo* cache_block_info = getCacheBlockInfo(address);
 
-   //[update]
-   if(modeled==count && modeled!=false )
-      this->loggingLevel(address, mem_op_type, cache_hit);
-
    if (!cache_hit && m_perfect)
    {
       cache_hit = true;
@@ -902,8 +900,10 @@ SubsecondTime t_issue, bool have_write_lock, String& path)
    if (count)
    {
       ScopedLock sl(getLock());
-      if (isPrefetch == Prefetch::NONE)
+      if (isPrefetch == Prefetch::NONE){
          getCache()->updateCounters(cache_hit);
+      }
+      this->loggingLevel(address, mem_op_type, cache_hit);//[update]
       updateCounters(mem_op_type, address, cache_hit, getCacheState(address), isPrefetch);
    }
 
