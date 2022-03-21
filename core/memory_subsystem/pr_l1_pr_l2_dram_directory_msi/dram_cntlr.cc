@@ -41,9 +41,12 @@ DramCntlr::DramCntlr(MemoryManagerBase* memory_manager,
    registerStatsMetric("dram", memory_manager->getCore()->getId(), "writes", &m_writes);
 
    //[update]
-   registerStatsMetric("dram", memory_manager->getCore()->getId(), "totalAccess", &totalAccess);
-   registerStatsMetric("dram", memory_manager->getCore()->getId(), "totalLoads", &totalLoads);
-   registerStatsMetric("dram", memory_manager->getCore()->getId(), "totalStores", &totalStores);
+   bzero(&stat,sizeof(stat));
+   registerStatsMetric("dram", memory_manager->getCore()->getId(), "totalAccess", &stat.totalAccess);
+   registerStatsMetric("dram", memory_manager->getCore()->getId(), "totalLoads", &stat.totalLoads);
+   registerStatsMetric("dram", memory_manager->getCore()->getId(), "totalStores", &stat.totalStores);
+   registerStatsMetric("dram", memory_manager->getCore()->getId(), "totalHits", &stat.totalHits);
+   registerStatsMetric("dram", memory_manager->getCore()->getId(), "totalMisses", &stat.totalMisses);
 }
 
 DramCntlr::~DramCntlr()

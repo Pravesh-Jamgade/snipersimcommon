@@ -224,6 +224,7 @@ namespace ParametricDramDirectoryMSI
             UInt64 totalLoads;
             UInt64 totalStores;
             UInt64 totalMisses;
+            UInt64 totalHits;
             
            UInt64 loads, stores;
            UInt64 load_misses, store_misses;
