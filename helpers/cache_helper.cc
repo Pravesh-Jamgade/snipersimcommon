@@ -15,7 +15,7 @@ void StrideTable::write()
     pcBasedClusterStrideFile<<"pc,stride,count\n";
    
     std::map<String, Add2Data>::iterator pit = table.begin();// iterator on eip add2data
-    std::map<String,Count>::iterator sit; // iterator on set of stride from StrideCluster
+    std::unordered_map<String,Count>::iterator sit; // iterator on set of stride from StrideCluster
     std::map<String, StrideCluster*>::iterator rit;
     std::list<AddressFrequencyAndOrder>::iterator strideOrderVecIt;
 
@@ -39,7 +39,7 @@ void StrideTable::write()
         if(rit!=strideClusterInfo.end())
         {
             // stride and count
-            std::map<String,Count>strideList = rit->second->getStrideList(); // get strideList for pc or eip
+            std::unordered_map<String,Count>strideList = rit->second->getStrideList(); // get strideList for pc or eip
             sit = strideList.begin();
             for(;sit!=strideList.end();sit++)
             {

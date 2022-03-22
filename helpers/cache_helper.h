@@ -17,6 +17,7 @@
         #include<list>
         #include<memory>
         #include<sqlite3.h>
+        #include<unordered_map>
 
 namespace cache_helper
 {   
@@ -179,7 +180,7 @@ class AddressFrequencyAndOrder
 Order of addreses (if address is acceses consecutive then its count accounted by AddressFrequencyAndOrder class) as well */
 class StrideCluster
 {
-    std::map<String,Count> strideList;//tracks only stride
+    std::unordered_map<String,Count> strideList;//tracks only stride
     std::list<AddressFrequencyAndOrder> strideOrderList;//tracks addresses responsible for stride
     IntPtr lastSeenAddr=0;//tracks last seen address, to calculate stride for next access
     public:
@@ -200,7 +201,7 @@ class StrideCluster
         lastSeenAddr=newAddr;
 
         String diffStr = itostr(diff);
-        std::map<String,Count>::iterator it=strideList.find(diffStr);
+        std::unordered_map<String,Count>::iterator it=strideList.find(diffStr);
         if(it!=strideList.end()){
             it->second.incrCount();
         }
@@ -213,7 +214,7 @@ class StrideCluster
         }//if prev strideorder == newstrideorder skip, otherwise track
         strideOrderList.emplace_back(newstrideOrderElement);
     }
-    std::map<String, Count> getStrideList(){return strideList;}
+    std::unordered_map<String, Count> getStrideList(){return strideList;}
     std::list<AddressFrequencyAndOrder> getAddressFrequencyAndOrder(){return strideOrderList;}
 };
 
