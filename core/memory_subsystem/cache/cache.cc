@@ -104,12 +104,6 @@ Cache::accessSingleLine(IntPtr addr, access_t access_type,
    //[update]
    // set cacheblockinfog to hotline
    processPCEntry(getEIP(),addr);
-   if(!cache_block_info->hasOption(CacheBlockInfo::WARMUP))// if it's not a Warmup cache-block
-   {
-      if(cache_block_info->hasOption(CacheBlockInfo::HOT_LINE))
-      else
-         cache_block_info->setOption(CacheBlockInfo::HOT_LINE);
-   }
 
    if (access_type == LOAD)
    {
@@ -148,24 +142,10 @@ Cache::insertSingleLine(IntPtr addr, Byte* fill_buff,
    //[update]
    // set cacheblockinfog to hotline
    processPCEntry(getEIP(),addr);
-   if(!cache_block_info->hasOption(CacheBlockInfo::WARMUP))// if it's not a Warmup cache-block
-   {
-      if(cache_block_info->hasOption(CacheBlockInfo::HOT_LINE))
-      else
-         cache_block_info->setOption(CacheBlockInfo::HOT_LINE);
-   }
    
    m_sets[set_index]->insert(cache_block_info, fill_buff,
          eviction, evict_block_info, evict_buff, cntlr);
    *evict_addr = tagToAddress(evict_block_info->getTag());
-
-   if(eviction)
-   {
-      if(cache_block_info->hasOption(CacheBlockInfo::HOT_LINE))
-      {
-         _LOG_CUSTOM_LOGGER(Log::Warning,Log::VerifyAA2,"%ld,%ld\n", getEIP(), addr);
-      }
-   }
 
    if (m_fault_injector) {
       // NOTE: no callback is generated for read of evicted data
