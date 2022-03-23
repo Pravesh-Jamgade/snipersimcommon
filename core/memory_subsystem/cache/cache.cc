@@ -202,7 +202,9 @@ bool Cache::processPCEntry(IntPtr pc, IntPtr addr)
    retAddr=retPC=-1;
    if(getName() != "L1-D")
       return false;
-   pcTable->insert(pc,addr);
+   
+   UInt64 cycleCount = Sim()->getCoreManager()->getCurrentCore()->getCycleCount();
+   pcTable->insert(pc,addr,cycleCount);
    
      return true;
 }

@@ -71,12 +71,13 @@ namespace CacheAddonSpace
         Helper::Counter addressCounter;
         Helper::Counter pcCounter;
         Helper::Counter refreshCounter;
+        UInt64 prevCycleNumber
         PCMisc(){
             refreshCounter=Helper::Counter(10000);
         }
         UInt64 getPCCount(){return pcCounter.getCount();}//keep count of new pc only
         UInt64 getAddrCount(){return addressCounter.getCount();}//keep count of new addresses only
-        virtual void action(Helper::Counter counter)=0;
+        virtual void action(UInt64 currCycleNumber)=0;
     };
 
     class PCHistoryTable: virtual public PCMisc
@@ -88,9 +89,11 @@ namespace CacheAddonSpace
             lock = new Lock();
         }
         void insert(IntPtr pc, IntPtr addr);
-        void action(Helper::Counter counter){
-            counter.decrease();
-            if(counter.getCount()<=0)
+        void action(UInt64 currCycleNumber){
+            prevCycleNumber=prevCycleNumber-currCycleNumber;
+            refreshCounter.decrease(prevCycleNumber);
+            prevCycleNumber=currCycleNumber;
+            if(refreshCounter.getCount()<=0)
             {
                 table.erase(table.begin(), table.end());
             }

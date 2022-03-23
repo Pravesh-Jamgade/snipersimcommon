@@ -3,7 +3,7 @@
 #include<unordered_map>
 using namespace CacheAddonSpace;
 
-void PCHistoryTable::insert(IntPtr pc, IntPtr addr)
+void PCHistoryTable::insert(IntPtr pc, IntPtr addr, UInt64 cycleCount)
 {
     std::unordered_map<IntPtr,AddressHistory>::const_iterator const_it=table.find(pc);
     if(const_it!=table.end())
@@ -17,7 +17,7 @@ void PCHistoryTable::insert(IntPtr pc, IntPtr addr)
         table.insert({pc,AddressHistory(addr)});
         pcCounter.increase();// only counting new pc entry
     }
-    action(refreshCounter);//resetting table if counter == 0
+    action(cycleCount);//resetting table if counter == 0
 }
 
 bool AddressHistory::insert(IntPtr addr)
