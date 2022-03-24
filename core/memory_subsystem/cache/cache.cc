@@ -32,7 +32,7 @@ Cache::Cache(
       m_sets[i] = CacheSet::createCacheSet(cfgname, core_id, replacement_policy, m_cache_type, m_associativity, m_blocksize, m_set_info);
    }
 
-   pcTable = new CacheAddonSpace::PCHistoryTable();
+   // pcTable = new CacheAddonSpace::PCHistoryTable();
    #ifdef ENABLE_SET_USAGE_HIST
    m_set_usage_hist = new UInt64[m_num_sets];
    for (UInt32 i = 0; i < m_num_sets; i++)
@@ -103,7 +103,7 @@ Cache::accessSingleLine(IntPtr addr, access_t access_type,
 
    //[update]
    // set cacheblockinfog to hotline
-   processPCEntry(getEIP(),addr);
+   processPCEntry(getEIP(),addr,cache_block_info);
 
    if (access_type == LOAD)
    {
@@ -141,7 +141,7 @@ Cache::insertSingleLine(IntPtr addr, Byte* fill_buff,
    
    //[update]
    // set cacheblockinfog to hotline
-   processPCEntry(getEIP(),addr);
+   processPCEntry(getEIP(),addr,cache_block_info);
    
    m_sets[set_index]->insert(cache_block_info, fill_buff,
          eviction, evict_block_info, evict_buff, cntlr);
@@ -196,15 +196,38 @@ Cache::updateHits(Core::mem_op_t mem_op_type, UInt64 hits)
    }
 }
 
-bool Cache::processPCEntry(IntPtr pc, IntPtr addr)
+UInt64 Cache::getCycleCount(){return cycleNumber;}
+
+bool Cache::processPCEntry(IntPtr pc, IntPtr addr, CacheBlockInfo* cache_block_info)
 {
    IntPtr retAddr,retPC;
    retAddr=retPC=-1;
    if(getName() != "L1-D")
       return false;
    
-   UInt64 cycleCount = Sim()->getCoreManager()->getCurrentCore()->getCycleCount();
-   pcTable->insert(pc,addr,cycleCount);
+   cache_block_info->setOption(CacheBlockInfo::HOT_LINE);
    
-     return true;
+   insert(pc,addr);
+
+   for(auto addr:action(getCycleCount()))//resetting table if counter == 0
+   {
+      IntPtr tag;
+      UInt32 set_index;
+      UInt32 line_index = -1;
+      UInt32 block_offset;
+
+      splitAddress(addr, tag, set_index, block_offset);
+
+      CacheSet* set = m_sets[set_index];
+      CacheBlockInfo* cache_block_info = set->find(tag, &line_index);
+      if(cache_block_info!=NULL)
+      {
+         bool cool = cache_block_info->hasOption(CacheBlockInfo::HOT_LINE);
+         if(cool)
+         {
+            cache_block_info->clearOption(CacheBlockInfo::HOT_LINE);
+         }
+      }
+   }
+   return true;//if it is L1-D cache
 }

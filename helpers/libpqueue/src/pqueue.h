@@ -210,6 +210,8 @@ pqueue_dump(pqueue_t *q,
  */
 int pqueue_is_valid(pqueue_t *q);
 
+void* pq_restructure(pqueue_t *q, void* ns);
+
 
 #endif /* PQUEUE_H */
 /** @} */

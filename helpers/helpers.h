@@ -25,7 +25,10 @@ namespace Helper
     {
         UInt64 count;
         UInt64 reuse;
+        IntPtr hint;
+
         public:
+        
         Counter(int init=1){this->count=init, this->reuse=init;}
         void increase(){this->count++;}
         void increase(UInt64 byk){this->count=this->count+byk;}

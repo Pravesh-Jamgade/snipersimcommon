@@ -1406,6 +1406,7 @@ CacheCntlr::accessCache(
       Core::mem_op_t mem_op_type, IntPtr ca_address, UInt32 offset,
       Byte* data_buf, UInt32 data_length, bool update_replacement, String path)
 {
+   getCache()->setCycleNumber(getMemoryManager()->getCore()->getCycleCount());
    // loggingLevel(ca_address,mem_op_type);
    switch (mem_op_type)
    {

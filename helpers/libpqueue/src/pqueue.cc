@@ -164,6 +164,7 @@ pqueue_insert(pqueue_t *q, void *d)
     q->size++;
     q->d[i] = (void*)malloc(sizeof(void));
     q->d[i] = d;
+    
     bubble_up(q, i);
 
     return 0;
@@ -191,7 +192,7 @@ pqueue_incr_priority(pqueue_t *q, void *d)
 {
     size_t posn;
     pqueue_pri_t old_pri = q->getpri(d);
-    pqueue_pri_t new_pri = old_pri--;
+    pqueue_pri_t new_pri = old_pri++;
 
     q->setpri(d, new_pri);
     posn = q->getpos(d);
@@ -236,7 +237,6 @@ pqueue_pop(pqueue_t *q)
     head = q->d[1];
     q->d[1] = q->d[--q->size];
     percolate_down(q, 1);
-
     return head;
 }
 
@@ -331,9 +331,14 @@ subtree_is_valid(pqueue_t *q, int pos)
     return 1;
 }
 
-
 int
 pqueue_is_valid(pqueue_t *q)
 {
     return subtree_is_valid(q, 1);
+}
+
+void* pq_restructure(pqueue_t *q, void* ns)
+{
+    size_t pos=q->getpos(ns);
+    bubble_up(q,pos);
 }

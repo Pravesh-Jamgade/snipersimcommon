@@ -17,7 +17,7 @@
 // Define to enable the set usage histogram
 //#define ENABLE_SET_USAGE_HIST
 
-class Cache : public CacheBase
+class Cache : public CacheBase, public CacheAddonSpace::PCHistoryTable
 {
    private:
       bool m_enabled;
@@ -33,7 +33,7 @@ class Cache : public CacheBase
 
       FaultInjector *m_fault_injector;
 
-      CacheAddonSpace::PCHistoryTable* pcTable;
+      // CacheAddonSpace::PCHistoryTable* pcTable;
 
       IntPtr eip;
 
@@ -93,7 +93,10 @@ class Cache : public CacheBase
             CacheBlockInfo* cache_block_info = set->find(tag, &line_index);
             return cache_block_info;
       }
-      bool processPCEntry(IntPtr pc, IntPtr addr);
+      bool processPCEntry(IntPtr pc, IntPtr addr, CacheBlockInfo* cache_block_info);
+      UInt64 cycleNumber;
+      void setCycleNumber(UInt64 cycleNumber){this->cycleNumber=cycleNumber;}
+      UInt64 getCycleCount();
 };
 
 template <class T>

@@ -3,35 +3,39 @@
 #include<unordered_map>
 using namespace CacheAddonSpace;
 
-void PCHistoryTable::insert(IntPtr pc, IntPtr addr, UInt64 cycleCount)
+void PCHistoryTable::insert(IntPtr pc, IntPtr addr)
 {
     std::unordered_map<IntPtr,AddressHistory>::const_iterator const_it=table.find(pc);
+
     if(const_it!=table.end())
     {
         AddressHistory addrh=const_it->second;
-        if(addrh.insert(addr))
-            addressCounter.increase();// only counting new addr 
+        int pri = addrh.insert(addr);// will return frequency of addr, if 0->1st time and it is unique for pc hence also increase addressCounter
+        if(pri==0)//implies new address
+            addressCounter.increase();//only counting new addr
     }
     else 
     {
         table.insert({pc,AddressHistory(addr)});
         pcCounter.increase();// only counting new pc entry
     }
-    action(cycleCount);//resetting table if counter == 0
 }
 
-bool AddressHistory::insert(IntPtr addr)
+// returns address count if already address entry exists else returns 0 for new entry
+UInt64 AddressHistory::insert(IntPtr addr)
 {
-    std::unordered_map<IntPtr, Helper::Counter>::const_iterator const_it=addressCount.find(addr);
+    std::unordered_map<IntPtr, Helper::Counter*>::const_iterator const_it=addressCount.find(addr);
+    Helper::Counter* counter = new Helper::Counter();
     if(const_it!=addressCount.end())
     {
-        Helper::Counter count=const_it->second;
-        count.increase();
-        return false;
+        counter=const_it->second;
+        counter->increase();
+        return counter->getCount();
     }
     else
     {
-        addressCount.insert({addr,Helper::Counter()});
-        return true;
+        addressCount.insert({addr, counter});
+        return 0;
     }
+    
 }

@@ -4,65 +4,36 @@
 #include "fixed_types.h"
 #include <iostream>
 #include <unordered_map>
+#include <unordered_set>
+#include <vector>
+#include <algorithm>
 #include "pqueue.h"
 #include "lock.h"
 #include "helpers.h"
 
 namespace CacheAddonSpace
 {   
-    typedef struct node_t
-    {
-        pqueue_pri_t pri;
-        int    val;
-        size_t pos;
-    } node_t;
-
-    class Function
-    {
-        public: 
-        static int
-        cmp_pri(pqueue_pri_t next, pqueue_pri_t curr)
-        {
-            return (next < curr);
-        }
-
-
-        static pqueue_pri_t
-        get_pri(void *a)
-        {
-            return ((node_t *) a)->pri;
-        }
-
-
-        static void
-        set_pri(void *a, pqueue_pri_t pri)
-        {
-            ((node_t *) a)->pri = pri;
-        }
-
-
-        static size_t
-        get_pos(void *a)
-        {
-            return ((node_t *) a)->pos;
-        }
-
-
-        static void
-        set_pos(void *a, size_t pos)
-        {
-            ((node_t *) a)->pos = pos;
-        }
-    };
-
+   
     class AddressHistory
     {
-        std::unordered_map<IntPtr,Helper::Counter> addressCount;
+        Helper::Counter totalpcCounter;
+        std::unordered_map<IntPtr,Helper::Counter*> addressCount;
         public:
         AddressHistory(IntPtr addr){
-            addressCount[addr]=Helper::Counter();
+            addressCount[addr]=new Helper::Counter();
         }
-        bool insert(IntPtr addr);// true; counting for new entries of memory address only
+        UInt64 insert(IntPtr addr);// true; counting for new entries of memory address only
+        Helper::Counter* find(IntPtr addr){
+            std::unordered_map<IntPtr,Helper::Counter*>::iterator it=addressCount.find(addr);
+            if(it!=addressCount.end())
+                return it->second;
+            return nullptr;
+        }
+        void deleteEntry(IntPtr addr){
+            addressCount.erase(addressCount.find(addr));
+        }
+        std::unordered_map<IntPtr,Helper::Counter*> getAddresses(){return addressCount;}
+        UInt64 getTotalAccessCount(){return totalpcCounter.getCount();}
     };
 
     class PCMisc
@@ -71,33 +42,58 @@ namespace CacheAddonSpace
         Helper::Counter addressCounter;
         Helper::Counter pcCounter;
         Helper::Counter refreshCounter;
-        UInt64 prevCycleNumber
-        PCMisc(){
-            refreshCounter=Helper::Counter(10000);
-        }
+        UInt64 prevCycleNumber;
+        
         UInt64 getPCCount(){return pcCounter.getCount();}//keep count of new pc only
         UInt64 getAddrCount(){return addressCounter.getCount();}//keep count of new addresses only
-        virtual void action(UInt64 currCycleNumber)=0;
+        virtual std::unordered_set<IntPtr> action(UInt64 currCycleNumber)=0;
     };
 
     class PCHistoryTable: virtual public PCMisc
     {
         std::unordered_map<IntPtr, AddressHistory> table;
         Lock *lock;
+        UInt64 prevCycleNumber=0;
         public:
         PCHistoryTable(){
             lock = new Lock();
         }
         void insert(IntPtr pc, IntPtr addr);
-        void action(UInt64 currCycleNumber){
-            prevCycleNumber=prevCycleNumber-currCycleNumber;
-            refreshCounter.decrease(prevCycleNumber);
-            prevCycleNumber=currCycleNumber;
-            if(refreshCounter.getCount()<=0)
+        std::unordered_set<IntPtr> action(UInt64 currCycleNumber){
+
+            std::unordered_set<IntPtr> allRemovableAddresses;
+
+            UInt64 modCycle = currCycleNumber%10000;
+
+            if(modCycle<prevCycleNumber)
             {
-                table.erase(table.begin(), table.end());
+                //erasing some pc entry
+                std::vector<std::pair<UInt64,IntPtr>> allPc;// count-pc
+                for(auto e: table)
+                {
+                    allPc.push_back({e.second.getTotalAccessCount(), e.first});
+                }
+                std::sort(allPc.begin(),allPc.end());
+
+                for(auto e: allPc)//count-pc
+                {
+                    std::unordered_map<IntPtr, AddressHistory>::iterator it = table.find(e.second);//pc
+                    if(it!=table.end())
+                    {
+                        for(auto p: it->second.getAddresses())
+                        {
+                            allRemovableAddresses.insert(p.first);
+                        }
+                    }
+                    table.erase(it);//pc
+                }
+                refreshCounter.reset();
             }
+            
+            prevCycleNumber=modCycle;
+            return allRemovableAddresses;
         }
+
     };
 };
 #endif
