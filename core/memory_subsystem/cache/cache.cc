@@ -1,4 +1,5 @@
 #include "simulator.h"
+#include "config.hpp"
 #include "cache.h"
 #include "log.h"
 #include "cache_helper.h"
@@ -23,6 +24,7 @@ Cache::Cache(
    AddressHomeLookup *ahl)
 :  //[ORIGINAL] // cache_helper::CacheHelper(name, num_sets, associativity, cache_block_size, hash, ahl),
    CacheBase(name, num_sets, associativity, cache_block_size, hash, ahl),
+   CacheAddonSpace::PCHistoryTable(Sim()->getCfg()->getInt("param/epoc")),
    m_enabled(false),
    m_num_accesses(0),
    m_num_hits(0),

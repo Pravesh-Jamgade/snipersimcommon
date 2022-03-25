@@ -54,9 +54,10 @@ namespace CacheAddonSpace
         std::unordered_map<IntPtr, AddressHistory> table;
         Lock *lock;
         UInt64 prevCycleNumber=0;
+        UInt64 epocDuration;
         public:
-        PCHistoryTable(){
-            lock = new Lock();
+        PCHistoryTable(UInt64 epoc){
+            this->epocDuration=epoc;
         }
         void insert(IntPtr pc, IntPtr addr);
         std::unordered_set<IntPtr> action(UInt64 currCycleNumber){

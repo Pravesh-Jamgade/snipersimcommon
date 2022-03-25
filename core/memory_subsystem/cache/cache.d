@@ -20,6 +20,10 @@
  /mnt/B/sniper/common/helpers/cache_helper.h \
  /mnt/B/sniper/common/system/inst_mode.h \
  /mnt/B/sniper/decoder_lib/decoder.h \
+ /mnt/B/sniper/common/config/config.hpp \
+ /mnt/B/sniper/common/config/key.hpp \
+ /mnt/B/sniper/common/config/section.hpp \
+ /mnt/B/sniper/common/config/config_exceptions.hpp \
  /mnt/B/sniper/common/core/memory_subsystem/cache/cache.h \
  /mnt/B/sniper/common/core/memory_subsystem/cache/cache_set.h \
  /mnt/B/sniper/common/core/memory_subsystem/cache/cache_block_info.h \
