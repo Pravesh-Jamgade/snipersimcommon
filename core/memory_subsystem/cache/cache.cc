@@ -4,6 +4,10 @@
 #include "cache_helper.h"
 
 // Cache class
+
+//flag to recieve miss ratio
+bool Cache::sendMsgFlag=false;
+
 // constructors/destructors
 Cache::Cache(
    String name,
@@ -227,6 +231,10 @@ bool Cache::processPCEntry(IntPtr pc, IntPtr addr, CacheBlockInfo* cache_block_i
          {
             cache_block_info->clearOption(CacheBlockInfo::HOT_LINE);
          }
+      }
+      if(!sendMsgFlag)
+      {
+         sendMsgFlag=true;
       }
    }
    return true;//if it is L1-D cache

@@ -19,6 +19,7 @@
 
 //[update]
 #include "cache_helper.h"
+#include "helpers.h"
 
 class DramCache;
 class ShmemPerf;
@@ -126,5 +127,6 @@ namespace ParametricDramDirectoryMSI
          //[update]
          std::vector<String> confName, objName;
          std::shared_ptr<cache_helper::CacheHelper> cacheHelper;
+         std::shared_ptr<Helper::MsgCollector> messageCollector;
    };
 }

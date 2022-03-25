@@ -2,6 +2,7 @@
 #define HELPER_H
 
 #include<iostream>
+#include<vector>
 #include "pqueue.h"
 #include "fixed_types.h"
 
@@ -36,6 +37,33 @@ namespace Helper
         void decrease(){this->count--;}
         void decrease(UInt64 byk){this->count=this->count-byk;}
         void reset(){this->count=this->reuse;}
+    };
+
+    class Message
+    {
+        public:
+        int core_id;
+        double miss_ratio;
+        String source;
+        bool skipStatus;
+        UInt64 totalAccess, totalMiss;
+        Message(int core_id, double miss_ratio, String source, UInt64 totalAccess, UInt64 totalMiss):
+        core_id(core_id), miss_ratio(miss_ratio), 
+        source(source),totalAccess(totalAccess), totalMiss(totalMiss),skipStatus(false)
+        {}
+        int getCore(){return core_id;}
+        double getMissRatio(){return miss_ratio;}
+        String getName(){return source;}
+        UInt64 gettotalMiss(){return totalMiss;}
+        UInt64 gettotalAccess(){return totalAccess;}
+    };
+
+    class MsgCollector
+    {
+        std::vector<Message> messages;
+        public:
+        void push(Message msg){messages.push_back(msg);}
+        std::vector<Message> getMsg(){return messages;}
     };
 }
 #endif

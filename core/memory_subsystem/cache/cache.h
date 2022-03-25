@@ -97,6 +97,10 @@ class Cache : public CacheBase, public CacheAddonSpace::PCHistoryTable
       UInt64 cycleNumber;
       void setCycleNumber(UInt64 cycleNumber){this->cycleNumber=cycleNumber;}
       UInt64 getCycleCount();
+      static bool sendMsgFlag;
+      static void resetSendMsgFlag(){
+            sendMsgFlag=false;
+      }
 };
 
 template <class T>

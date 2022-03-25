@@ -49,6 +49,7 @@ MemoryManager::MemoryManager(Core* core,
 {
 
    cacheHelper = core->getCacheHelper();
+   messageCollector=std::make_shared<Helper::MsgCollector>();
    
    // Read Parameters from the Config file
    std::map<MemComponent::component_t, CacheParameters> cache_parameters;
@@ -517,8 +518,20 @@ MemoryManager::coreInitiateMemoryAccess(
    String path;
 
    for(UInt32 i = MemComponent::FIRST_LEVEL_CACHE; i <= (UInt32)m_last_level_cache; ++i) {
+      if(Cache::sendMsgFlag)
+         m_cache_cntlrs[(MemComponent::component_t)i]->collectMsg(messageCollector);
       m_cache_cntlrs[(MemComponent::component_t)i]->setEIP(eip);
    }
+
+   if(Cache::sendMsgFlag){
+      Cache::resetSendMsgFlag();
+      for(auto msg: messageCollector->getMsg())
+      {
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::Message,"%d,%s,%f,%ld,%ld\n" ,msg.getCore(), msg.getName().c_str(), 
+         msg.getMissRatio(), msg.gettotalMiss(), msg.gettotalAccess());
+      }
+   }
+      
 
    if(m_dram_cache!=NULL){
       m_dram_cache->setEIP(eip);

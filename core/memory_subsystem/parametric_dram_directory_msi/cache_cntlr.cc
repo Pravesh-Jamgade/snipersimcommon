@@ -12,6 +12,7 @@
 #include <cstring>
 
 #include "general.h"
+#include "helpers.h"
 
 // Define to allow private L2 caches not to take the stack lock.
 // Works in most cases, but seems to have some more bugs or race conditions, preventing it from being ready for prime time.
@@ -2432,11 +2433,16 @@ CacheCntlr::loggingLevel(IntPtr addr, Core::mem_op_t mem_op_type, bool accessRes
    if(typeAccess)
       stats.totalLoads++;
    else stats.totalStores++;
+
    stats.totalAccess++;
 
-   if(accessResult)
+
+   if(accessResult){
       stats.totalHits++;
-   else stats.totalMisses++;
+   }
+   else {
+      stats.totalMisses++;
+   }
 
    String name = getName();
    IntPtr eip = getEIP();
@@ -2445,6 +2451,13 @@ CacheCntlr::loggingLevel(IntPtr addr, Core::mem_op_t mem_op_type, bool accessRes
       UInt64 cycleCount=getMemoryManager()->getCore()->getCycleCount();
       cacheHelper->addRequest(eip, addr, name, cycleCount, getMemoryManager()->getCore()->getId(), typeAccess, accessResult);
    }
+}
+
+void
+CacheCntlr::collectMsg(std::shared_ptr<Helper::MsgCollector> msgCollector)
+{
+   Helper::Message message = Helper::Message(getMemoryManager()->getCore()->getId(), getMissRation(), getName(), gettotalAccess(), gettotalMiss());
+   msgCollector->push(message);
 }
 
 

@@ -71,6 +71,7 @@
  /mnt/B/sniper/common/core/memory_subsystem/dram/dram_cntlr_interface.h \
  /mnt/B/sniper/common/core/memory_subsystem/parametric_dram_directory_msi/../pr_l1_pr_l2_dram_directory_msi/shmem_perf.h \
  /mnt/B/sniper/common/core/memory_subsystem/directory_schemes/coherency_protocol.h \
+ /mnt/B/sniper/common/helpers/helpers.h \
  /mnt/B/sniper/common/system/core_manager.h \
  /mnt/B/sniper/common/misc/tls.h /mnt/B/sniper/common/config/config.hpp \
  /mnt/B/sniper/common/config/key.hpp \
