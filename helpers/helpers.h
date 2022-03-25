@@ -45,17 +45,17 @@ namespace Helper
         int core_id;
         double miss_ratio;
         String source;
-        bool skipStatus;
         UInt64 totalAccess, totalMiss;
         Message(int core_id, double miss_ratio, String source, UInt64 totalAccess, UInt64 totalMiss):
         core_id(core_id), miss_ratio(miss_ratio), 
-        source(source),totalAccess(totalAccess), totalMiss(totalMiss),skipStatus(false)
+        source(source),totalAccess(totalAccess), totalMiss(totalMiss)
         {}
         int getCore(){return core_id;}
         double getMissRatio(){return miss_ratio;}
         String getName(){return source;}
         UInt64 gettotalMiss(){return totalMiss;}
         UInt64 gettotalAccess(){return totalAccess;}
+        double getMiss2HitRatio(){return (double)totalMiss/ (double)(totalAccess-totalMiss);}
     };
 
     class MsgCollector
@@ -64,6 +64,25 @@ namespace Helper
         public:
         void push(Message msg){messages.push_back(msg);}
         std::vector<Message> getMsg(){return messages;}
+    };
+
+    class LevelPredictor
+    {   
+        std::vector<int>levelToSkip;
+        public:
+        LevelPredictor(int size)
+        {
+            levelToSkip=std::vector<int>(size,0);
+        }
+        void addLevelMiss(int level)
+        {
+            levelToSkip[level]=1;
+        }
+        void oredLevelMiss(int level)
+        {
+            levelToSkip[level]=levelToSkip[level]==1?1:0;
+        }
+        std::vector<int> getLevelPred(){return levelToSkip;}
     };
 }
 #endif

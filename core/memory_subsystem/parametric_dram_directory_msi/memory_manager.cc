@@ -49,8 +49,7 @@ MemoryManager::MemoryManager(Core* core,
 {
 
    cacheHelper = core->getCacheHelper();
-   messageCollector=std::make_shared<Helper::MsgCollector>();
-   
+
    // Read Parameters from the Config file
    std::map<MemComponent::component_t, CacheParameters> cache_parameters;
    std::map<MemComponent::component_t, String> cache_names;
@@ -92,6 +91,8 @@ MemoryManager::MemoryManager(Core* core,
 
       confName.clear();
       objName.clear();
+
+      levelPred = new Helper::LevelPredictor(m_last_level_cache - MemComponent::FIRST_LEVEL_CACHE + 1);
 
       for(UInt32 i = MemComponent::FIRST_LEVEL_CACHE; i <= (UInt32)m_last_level_cache; ++i)
       {
@@ -518,20 +519,8 @@ MemoryManager::coreInitiateMemoryAccess(
    String path;
 
    for(UInt32 i = MemComponent::FIRST_LEVEL_CACHE; i <= (UInt32)m_last_level_cache; ++i) {
-      if(Cache::sendMsgFlag)
-         m_cache_cntlrs[(MemComponent::component_t)i]->collectMsg(messageCollector);
       m_cache_cntlrs[(MemComponent::component_t)i]->setEIP(eip);
-   }
-
-   if(Cache::sendMsgFlag){
-      Cache::resetSendMsgFlag();
-      for(auto msg: messageCollector->getMsg())
-      {
-         _LOG_CUSTOM_LOGGER(Log::Warning, Log::Message,"%d,%s,%f,%ld,%ld\n" ,msg.getCore(), msg.getName().c_str(), 
-         msg.getMissRatio(), msg.gettotalMiss(), msg.gettotalAccess());
-      }
-   }
-      
+   }  
 
    if(m_dram_cache!=NULL){
       m_dram_cache->setEIP(eip);
@@ -546,13 +535,50 @@ MemoryManager::coreInitiateMemoryAccess(
    else if (mem_component == MemComponent::L1_DCACHE && m_dtlb)
       accessTLB(m_dtlb, address, false, modeled, eip, path);
 
-   return m_cache_cntlrs[mem_component]->processMemOpFromCore(
+   HitWhere::where_t hitWhere= m_cache_cntlrs[mem_component]->processMemOpFromCore(
          lock_signal,
          mem_op_type,
          address, offset,
          data_buf, data_length,
          modeled == Core::MEM_MODELED_NONE || modeled == Core::MEM_MODELED_COUNT ? false : true,
          modeled == Core::MEM_MODELED_NONE ? false : true,  eip, path);
+
+   double prev=0;
+   if(Cache::sendMsgFlag){
+      // collecting msg from all cache levels
+      for(UInt32 i = MemComponent::FIRST_LEVEL_CACHE; i <= (UInt32)m_last_level_cache; ++i) {
+
+         Helper::Message msg= m_cache_cntlrs[(MemComponent::component_t)i]->collectMsg();
+
+         if(i>MemComponent::FIRST_LEVEL_CACHE){
+            if(prev<msg.getMissRatio()){
+               levelPred->addLevelMiss(i);//set (skip)true to current
+            }
+            else{
+               levelPred->addLevelMiss(i-1);//set (skip)true to previous
+            }
+            if(msg.gettotalMiss()>(msg.gettotalAccess()-msg.gettotalMiss()))
+            {
+               levelPred->oredLevelMiss(i);
+            }
+         }
+
+         prev=msg.getMissRatio();
+
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::Message,"%d,%s,%f,%f\n" ,msg.getCore(), 
+                              msg.getName().c_str(), 
+                              msg.getMissRatio(), msg.getMiss2HitRatio());
+      }  
+
+      for(int i=0;i< levelPred->getLevelPred().size();i++)
+      {
+         std::cout<<i<<"="<<levelPred->getLevelPred()[i]<<", ";
+      }
+      std::cout<<'\n';
+      Cache::resetSendMsgFlag();
+   }
+   
+   return hitWhere;
 }
 
 void

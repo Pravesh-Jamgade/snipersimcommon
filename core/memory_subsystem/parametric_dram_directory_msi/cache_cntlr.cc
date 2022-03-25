@@ -425,10 +425,9 @@ LOG_ASSERT_ERROR(offset + data_length <= getCacheBlockSize(), "access until %u >
 
       updateCounters(mem_op_type, ca_address, cache_hit, getCacheState(cache_block_info), Prefetch::NONE);
    }
-
+   
    if (cache_hit)
    {
-   
       cache_helper::Misc::pathAdd(cache_hit, m_mem_component, "A", path);
 MYLOG("L1 hit");
       getMemoryManager()->incrElapsedTime(m_mem_component, CachePerfModel::ACCESS_CACHE_DATA_AND_TAGS, ShmemPerfModel::_USER_THREAD);
@@ -2453,11 +2452,12 @@ CacheCntlr::loggingLevel(IntPtr addr, Core::mem_op_t mem_op_type, bool accessRes
    }
 }
 
-void
-CacheCntlr::collectMsg(std::shared_ptr<Helper::MsgCollector> msgCollector)
+Helper::Message
+CacheCntlr::collectMsg()
 {
-   Helper::Message message = Helper::Message(getMemoryManager()->getCore()->getId(), getMissRation(), getName(), gettotalAccess(), gettotalMiss());
-   msgCollector->push(message);
+   Helper::Message message = Helper::Message(getMemoryManager()->getCore()->getId(), getMissRation(), 
+   getName(), gettotalAccess(), gettotalMiss());
+   return message;
 }
 
 

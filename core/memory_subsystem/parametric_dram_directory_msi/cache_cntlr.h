@@ -467,7 +467,7 @@ namespace ParametricDramDirectoryMSI
          
          void loggingLevel(IntPtr addr, Core::mem_op_t mem_op_type, bool accessResult, bool isCache=true);
 
-         void collectMsg(std::shared_ptr<Helper::MsgCollector> msgCollector);
+         Helper::Message collectMsg();
 
          double getMissRation(){
             if(stats.totalAccess==0)
