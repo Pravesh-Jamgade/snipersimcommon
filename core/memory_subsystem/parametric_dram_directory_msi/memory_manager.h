@@ -127,6 +127,6 @@ namespace ParametricDramDirectoryMSI
          //[update]
          std::vector<String> confName, objName;
          std::shared_ptr<cache_helper::CacheHelper> cacheHelper;
-         Helper::LevelPredictor *levelPred=nullptr;
+         Helper::LevelPredictor *levelPred=nullptrf;
    };
 }
