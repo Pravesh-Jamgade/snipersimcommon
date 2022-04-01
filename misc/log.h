@@ -30,6 +30,7 @@ class Log
       {
          AddressAnalyzer=0,
          Message,
+         MessageGlobal,
          END,
       };
 

@@ -63,11 +63,11 @@ class Cache : public CacheBase, public CacheAddonSpace::PCHistoryTable
       // [ORIGINAL]
       CacheBlockInfo* accessSingleLine(IntPtr addr,
             access_t access_type, Byte* buff, UInt32 bytes, SubsecondTime now, bool update_replacement, 
-            String path="");
+            String path="", bool count=true);
       
       void insertSingleLine(IntPtr addr, Byte* fill_buff,
             bool* eviction, IntPtr* evict_addr,
-            CacheBlockInfo* evict_block_info, Byte* evict_buff, SubsecondTime now, CacheCntlr *cntlr = NULL);
+            CacheBlockInfo* evict_block_info, Byte* evict_buff, SubsecondTime now, CacheCntlr *cntlr = NULL, bool count=true);
       
 
       CacheBlockInfo* peekSingleLine(IntPtr addr);
@@ -93,7 +93,7 @@ class Cache : public CacheBase, public CacheAddonSpace::PCHistoryTable
             CacheBlockInfo* cache_block_info = set->find(tag, &line_index);
             return cache_block_info;
       }
-      bool processPCEntry(IntPtr pc, IntPtr addr, CacheBlockInfo* cache_block_info);
+      bool processPCEntry(IntPtr pc, IntPtr addr, CacheBlockInfo* cache_block_info, bool count=true);
       UInt64 cycleNumber;
       void setCycleNumber(UInt64 cycleNumber){this->cycleNumber=cycleNumber;}
       UInt64 getCycleCount();

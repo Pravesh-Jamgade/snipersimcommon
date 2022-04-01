@@ -44,6 +44,7 @@
  /mnt/B/sniper/common/system/inst_mode.h \
  /mnt/B/sniper/decoder_lib/decoder.h \
  /mnt/B/sniper/common/core/memory_subsystem/pr_l1_pr_l2_dram_directory_msi/shmem_perf.h \
+ /mnt/B/sniper/common/helpers/helpers.h \
  /mnt/B/sniper/common/core/memory_subsystem/memory_manager_base.h \
  /mnt/B/sniper/common/network/network.h \
  /mnt/B/sniper/common/network/packet_type.h \

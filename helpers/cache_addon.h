@@ -13,7 +13,6 @@
 
 namespace CacheAddonSpace
 {   
-   
     class AddressHistory
     {
         Helper::Counter totalpcCounter;

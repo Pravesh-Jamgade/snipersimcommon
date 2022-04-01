@@ -343,7 +343,7 @@ CacheCntlr::processMemOpFromCore(
       Byte* data_buf, UInt32 data_length,
       bool modeled,
       bool count,
-      IntPtr eip, String& path)
+      IntPtr eip, String& path, std::shared_ptr<Helper::PCStatHelper> pcStatHelper)
 {
 
    // [UPDATE]
@@ -422,6 +422,9 @@ LOG_ASSERT_ERROR(offset + data_length <= getCacheBlockSize(), "access until %u >
       //[update]
       // if debug level not specified, unlock to log all; or unlock individual level
       this->loggingLevel(ca_address, mem_op_type, cache_hit);
+
+      if(cache_hit)
+         pcStatHelper->insertEntry(m_mem_component, getEIP(), cache_hit);
 
       updateCounters(mem_op_type, ca_address, cache_hit, getCacheState(cache_block_info), Prefetch::NONE);
    }
@@ -522,7 +525,8 @@ MYLOG("L1 miss");
 
 MYLOG("processMemOpFromCore l%d before next", m_mem_component);
       hit_where = m_next_cache_cntlr->processShmemReqFromPrevCache(this, mem_op_type, ca_address, modeled, count, 
-      Prefetch::NONE, t_start, false, tmp1);
+      Prefetch::NONE, t_start, false, tmp1, pcStatHelper);
+
       bool next_cache_hit = hit_where != HitWhere::MISS;
 MYLOG("processMemOpFromCore l%d next hit = %d", m_mem_component, next_cache_hit);
 
@@ -613,6 +617,8 @@ MYLOG("processMemOpFromCore l%d after next fill", m_mem_component);
    
    // path += MemComponent2String(m_mem_component);
    // cache_helper::Misc::stateAppend(1,path);
+
+   // printf("[register] %ld, %ld, %s", getEIP(), ca_address, MemComponent2String(m_mem_component).c_str());
 
    accessCache(mem_op_type, ca_address, offset, data_buf, data_length, 
    hit_where == HitWhere::where_t(m_mem_component) && count, path);
@@ -860,7 +866,7 @@ CacheCntlr::doPrefetch(IntPtr prefetch_address, SubsecondTime t_start)
 HitWhere::where_t
 CacheCntlr::processShmemReqFromPrevCache(CacheCntlr* requester, Core::mem_op_t mem_op_type, IntPtr address, 
 bool modeled, bool count, Prefetch::prefetch_type_t isPrefetch, 
-SubsecondTime t_issue, bool have_write_lock, String& path)
+SubsecondTime t_issue, bool have_write_lock, String& path, std::shared_ptr<Helper::PCStatHelper> pcStatHelper)
 {
 
    #ifdef PRIVATE_L2_OPTIMIZATION
@@ -905,6 +911,10 @@ SubsecondTime t_issue, bool have_write_lock, String& path)
       }
       this->loggingLevel(address, mem_op_type, cache_hit);//[update]
       updateCounters(mem_op_type, address, cache_hit, getCacheState(address), isPrefetch);
+      if(pcStatHelper!=nullptr)
+      {
+         pcStatHelper->insertEntry(m_mem_component, getEIP(), cache_hit);
+      }
    }
 
    if (cache_hit)
@@ -1050,7 +1060,7 @@ SubsecondTime t_issue, bool have_write_lock, String& path)
          cache_helper::Misc::pathAdd(cache_hit, m_mem_component, "D1", path);
 
          hit_where = m_next_cache_cntlr->processShmemReqFromPrevCache(this, mem_op_type, address, modeled, count, 
-         isPrefetch == Prefetch::NONE ? Prefetch::NONE : Prefetch::OTHER, t_issue, have_write_lock_internal, path);
+         isPrefetch == Prefetch::NONE ? Prefetch::NONE : Prefetch::OTHER, t_issue, have_write_lock_internal, path, pcStatHelper);
          
          if (hit_where != HitWhere::MISS)
          {
@@ -1406,6 +1416,7 @@ CacheCntlr::accessCache(
       Core::mem_op_t mem_op_type, IntPtr ca_address, UInt32 offset,
       Byte* data_buf, UInt32 data_length, bool update_replacement, String path)
 {
+   
    getCache()->setCycleNumber(getMemoryManager()->getCore()->getCycleCount());
    // loggingLevel(ca_address,mem_op_type);
    switch (mem_op_type)

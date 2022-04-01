@@ -59,6 +59,7 @@
  /mnt/B/sniper/common/core/memory_subsystem/cache/req_queue_list_template.h \
  /mnt/B/sniper/common/misc/stats.h \
  /mnt/B/sniper/common/core/memory_subsystem/pr_l1_pr_l2_dram_directory_msi/shmem_perf.h \
+ /mnt/B/sniper/common/helpers/helpers.h \
  /mnt/B/sniper/common/core/memory_subsystem/parametric_dram_directory_msi/../pr_l1_pr_l2_dram_directory_msi/dram_directory_cntlr.h \
  /mnt/B/sniper/common/core/memory_subsystem/parametric_dram_directory_msi/../pr_l1_pr_l2_dram_directory_msi/dram_directory_cache.h \
  /mnt/B/sniper/common/core/memory_subsystem/directory_schemes/directory.h \
@@ -73,7 +74,6 @@
  /mnt/B/sniper/common/core/memory_subsystem/dram/dram_cntlr_interface.h \
  /mnt/B/sniper/common/core/memory_subsystem/parametric_dram_directory_msi/../pr_l1_pr_l2_dram_directory_msi/shmem_perf.h \
  /mnt/B/sniper/common/core/memory_subsystem/directory_schemes/coherency_protocol.h \
- /mnt/B/sniper/common/helpers/helpers.h \
  /mnt/B/sniper/common/core/memory_subsystem/fast_nehalem/memory_manager.h \
  /mnt/B/sniper/common/core/memory_subsystem/memory_manager_fast.h \
  /mnt/B/sniper/common/config/config.hpp \

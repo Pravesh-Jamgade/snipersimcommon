@@ -90,7 +90,7 @@ Cache::invalidateSingleLine(IntPtr addr)
 
 CacheBlockInfo*
 Cache::accessSingleLine(IntPtr addr, access_t access_type,
-      Byte* buff, UInt32 bytes, SubsecondTime now, bool update_replacement, String path)
+      Byte* buff, UInt32 bytes, SubsecondTime now, bool update_replacement, String path, bool count)
 {
 
    IntPtr tag;
@@ -109,7 +109,7 @@ Cache::accessSingleLine(IntPtr addr, access_t access_type,
 
    //[update]
    // set cacheblockinfog to hotline
-   processPCEntry(getEIP(),addr,cache_block_info);
+   processPCEntry(getEIP(),addr,cache_block_info,count);
 
    if (access_type == LOAD)
    {
@@ -135,7 +135,7 @@ void
 Cache::insertSingleLine(IntPtr addr, Byte* fill_buff,
       bool* eviction, IntPtr* evict_addr,
       CacheBlockInfo* evict_block_info, Byte* evict_buff,
-      SubsecondTime now, CacheCntlr *cntlr)
+      SubsecondTime now, CacheCntlr *cntlr, bool count)
 {
 
    IntPtr tag;
@@ -147,7 +147,7 @@ Cache::insertSingleLine(IntPtr addr, Byte* fill_buff,
    
    //[update]
    // set cacheblockinfog to hotline
-   processPCEntry(getEIP(),addr,cache_block_info);
+   processPCEntry(getEIP(),addr,cache_block_info,count);
    
    m_sets[set_index]->insert(cache_block_info, fill_buff,
          eviction, evict_block_info, evict_buff, cntlr);
@@ -204,16 +204,18 @@ Cache::updateHits(Core::mem_op_t mem_op_type, UInt64 hits)
 
 UInt64 Cache::getCycleCount(){return cycleNumber;}
 
-bool Cache::processPCEntry(IntPtr pc, IntPtr addr, CacheBlockInfo* cache_block_info)
+bool Cache::processPCEntry(IntPtr pc, IntPtr addr, CacheBlockInfo* cache_block_info, bool count)
 {
    IntPtr retAddr,retPC;
    retAddr=retPC=-1;
    if(getName() != "L1-D")
       return false;
    
-   cache_block_info->setOption(CacheBlockInfo::HOT_LINE);
-   
-   insert(pc,addr);
+   if(count){
+      // printf("=[verify1] %ld, %ld, %s\n",getEIP(),addr,getName().c_str());
+      cache_block_info->setOption(CacheBlockInfo::HOT_LINE);
+      insert(pc,addr);
+   }
 
    for(auto addr:action(getCycleCount()))//resetting table if counter == 0
    {

@@ -75,6 +75,7 @@
  /mnt/B/sniper/common/misc/setlock.h /mnt/B/sniper/common/misc/selock.h \
  /mnt/B/sniper/common/performance_model/contention_model.h \
  /mnt/B/sniper/common/core/memory_subsystem/pr_l1_pr_l2_dram_directory_msi/shmem_perf.h \
+ /mnt/B/sniper/common/helpers/helpers.h \
  /mnt/B/sniper/common/config/config.hpp \
  /mnt/B/sniper/common/config/key.hpp \
  /mnt/B/sniper/common/config/section.hpp \

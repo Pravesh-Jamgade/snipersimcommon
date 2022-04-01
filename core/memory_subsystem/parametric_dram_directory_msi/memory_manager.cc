@@ -49,6 +49,7 @@ MemoryManager::MemoryManager(Core* core,
 {
 
    cacheHelper = core->getCacheHelper();
+   PCStatCollector = std::make_shared<Helper::PCStatHelper>();
 
    // Read Parameters from the Config file
    std::map<MemComponent::component_t, CacheParameters> cache_parameters;
@@ -465,6 +466,12 @@ MemoryManager::MemoryManager(Core* core,
 MemoryManager::~MemoryManager()
 {
 
+   for(auto pc: PCStatCollector->globalAllLevelPCStat){
+      for(auto msg: PCStatCollector->getMessage(pc.first, PCStatCollector->globalAllLevelPCStat)){
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::MessageGlobal, "%ld, %f, %s\n",pc.first, msg.getMiss2HitRatio(), msg.getName().c_str());
+      }
+   }
+
    UInt32 i;
 
    getNetwork()->unregisterCallback(SHARED_MEM_1);
@@ -541,40 +548,16 @@ MemoryManager::coreInitiateMemoryAccess(
          address, offset,
          data_buf, data_length,
          modeled == Core::MEM_MODELED_NONE || modeled == Core::MEM_MODELED_COUNT ? false : true,
-         modeled == Core::MEM_MODELED_NONE ? false : true,  eip, path);
+         modeled == Core::MEM_MODELED_NONE ? false : true,  eip, path, PCStatCollector);
 
-   double prev=0;
    if(Cache::sendMsgFlag){
-      // collecting msg from all cache levels
-      for(UInt32 i = MemComponent::FIRST_LEVEL_CACHE; i <= (UInt32)m_last_level_cache; ++i) {
-
-         Helper::Message msg= m_cache_cntlrs[(MemComponent::component_t)i]->collectMsg();
-
-         if(i>MemComponent::FIRST_LEVEL_CACHE){
-            if(prev<msg.getMissRatio()){
-               levelPred->addLevelMiss(i);//set (skip)true to current
-            }
-            else{
-               levelPred->addLevelMiss(i-1);//set (skip)true to previous
-            }
-            if(msg.gettotalMiss()>(msg.gettotalAccess()-msg.gettotalMiss()))
-            {
-               levelPred->oredLevelMiss(i);
-            }
+      for(auto pc: PCStatCollector->tmpAllLevelPCStat){
+         for(auto msg: PCStatCollector->getMessage(pc.first, PCStatCollector->tmpAllLevelPCStat)){
+            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::Message, "%ld, %f, %s\n",pc.first, msg.getMiss2HitRatio(), msg.getName().c_str());
          }
-
-         prev=msg.getMissRatio();
-
-         _LOG_CUSTOM_LOGGER(Log::Warning, Log::Message,"%d,%s,%f,%f\n" ,msg.getCore(), 
-                              msg.getName().c_str(), 
-                              msg.getMissRatio(), msg.getMiss2HitRatio());
-      }  
-
-      for(int i=0;i< levelPred->getLevelPred().size();i++)
-      {
-         std::cout<<i<<"="<<levelPred->getLevelPred()[i]<<", ";
       }
-      std::cout<<'\n';
+      epocCounter.increase();
+      PCStatCollector->reset();
       Cache::resetSendMsgFlag();
    }
    

@@ -3,9 +3,10 @@
 
 #include<iostream>
 #include<vector>
+#include<unordered_map>
 #include "pqueue.h"
 #include "fixed_types.h"
-
+#include "mem_component.h"
 
 namespace Helper
 {
@@ -26,7 +27,6 @@ namespace Helper
     {
         UInt64 count;
         UInt64 reuse;
-        IntPtr hint;
 
         public:
         
@@ -46,6 +46,7 @@ namespace Helper
         double miss_ratio;
         String source;
         UInt64 totalAccess, totalMiss;
+        // coreid, miss_ratio, source memory, totalAccess, totalMisss  
         Message(int core_id, double miss_ratio, String source, UInt64 totalAccess, UInt64 totalMiss):
         core_id(core_id), miss_ratio(miss_ratio), 
         source(source),totalAccess(totalAccess), totalMiss(totalMiss)
@@ -84,5 +85,84 @@ namespace Helper
         }
         std::vector<int> getLevelPred(){return levelToSkip;}
     };
+
+    class PCStat
+    {
+        Counter hit, miss;
+        public:
+        PCStat()
+        {
+            hit=Counter();
+            miss=Counter();
+        }      
+        void increaseMiss(){miss.increase();}
+        void increaseHit(){hit.increase();}
+        UInt64 getHitCount(){return hit.getCount();}
+        UInt64 getMissCount(){return miss.getCount();}
+        double getMissRatio(){return (double)miss.getCount()/(double)(miss.getCount()+hit.getCount()); }
+        double getMissHitRate(){return (double)miss.getCount()/(double)(hit.getCount()); }
+    };
+
+    class PCStatHelper
+    {
+        public:
+        PCStatHelper(){}
+        typedef std::unordered_map<int, PCStat> LevelPCStat;
+        std::unordered_map<IntPtr, LevelPCStat> tmpAllLevelPCStat;
+        std::unordered_map<IntPtr, LevelPCStat> globalAllLevelPCStat;
+
+        void reset(){tmpAllLevelPCStat.erase(tmpAllLevelPCStat.begin(), tmpAllLevelPCStat.end());}
+        int getTmpSize(){ return tmpAllLevelPCStat.size();}
+        int getGlobalSize(){return globalAllLevelPCStat.size();}
+
+        void insert(std::unordered_map<IntPtr, LevelPCStat>& tmpAllLevelPCStat, int level, IntPtr pc, bool cache_hit){
+            auto findPc = tmpAllLevelPCStat.find(pc);
+            if(findPc!=tmpAllLevelPCStat.end()){
+               
+                auto findLevel=tmpAllLevelPCStat[pc].find(level);
+                if(findLevel!=tmpAllLevelPCStat[pc].end()){
+                    if(cache_hit)
+                        findLevel->second.increaseHit();
+                    else findLevel->second.increaseMiss();
+                }
+                else{
+                    tmpAllLevelPCStat[pc].insert({level,PCStat()});
+                }
+            }
+            else{
+                LevelPCStat levelPCStat;
+                levelPCStat.insert({level,PCStat()});
+                tmpAllLevelPCStat.insert({pc,levelPCStat});
+            }
+        }
+
+        void insertEntry(int level, IntPtr pc, bool cache_hit){
+            
+            if(level>=20)
+            {
+                printf("%s, %ld\n", MemComponent2String(static_cast<MemComponent::component_t>(level)).c_str(), pc);
+            }
+            if(level<=2){
+                return;
+            }
+            insert(tmpAllLevelPCStat, level,pc,cache_hit);            
+            insert(globalAllLevelPCStat, level,pc,cache_hit);            
+            insertEntry(level-1, pc, false);
+        }
+
+        std::vector<Message> getMessage(IntPtr pc, std::unordered_map<IntPtr, LevelPCStat>& mp){
+            std::vector<Message> allMsg;
+            for(auto uord: mp[pc])
+            {
+                PCStat pcStat= uord.second;
+                UInt64 total = pcStat.getHitCount() + pcStat.getMissCount();
+                Message msg = Message(-1,-1, MemComponent2String(static_cast<MemComponent::component_t>(uord.first)), total, pcStat.getMissCount());
+                allMsg.push_back(msg);
+            }
+            return allMsg;
+        }
+    };
+
+
 }
 #endif
