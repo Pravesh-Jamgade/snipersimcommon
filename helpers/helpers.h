@@ -57,6 +57,7 @@ namespace Helper
         UInt64 gettotalMiss(){return totalMiss;}
         UInt64 gettotalAccess(){return totalAccess;}
         double getMiss2HitRatio(){return (double)totalMiss/ (double)(totalAccess-totalMiss);}
+        UInt64 gettotalHits(){return totalAccess-totalMiss;}
     };
 
     class MsgCollector

@@ -468,7 +468,7 @@ MemoryManager::~MemoryManager()
 
    for(auto pc: PCStatCollector->globalAllLevelPCStat){
       for(auto msg: PCStatCollector->getMessage(pc.first, PCStatCollector->globalAllLevelPCStat)){
-         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::MessageGlobal, "%ld, %f, %s\n",pc.first, msg.getMiss2HitRatio(), msg.getName().c_str());
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::MessageGlobal, "%ld, %f, %s, %ld, %ld\n",pc.first, msg.getMiss2HitRatio(), msg.getName().c_str(), msg.gettotalMiss(), msg.gettotalHits());
       }
    }
 
