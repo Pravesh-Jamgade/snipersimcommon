@@ -618,7 +618,7 @@ MYLOG("processMemOpFromCore l%d after next fill", m_mem_component);
    // path += MemComponent2String(m_mem_component);
    // cache_helper::Misc::stateAppend(1,path);
 
-   // printf("[register] %ld, %ld, %s", getEIP(), ca_address, MemComponent2String(m_mem_component).c_str());
+   pcStatHelper->LPPredictionVerifier(getEIP(), m_mem_component);
 
    accessCache(mem_op_type, ca_address, offset, data_buf, data_length, 
    hit_where == HitWhere::where_t(m_mem_component) && count, path);
@@ -2462,14 +2462,5 @@ CacheCntlr::loggingLevel(IntPtr addr, Core::mem_op_t mem_op_type, bool accessRes
       cacheHelper->addRequest(eip, addr, name, cycleCount, getMemoryManager()->getCore()->getId(), typeAccess, accessResult);
    }
 }
-
-Helper::Message
-CacheCntlr::collectMsg()
-{
-   Helper::Message message = Helper::Message(getMemoryManager()->getCore()->getId(), getMissRation(), 
-   getName(), gettotalAccess(), gettotalMiss());
-   return message;
-}
-
 
 }

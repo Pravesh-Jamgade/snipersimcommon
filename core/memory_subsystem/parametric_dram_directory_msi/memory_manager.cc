@@ -51,6 +51,8 @@ MemoryManager::MemoryManager(Core* core,
    cacheHelper = core->getCacheHelper();
    PCStatCollector = std::make_shared<Helper::PCStatHelper>();
 
+   _LOG_CUSTOM_LOGGER(Log::Warning,Log::LogDst::LP_Prediction_Match,"pc,level\n");
+
    // Read Parameters from the Config file
    std::map<MemComponent::component_t, CacheParameters> cache_parameters;
    std::map<MemComponent::component_t, String> cache_names;
@@ -92,8 +94,6 @@ MemoryManager::MemoryManager(Core* core,
 
       confName.clear();
       objName.clear();
-
-      levelPred = new Helper::LevelPredictor(m_last_level_cache - MemComponent::FIRST_LEVEL_CACHE + 1);
 
       for(UInt32 i = MemComponent::FIRST_LEVEL_CACHE; i <= (UInt32)m_last_level_cache; ++i)
       {
@@ -468,7 +468,11 @@ MemoryManager::~MemoryManager()
 
    for(auto pc: PCStatCollector->globalAllLevelPCStat){
       for(auto msg: PCStatCollector->getMessage(pc.first, PCStatCollector->globalAllLevelPCStat)){
-         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::MessageGlobal, "%ld, %f, %s, %ld, %ld\n",pc.first, msg.getMiss2HitRatio(), msg.getName().c_str(), msg.gettotalMiss(), msg.gettotalHits());
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::MessageGlobal, "%ld, %f, %s, %ld, %ld\n",
+            pc.first, msg.getMiss2HitRatio(), 
+            MemComponent2String(msg.getLevel()).c_str(), 
+            msg.gettotalMiss(), 
+            msg.gettotalHits());
       }
    }
 
@@ -553,7 +557,12 @@ MemoryManager::coreInitiateMemoryAccess(
    if(Cache::sendMsgFlag){
       for(auto pc: PCStatCollector->tmpAllLevelPCStat){
          for(auto msg: PCStatCollector->getMessage(pc.first, PCStatCollector->tmpAllLevelPCStat)){
-            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::Message, "%ld, %f, %s\n",pc.first, msg.getMiss2HitRatio(), msg.getName().c_str());
+            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::Message, "%ld, %f, %s, %d\n",
+               pc.first, 
+               msg.getMiss2HitRatio(), 
+               MemComponent2String(msg.getLevel()).c_str(),
+               msg.isLevelSkipable()
+            );
          }
       }
       epocCounter.increase();

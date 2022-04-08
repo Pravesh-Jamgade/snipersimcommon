@@ -7,22 +7,10 @@
 #include "pqueue.h"
 #include "fixed_types.h"
 #include "mem_component.h"
+#include "log.h"
 
 namespace Helper
 {
-    class PQueue
-    {
-        pqueue_t* pQ;
-        public:
-        PQueue(){
-            // pQ=pqueue_init()
-        }
-        void insert();
-        void peek();
-        void remove();
-        void update();
-    };
-
     class Counter
     {
         UInt64 count;
@@ -44,48 +32,43 @@ namespace Helper
         public:
         int core_id;
         double miss_ratio;
-        String source;
+        MemComponent::component_t source;
         UInt64 totalAccess, totalMiss;
+        bool levelSkipable;
         // coreid, miss_ratio, source memory, totalAccess, totalMisss  
-        Message(int core_id, double miss_ratio, String source, UInt64 totalAccess, UInt64 totalMiss):
+        Message(int core_id, double miss_ratio, MemComponent::component_t source, UInt64 totalAccess, UInt64 totalMiss):
         core_id(core_id), miss_ratio((double)totalMiss/(double)totalAccess), 
-        source(source),totalAccess(totalAccess), totalMiss(totalMiss)
+        source(source),totalAccess(totalAccess), totalMiss(totalMiss),levelSkipable(false)
         {}
         int getCore(){return core_id;}
-        double getMissRatio(){return miss_ratio;}
-        String getName(){return source;}
         UInt64 gettotalMiss(){return totalMiss;}
         UInt64 gettotalAccess(){return totalAccess;}
         double getMiss2HitRatio(){return (double)totalMiss/ (double)(totalAccess-totalMiss);}
         double getMissRatio(){return miss_ratio;}
         UInt64 gettotalHits(){return totalAccess-totalMiss;}
-    };
-
-    class MsgCollector
-    {
-        std::vector<Message> messages;
-        public:
-        void push(Message msg){messages.push_back(msg);}
-        std::vector<Message> getMsg(){return messages;}
+        MemComponent::component_t getLevel(){return source;}
+        void addLevelSkip(){levelSkipable=true;}
+        bool isLevelSkipable(){return levelSkipable;}
     };
 
     class LevelPredictor
     {   
-        std::vector<bool>levelToSkip;
+        UInt64 levelToSkip;
         public:
-        LevelPredictor(int size)
+        LevelPredictor(){}
+        void addSkipLevel(MemComponent::component_t level)
         {
-            levelToSkip=std::vector<bool>(size,0);
+            int a=1;
+            a=1<<level;
+            if(!canSkipLevel(level))
+                levelToSkip=levelToSkip ^ a;
         }
-        void addLevelMiss(int level)
-        {
-            levelToSkip[level]=1;
+
+        bool canSkipLevel(MemComponent::component_t level){
+            int a=1;
+            a=1<<level;
+            return levelToSkip & a;
         }
-        void oredLevelMiss(int level)
-        {
-            levelToSkip[level]=levelToSkip[level]==1?1:0;
-        }
-        std::vector<bool> getLevelPred(){return levelToSkip;}
     };
 
     class PCStat
@@ -108,7 +91,9 @@ namespace Helper
     class PCStatHelper
     {
         public:
-        PCStatHelper(){}
+        PCStatHelper(){
+            lp_unlock=false;
+        }
         typedef std::unordered_map<int, PCStat> LevelPCStat;
         //epoc based but reset for next epoc usage
         std::unordered_map<IntPtr, LevelPCStat> tmpAllLevelPCStat;
@@ -117,11 +102,18 @@ namespace Helper
         std::unordered_map<IntPtr, LevelPCStat> globalAllLevelPCStat;
         LevelPredictor globalAllLevelLP;
 
-        void reset(){tmpAllLevelPCStat.erase(tmpAllLevelPCStat.begin(), tmpAllLevelPCStat.end());}
+        // LP in-use after 1st epoc
+        bool lp_unlock;
+
+        void reset(){
+            tmpAllLevelPCStat.erase(tmpAllLevelPCStat.begin(), tmpAllLevelPCStat.end());
+            lp_unlock=true;    
+        }
         int getTmpSize(){ return tmpAllLevelPCStat.size();}
         int getGlobalSize(){return globalAllLevelPCStat.size();}
 
         void insert(std::unordered_map<IntPtr, LevelPCStat>& tmpAllLevelPCStat, int level, IntPtr pc, bool cache_hit){
+
             auto findPc = tmpAllLevelPCStat.find(pc);
             if(findPc!=tmpAllLevelPCStat.end()){
                
@@ -142,23 +134,50 @@ namespace Helper
             }
         }
 
+        std::vector<MemComponent::component_t> LPPrediction(IntPtr pc){
+            std::vector<MemComponent::component_t> predicted_levels;
+            // LP prediction
+            if(lp_unlock)
+            {
+                auto ptr = tmpAllLevelLP.find(pc);
+                if(ptr!=tmpAllLevelLP.end()){
+                    for(int i=3;i<= 5; i++){// (5-3+1)=3 level's of cache
+                        if(ptr->second.canSkipLevel(static_cast<MemComponent::component_t>(i) )){
+                            predicted_levels.push_back(static_cast<MemComponent::component_t>(i));
+                        }
+                    }
+                }
+            }
+            return predicted_levels;
+        }
+
+        bool LPPredictionVerifier(IntPtr pc, MemComponent::component_t actual_level){
+            if(lp_unlock){
+                for(auto e: LPPrediction(pc)){
+                    if(e==actual_level){
+                        _LOG_CUSTOM_LOGGER(Log::Warning,Log::LogDst::LP_Prediction_Match,"%ld,%s\n",pc,MemComponent2String(e).c_str() );
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
         void insertEntry(int level, IntPtr pc, bool cache_hit){
             
-            if(level>=20)
-            {
-                printf("%s, %ld\n", MemComponent2String(static_cast<MemComponent::component_t>(level)).c_str(), pc);
-            }
             if(level<=2){
                 return;
             }
+            
             insert(tmpAllLevelPCStat, level,pc,cache_hit);            
             insert(globalAllLevelPCStat, level,pc,cache_hit);            
             insertEntry(level-1, pc, false);
         }
 
+        // will return epoc based pc stat to log, as well it adds skipable levels;
         std::vector<Message> getMessage(IntPtr pc, std::unordered_map<IntPtr, LevelPCStat>& mp){
             std::vector<Message> allMsg;
-            tmpAllLevelLP[pc]=LevelPredictor(3);
+            tmpAllLevelLP[pc]=LevelPredictor();
 
             bool firstRatio=true; 
             double preRatio, currRatio, prevMisses;
@@ -166,20 +185,21 @@ namespace Helper
             {
                 PCStat pcStat= uord.second;
                 UInt64 total = pcStat.getHitCount() + pcStat.getMissCount();
-                Message msg = Message(-1,-1, MemComponent2String(static_cast<MemComponent::component_t>(uord.first)), total, pcStat.getMissCount());
+                Message msg = Message(-1,-1, static_cast<MemComponent::component_t>(uord.first), total, pcStat.getMissCount());
                 allMsg.push_back(msg);
                 if(firstRatio){
                     currRatio=msg.gettotalMiss()/msg.gettotalAccess();
                     firstRatio=false;
                 }
                 else{
-                    currRatio=((double)msg.gettotalMiss()/(double)preMisses) * 100;
+                    currRatio=((double)msg.gettotalMiss()/(double)prevMisses) * 100;
                 } 
 
                 prevMisses=msg.gettotalMiss();
-                if( abs(msg.gettotalHits()-msg.gettotalMiss()) > 500 ){
-                    if(msg.getMissRatio() > 0.5){
-                        tmpAllLevelLP[pc].addLevelMiss();
+                if( abs( (long long) (msg.gettotalHits()-msg.gettotalMiss())) > 500 ){//if differencce betn miss and hits for x level is > 500 the go check miss ratio
+                    if(currRatio > 0.5){// reason is that it should be significant to skip
+                        tmpAllLevelLP[pc].addSkipLevel(msg.getLevel());
+                        msg.addLevelSkip();
                     }
                 }
 

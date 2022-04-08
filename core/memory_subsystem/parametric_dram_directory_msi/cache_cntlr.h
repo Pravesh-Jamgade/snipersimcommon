@@ -468,8 +468,6 @@ namespace ParametricDramDirectoryMSI
          
          void loggingLevel(IntPtr addr, Core::mem_op_t mem_op_type, bool accessResult, bool isCache=true);
 
-         Helper::Message collectMsg();
-
          double getMissRation(){
             if(stats.totalAccess==0)
                return 0;
