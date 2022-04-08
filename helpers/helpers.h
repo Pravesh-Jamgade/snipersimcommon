@@ -211,7 +211,7 @@ namespace Helper
                 PCStat pcStat= uord.second;
                 UInt64 total = pcStat.getHitCount() + pcStat.getMissCount();
                 Message msg = Message(-1,-1, static_cast<MemComponent::component_t>(uord.first), total, pcStat.getMissCount());
-                allMsg.push_back(msg);
+                
                 if(firstRatio){
                     currRatio=msg.gettotalMiss()/msg.gettotalAccess();
                     firstRatio=false;
@@ -229,6 +229,7 @@ namespace Helper
                     }
                 }
 
+                allMsg.push_back(msg);
             }
             return allMsg;
         }

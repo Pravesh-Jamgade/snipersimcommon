@@ -52,6 +52,10 @@ MemoryManager::MemoryManager(Core* core,
    PCStatCollector = std::make_shared<Helper::PCStatHelper>();
    firstEpocOnly = false;
 
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_MISS_RATE,"LP MISS RATE\n");
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Prediction_GlOBAL, "pc,level,miss,hit,skip-status\n");
+   _LOG_CUSTOM_LOGGER(Log::Warning,Log::LP_PC_STATUS, "pc, skippabel levels list\n");
+
    // Read Parameters from the Config file
    std::map<MemComponent::component_t, CacheParameters> cache_parameters;
    std::map<MemComponent::component_t, String> cache_names;
@@ -558,15 +562,15 @@ MemoryManager::coreInitiateMemoryAccess(
       for(auto pc: PCStatCollector->tmpAllLevelPCStat){
          std::vector<Helper::Message> allMsg = PCStatCollector->processEpocEndComputation(pc.first, PCStatCollector->tmpAllLevelPCStat);
          if(firstEpocOnly){
-            _LOG_CUSTOM_LOGGER(Log::Warning,Log::LP_PC_STATUS, "%ld", pc.first);
+            _LOG_CUSTOM_LOGGER(Log::Warning,Log::LP_PC_STATUS, "[+]%ld: ", pc.first);
             for(auto msg: allMsg){
-               _LOG_CUSTOM_LOGGER(Log::Warning,Log::LP_PC_STATUS, "%d,", msg.isLevelSkipable());
+               _LOG_CUSTOM_LOGGER(Log::Warning,Log::LP_PC_STATUS, "[%s,%d],", MemComponent2String(msg.getLevel()).c_str(),msg.isLevelSkipable());
             } 
             _LOG_CUSTOM_LOGGER(Log::Warning,Log::LP_PC_STATUS,"\n");           
          }
       }
 
-      _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_MISS_RATE,"%f", 
+      _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_MISS_RATE,"%f\n", 
          (double)PCStatCollector->predMissCounter.getCount()/(double)PCStatCollector->predTotalCounter.getCount() );
       epocCounter.increase();
       PCStatCollector->reset();
