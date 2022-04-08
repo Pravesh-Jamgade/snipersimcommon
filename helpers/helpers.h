@@ -214,6 +214,7 @@ namespace Helper
                 
                 if(firstRatio){
                     currRatio=msg.gettotalMiss()/msg.gettotalAccess();
+                    printf("%s,%d\n", MemComponent2String(static_cast<MemComponent::component_t>(uord.first)).c_str(), mp[pc].size());
                     firstRatio=false;
                 }
                 else{
