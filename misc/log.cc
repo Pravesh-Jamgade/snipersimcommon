@@ -432,7 +432,7 @@ void Log::log(Log::LogDst logDst, const char *format, ...)
          if(_loggerFiles[logDst]==NULL)
          {
             sprintf(filename, "customLog_%u.log", logDst);
-            _loggerFiles[logDst]=fopen(formatFileName(filename).c_str(), "a+");
+            _loggerFiles[logDst]=fopen(formatFileName(filename).c_str(), "w");
          }
          file=_loggerFiles[logDst];
          lock=_loggerLocks[logDst];

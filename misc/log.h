@@ -30,9 +30,8 @@ class Log
       {
          AddressAnalyzer=0,
          Message,
-         MessageGlobal,
-         LP_Prediction,// log all LP prediction
-         LP_Prediction_Match,// log only when predicted==actual prediction
+         LP_Prediction_GlOBAL,
+         LP_Prediction_MATCH,// log only when predicted==actual prediction
          END,
       };
 

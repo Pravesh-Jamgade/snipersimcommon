@@ -92,7 +92,7 @@ namespace Helper
     {
         public:
         PCStatHelper(){
-            lp_unlock=false;
+            lp_unlock=2;
         }
         typedef std::unordered_map<int, PCStat> LevelPCStat;
         //epoc based but reset for next epoc usage
@@ -100,14 +100,13 @@ namespace Helper
         std::unordered_map<IntPtr, LevelPredictor> tmpAllLevelLP;
         //epoc based but cumulative
         std::unordered_map<IntPtr, LevelPCStat> globalAllLevelPCStat;
-        LevelPredictor globalAllLevelLP;
 
         // LP in-use after 1st epoc
-        bool lp_unlock;
+        int lp_unlock;
 
         void reset(){
             tmpAllLevelPCStat.erase(tmpAllLevelPCStat.begin(), tmpAllLevelPCStat.end());
-            lp_unlock=true;    
+            lp_unlock--;
         }
         int getTmpSize(){ return tmpAllLevelPCStat.size();}
         int getGlobalSize(){return globalAllLevelPCStat.size();}
@@ -137,7 +136,7 @@ namespace Helper
         std::vector<MemComponent::component_t> LPPrediction(IntPtr pc){
             std::vector<MemComponent::component_t> predicted_levels;
             // LP prediction
-            if(lp_unlock)
+            if(lp_unlock==1)
             {
                 auto ptr = tmpAllLevelLP.find(pc);
                 if(ptr!=tmpAllLevelLP.end()){
@@ -152,10 +151,9 @@ namespace Helper
         }
 
         bool LPPredictionVerifier(IntPtr pc, MemComponent::component_t actual_level){
-            if(lp_unlock){
+            if(lp_unlock==1){
                 for(auto e: LPPrediction(pc)){
                     if(e==actual_level){
-                        _LOG_CUSTOM_LOGGER(Log::Warning,Log::LogDst::LP_Prediction_Match,"%ld,%s\n",pc,MemComponent2String(e).c_str() );
                         return true;
                     }
                 }
@@ -177,7 +175,11 @@ namespace Helper
         // will return epoc based pc stat to log, as well it adds skipable levels;
         std::vector<Message> getMessage(IntPtr pc, std::unordered_map<IntPtr, LevelPCStat>& mp){
             std::vector<Message> allMsg;
-            tmpAllLevelLP[pc]=LevelPredictor();
+            
+            auto entryLP = tmpAllLevelLP.find(pc);
+            if(entryLP==tmpAllLevelLP.end()){
+                tmpAllLevelLP[pc]=LevelPredictor();
+            }
 
             bool firstRatio=true; 
             double preRatio, currRatio, prevMisses;

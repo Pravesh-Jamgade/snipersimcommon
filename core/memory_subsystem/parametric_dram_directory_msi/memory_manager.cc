@@ -51,7 +51,7 @@ MemoryManager::MemoryManager(Core* core,
    cacheHelper = core->getCacheHelper();
    PCStatCollector = std::make_shared<Helper::PCStatHelper>();
 
-   _LOG_CUSTOM_LOGGER(Log::Warning,Log::LogDst::LP_Prediction_Match,"pc,level\n");
+   _LOG_CUSTOM_LOGGER(Log::Warning,Log::LogDst::LP_Prediction_MATCH,"pc,level\n");
 
    // Read Parameters from the Config file
    std::map<MemComponent::component_t, CacheParameters> cache_parameters;
@@ -468,11 +468,12 @@ MemoryManager::~MemoryManager()
 
    for(auto pc: PCStatCollector->globalAllLevelPCStat){
       for(auto msg: PCStatCollector->getMessage(pc.first, PCStatCollector->globalAllLevelPCStat)){
-         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::MessageGlobal, "%ld, %f, %s, %ld, %ld\n",
-            pc.first, msg.getMiss2HitRatio(), 
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Prediction_GlOBAL, "%ld, %s, %ld, %ld, %d\n",
+            pc.first, 
             MemComponent2String(msg.getLevel()).c_str(), 
             msg.gettotalMiss(), 
-            msg.gettotalHits());
+            msg.gettotalHits(),
+            msg.isLevelSkipable());
       }
    }
 
