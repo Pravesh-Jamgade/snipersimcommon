@@ -1,3 +1,3 @@
-/home/user/station/version/sniper/common/config/key.o /home/user/station/version/sniper/common/config/key.d: $(wildcard /home/user/station/version/sniper/common/config/key.cpp \
- /home/user/station/version/sniper/common/config/key.hpp \
- /home/user/station/version/sniper/common/misc/fixed_types.h)
+/mnt/B/sniper/common/config/key.o /mnt/B/sniper/common/config/key.d: $(wildcard /mnt/B/sniper/common/config/key.cpp \
+ /mnt/B/sniper/common/config/key.hpp \
+ /mnt/B/sniper/common/misc/fixed_types.h)

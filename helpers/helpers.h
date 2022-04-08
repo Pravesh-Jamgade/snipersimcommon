@@ -55,7 +55,9 @@ namespace Helper
     {   
         UInt64 levelToSkip;
         public:
-        LevelPredictor(){}
+        LevelPredictor(){
+            levelToSkip=0;
+        }
         void addSkipLevel(MemComponent::component_t level)
         {
             int a=1;
@@ -68,6 +70,16 @@ namespace Helper
             int a=1;
             a=1<<level;
             return levelToSkip & a;
+        }
+
+        std::vector<MemComponent::component_t> getLevelStatus(){
+            std::vector<MemComponent::component_t> allLevels;
+            for(int i=3;i<=5;i++){
+                if(canSkipLevel(static_cast<MemComponent::component_t>(i))){
+                    allLevels.push_back(static_cast<MemComponent::component_t>(i));
+                }
+            }
+            return allLevels;
         }
     };
 
@@ -100,6 +112,9 @@ namespace Helper
         std::unordered_map<IntPtr, LevelPredictor> tmpAllLevelLP;
         //epoc based but cumulative
         std::unordered_map<IntPtr, LevelPCStat> globalAllLevelPCStat;
+        std::unordered_map<IntPtr, LevelPredictor> globalAllLevelLP;
+        Counter predMissCounter;
+        Counter predTotalCounter;
 
         // LP in-use after 1st epoc
         int lp_unlock;
@@ -156,6 +171,10 @@ namespace Helper
                     if(e==actual_level){
                         return true;
                     }
+                    else{
+                        predMissCounter.increase();
+                    }
+                    predTotalCounter.increase();
                 }
             }
             return false;
@@ -173,16 +192,20 @@ namespace Helper
         }
 
         // will return epoc based pc stat to log, as well it adds skipable levels;
-        std::vector<Message> getMessage(IntPtr pc, std::unordered_map<IntPtr, LevelPCStat>& mp){
+        std::vector<Message> processEpocEndComputation(IntPtr pc, std::unordered_map<IntPtr, LevelPCStat>& mp){
             std::vector<Message> allMsg;
             
-            auto entryLP = tmpAllLevelLP.find(pc);
-            if(entryLP==tmpAllLevelLP.end()){
+            if(tmpAllLevelLP.find(pc)==tmpAllLevelLP.end()){
                 tmpAllLevelLP[pc]=LevelPredictor();
             }
 
+            if(globalAllLevelLP.find(pc)==globalAllLevelLP.end()){
+                globalAllLevelLP[pc]=LevelPredictor();
+            }
+
             bool firstRatio=true; 
-            double preRatio, currRatio, prevMisses;
+            double currRatio;
+            UInt64 prevMisses;
             for(auto uord: mp[pc])
             {
                 PCStat pcStat= uord.second;
@@ -194,13 +217,14 @@ namespace Helper
                     firstRatio=false;
                 }
                 else{
-                    currRatio=((double)msg.gettotalMiss()/(double)prevMisses) * 100;
+                    currRatio=((double)msg.gettotalMiss()/(double)prevMisses);
                 } 
 
                 prevMisses=msg.gettotalMiss();
                 if( abs( (long long) (msg.gettotalHits()-msg.gettotalMiss())) > 500 ){//if differencce betn miss and hits for x level is > 500 the go check miss ratio
                     if(currRatio > 0.5){// reason is that it should be significant to skip
                         tmpAllLevelLP[pc].addSkipLevel(msg.getLevel());
+                        globalAllLevelLP[pc].addSkipLevel(msg.getLevel());
                         msg.addLevelSkip();
                     }
                 }

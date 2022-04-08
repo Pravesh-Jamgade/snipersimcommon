@@ -50,8 +50,7 @@ MemoryManager::MemoryManager(Core* core,
 
    cacheHelper = core->getCacheHelper();
    PCStatCollector = std::make_shared<Helper::PCStatHelper>();
-
-   _LOG_CUSTOM_LOGGER(Log::Warning,Log::LogDst::LP_Prediction_MATCH,"pc,level\n");
+   firstEpocOnly = false;
 
    // Read Parameters from the Config file
    std::map<MemComponent::component_t, CacheParameters> cache_parameters;
@@ -467,7 +466,7 @@ MemoryManager::~MemoryManager()
 {
 
    for(auto pc: PCStatCollector->globalAllLevelPCStat){
-      for(auto msg: PCStatCollector->getMessage(pc.first, PCStatCollector->globalAllLevelPCStat)){
+      for(auto msg: PCStatCollector->processEpocEndComputation(pc.first, PCStatCollector->globalAllLevelPCStat)){
          _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Prediction_GlOBAL, "%ld, %s, %ld, %ld, %d\n",
             pc.first, 
             MemComponent2String(msg.getLevel()).c_str(), 
@@ -557,17 +556,21 @@ MemoryManager::coreInitiateMemoryAccess(
 
    if(Cache::sendMsgFlag){
       for(auto pc: PCStatCollector->tmpAllLevelPCStat){
-         for(auto msg: PCStatCollector->getMessage(pc.first, PCStatCollector->tmpAllLevelPCStat)){
-            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::Message, "%ld, %f, %s, %d\n",
-               pc.first, 
-               msg.getMiss2HitRatio(), 
-               MemComponent2String(msg.getLevel()).c_str(),
-               msg.isLevelSkipable()
-            );
+         std::vector<Helper::Message> allMsg = PCStatCollector->processEpocEndComputation(pc.first, PCStatCollector->tmpAllLevelPCStat);
+         if(firstEpocOnly){
+            _LOG_CUSTOM_LOGGER(Log::Warning,Log::LP_PC_STATUS, "%ld", pc.first);
+            for(auto msg: allMsg){
+               _LOG_CUSTOM_LOGGER(Log::Warning,Log::LP_PC_STATUS, "%d,", msg.isLevelSkipable());
+            } 
+            _LOG_CUSTOM_LOGGER(Log::Warning,Log::LP_PC_STATUS,"\n");           
          }
       }
+
+      _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_MISS_RATE,"%f", 
+         (double)PCStatCollector->predMissCounter.getCount()/(double)PCStatCollector->predTotalCounter.getCount() );
       epocCounter.increase();
       PCStatCollector->reset();
+      firstEpocOnly=false;
       Cache::resetSendMsgFlag();
    }
    

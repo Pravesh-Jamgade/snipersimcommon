@@ -1,6 +1,4 @@
-/home/user/station/version/sniper/common/misc/checksum.o /home/user/station/version/sniper/common/misc/checksum.d: $(wildcard /home/user/station/version/sniper/common/misc/checksum.cc \
- /home/user/station/version/sniper/common/misc/checksum.h \
- /home/user/station/version/sniper/common/misc/fixed_types.h \
- /home/user/station/version/sniper/common/misc/log.h \
- /home/user/station/version/sniper/common/misc/lock.h \
- /home/user/station/version/sniper/common/misc/itostr.h)
+/mnt/B/sniper/common/misc/checksum.o /mnt/B/sniper/common/misc/checksum.d: $(wildcard /mnt/B/sniper/common/misc/checksum.cc \
+ /mnt/B/sniper/common/misc/checksum.h \
+ /mnt/B/sniper/common/misc/fixed_types.h /mnt/B/sniper/common/misc/log.h \
+ /mnt/B/sniper/common/misc/lock.h /mnt/B/sniper/common/misc/itostr.h)
