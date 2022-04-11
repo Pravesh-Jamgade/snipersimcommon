@@ -579,7 +579,7 @@ MemoryManager::coreInitiateMemoryAccess(
       if(debugEpoc==epocCounter.getCount()-1){
          printf("[LP hitrate] epocNumber=%ld, hitrate=%f\n", epocCounter.getCount(),PCStatCollector->getLPHitRate());
          _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_MISS_RATE, "Hit Rate=%f", PCStatCollector->getLPHitRate());
-         PCStatCollector->lockreset();//1->0// disable lookup to LP//experimenting for only one immediate epoc miss-rate check after key epoc where skip information is calculated
+         // PCStatCollector->lockreset();//1->0// disable lookup to LP//experimenting for only one immediate epoc miss-rate check after key epoc where skip information is calculated
       }
 
       PCStatCollector->reset();
