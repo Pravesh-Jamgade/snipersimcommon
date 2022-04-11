@@ -176,7 +176,7 @@ namespace Helper
             
             if(lp_unlock==1){
                 predTotalCounter.increase();
-                _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Prediction_MATCH, "\nactual=%s, predict=", MemComponent2String(actual_level).c_str());
+                _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Prediction_MATCH, "\npc=%ld,actual=%s,predict=", pc,MemComponent2String(actual_level).c_str());
             
                 for(auto e: LPPrediction(pc)){
                     if(e==actual_level){
@@ -184,6 +184,7 @@ namespace Helper
                         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Prediction_MATCH, "Hit");
                         return true;
                     }
+                    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Prediction_MATCH, "%d,", e);
                 }
                 _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Prediction_MATCH, "Miss");
             }

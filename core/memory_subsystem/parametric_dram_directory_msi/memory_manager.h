@@ -129,6 +129,6 @@ namespace ParametricDramDirectoryMSI
          std::shared_ptr<cache_helper::CacheHelper> cacheHelper;
          std::shared_ptr<Helper::PCStatHelper> PCStatCollector;
          Helper::Counter epocCounter;
-         int debugEpoc;
+         UInt64 debugEpoc;
    };
 }

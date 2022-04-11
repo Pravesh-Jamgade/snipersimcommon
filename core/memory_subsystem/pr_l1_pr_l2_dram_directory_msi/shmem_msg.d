@@ -1,12 +1,13 @@
-/mnt/B/sniper/common/core/memory_subsystem/pr_l1_pr_l2_dram_directory_msi/shmem_msg.o /mnt/B/sniper/common/core/memory_subsystem/pr_l1_pr_l2_dram_directory_msi/shmem_msg.d: $(wildcard \
- /mnt/B/sniper/common/core/memory_subsystem/pr_l1_pr_l2_dram_directory_msi/shmem_msg.cc \
- /mnt/B/sniper/common/core/memory_subsystem/pr_l1_pr_l2_dram_directory_msi/shmem_msg.h \
- /mnt/B/sniper/common/core/memory_subsystem/mem_component.h \
- /mnt/B/sniper/common/misc/fixed_types.h \
- /mnt/B/sniper/common/performance_model/hit_where.h \
- /mnt/B/sniper/common/core/memory_subsystem/pr_l1_pr_l2_dram_directory_msi/shmem_perf.h \
- /mnt/B/sniper/common/misc/subsecond_time.h \
- /mnt/B/sniper/common/misc/fixed_types.h /mnt/B/sniper/common/misc/lock.h \
- /mnt/B/sniper/common/misc/itostr.h \
- /mnt/B/sniper/common/misc/subsecond_time_c.h \
- /mnt/B/sniper/common/misc/log.h)
+/home/user/station/version/sniper/common/core/memory_subsystem/pr_l1_pr_l2_dram_directory_msi/shmem_msg.o /home/user/station/version/sniper/common/core/memory_subsystem/pr_l1_pr_l2_dram_directory_msi/shmem_msg.d: $(wildcard \
+ /home/user/station/version/sniper/common/core/memory_subsystem/pr_l1_pr_l2_dram_directory_msi/shmem_msg.cc \
+ /home/user/station/version/sniper/common/core/memory_subsystem/pr_l1_pr_l2_dram_directory_msi/shmem_msg.h \
+ /home/user/station/version/sniper/common/core/memory_subsystem/mem_component.h \
+ /home/user/station/version/sniper/common/misc/fixed_types.h \
+ /home/user/station/version/sniper/common/performance_model/hit_where.h \
+ /home/user/station/version/sniper/common/core/memory_subsystem/pr_l1_pr_l2_dram_directory_msi/shmem_perf.h \
+ /home/user/station/version/sniper/common/misc/subsecond_time.h \
+ /home/user/station/version/sniper/common/misc/fixed_types.h \
+ /home/user/station/version/sniper/common/misc/lock.h \
+ /home/user/station/version/sniper/common/misc/itostr.h \
+ /home/user/station/version/sniper/common/misc/subsecond_time_c.h \
+ /home/user/station/version/sniper/common/misc/log.h)
