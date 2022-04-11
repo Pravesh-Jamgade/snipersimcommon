@@ -50,12 +50,12 @@ MemoryManager::MemoryManager(Core* core,
 
    cacheHelper = core->getCacheHelper();
    PCStatCollector = std::make_shared<Helper::PCStatHelper>();
-   firstEpocOnly = false;
-
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_MISS_RATE,"LP MISS RATE\n");
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Prediction_GlOBAL, "pc,level,miss,hit,skip-status\n");
-   _LOG_CUSTOM_LOGGER(Log::Warning,Log::LP_PC_STATUS, "pc, skippabel levels list\n");
-
+   if(Sim()->getCfg()->hasKey("debug/epocNumber"))
+   {
+      debugEpoc=Sim()->getCfg()->getInt("debug/epocNumber");
+   }
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_PC_STATUS, "pc,level,miss,total,skip\n");
+  
    // Read Parameters from the Config file
    std::map<MemComponent::component_t, CacheParameters> cache_parameters;
    std::map<MemComponent::component_t, String> cache_names;
@@ -469,17 +469,6 @@ MemoryManager::MemoryManager(Core* core,
 MemoryManager::~MemoryManager()
 {
 
-   for(auto pc: PCStatCollector->globalAllLevelPCStat){
-      for(auto msg: PCStatCollector->processEpocEndComputation(pc.first, PCStatCollector->globalAllLevelPCStat)){
-         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Prediction_GlOBAL, "%ld, %s, %ld, %ld, %d\n",
-            pc.first, 
-            MemComponent2String(msg.getLevel()).c_str(), 
-            msg.gettotalMiss(), 
-            msg.gettotalHits(),
-            msg.isLevelSkipable());
-      }
-   }
-
    UInt32 i;
 
    getNetwork()->unregisterCallback(SHARED_MEM_1);
@@ -561,23 +550,42 @@ MemoryManager::coreInitiateMemoryAccess(
    if(Cache::sendMsgFlag){
       for(auto pc: PCStatCollector->tmpAllLevelPCStat){
          std::vector<Helper::Message> allMsg = PCStatCollector->processEpocEndComputation(pc.first, PCStatCollector->tmpAllLevelPCStat);
-         if(firstEpocOnly){
-            _LOG_CUSTOM_LOGGER(Log::Warning,Log::LP_PC_STATUS, "[+]%ld: ", pc.first);
+
+         // if only debugEpoc is reached//done because right after first epoc could not seee effetive skipable levels
+         if(debugEpoc=epocCounter.getCount()){
+            printf("[enable] debugEpoc=%d\n", debugEpoc);
+
+            // logging to find pc with their skippable levels
             for(auto msg: allMsg){
-               _LOG_CUSTOM_LOGGER(Log::Warning,Log::LP_PC_STATUS, "[%s,%d],", MemComponent2String(msg.getLevel()).c_str(),msg.isLevelSkipable());
+               _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_PC_STATUS, "%ld,%s,%ld,%ld,%ld\n", 
+                  pc.first, 
+                  MemComponent2String(msg.getLevel()).c_str(),
+                  msg.gettotalMiss(),
+                  msg.gettotalAccess(),
+                  msg.isLevelSkipable()
+               );
             } 
-            _LOG_CUSTOM_LOGGER(Log::Warning,Log::LP_PC_STATUS,"\n");           
          }
       }
 
-      _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_MISS_RATE,"%f\n", 
-         (double)PCStatCollector->predMissCounter.getCount()/(double)PCStatCollector->predTotalCounter.getCount() );
-      epocCounter.increase();
+      if(debugEpoc==epocCounter.getCount())
+      {
+         printf("[lockreset] 2->1\n");
+         // allow predictor measurement//allow accesses to look for LP
+         PCStatCollector->lockreset();//2->1
+      }
+
+      if(debugEpoc==epocCounter.getCount()-1){
+         printf("[LP hitrate]=%d\n", PCStatCollector->getLPHitRate());
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_MISS_RATE, "Hit Rate=%f", PCStatCollector->getLPHitRate());
+         PCStatCollector->lockreset();//1->0// disable lookup to LP//experimenting for only one immediate epoc miss-rate check after key epoc where skip information is calculated
+      }
+
       PCStatCollector->reset();
-      firstEpocOnly=false;
       Cache::resetSendMsgFlag();
+      epocCounter.increase();
    }
-   
+
    return hitWhere;
 }
 

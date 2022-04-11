@@ -4,6 +4,7 @@
 #include<iostream>
 #include<vector>
 #include<unordered_map>
+#include<map>
 #include "pqueue.h"
 #include "fixed_types.h"
 #include "mem_component.h"
@@ -74,6 +75,7 @@ namespace Helper
 
         std::vector<MemComponent::component_t> getLevelStatus(){
             std::vector<MemComponent::component_t> allLevels;
+            //TODO:remove these constant values
             for(int i=3;i<=5;i++){
                 if(canSkipLevel(static_cast<MemComponent::component_t>(i))){
                     allLevels.push_back(static_cast<MemComponent::component_t>(i));
@@ -106,32 +108,36 @@ namespace Helper
         PCStatHelper(){
             lp_unlock=2;
         }
-        typedef std::unordered_map<int, PCStat> LevelPCStat;
+        typedef std::map<int, PCStat> LevelPCStat;
         //epoc based but reset for next epoc usage
         std::unordered_map<IntPtr, LevelPCStat> tmpAllLevelPCStat;
         std::unordered_map<IntPtr, LevelPredictor> tmpAllLevelLP;
         //epoc based but cumulative
         std::unordered_map<IntPtr, LevelPCStat> globalAllLevelPCStat;
         std::unordered_map<IntPtr, LevelPredictor> globalAllLevelLP;
-        Counter predMissCounter;
+        Counter predHitsCounter;
         Counter predTotalCounter;
 
-        // LP in-use after 1st epoc
+        // LP in-use after debugEpoc epoc
         int lp_unlock;
+
+        double getLPHitRate(){
+            return (double)predHitsCounter.getCount()/(double)predTotalCounter.getCount();
+        }
 
         void reset(){
             tmpAllLevelPCStat.erase(tmpAllLevelPCStat.begin(), tmpAllLevelPCStat.end());
-            lp_unlock--;
         }
         int getTmpSize(){ return tmpAllLevelPCStat.size();}
         int getGlobalSize(){return globalAllLevelPCStat.size();}
+        void lockreset(){lp_unlock--;}
 
         void insert(std::unordered_map<IntPtr, LevelPCStat>& tmpAllLevelPCStat, int level, IntPtr pc, bool cache_hit){
 
             auto findPc = tmpAllLevelPCStat.find(pc);
             if(findPc!=tmpAllLevelPCStat.end()){
                
-                auto findLevel=tmpAllLevelPCStat[pc].find(level);
+                auto findLevel=findPc->second.find(level);
                 if(findLevel!=tmpAllLevelPCStat[pc].end()){
                     if(cache_hit)
                         findLevel->second.increaseHit();
@@ -155,6 +161,7 @@ namespace Helper
             {
                 auto ptr = tmpAllLevelLP.find(pc);
                 if(ptr!=tmpAllLevelLP.end()){
+                    //TODO: remove these constant values
                     for(int i=3;i<= 5; i++){// (5-3+1)=3 level's of cache
                         if(ptr->second.canSkipLevel(static_cast<MemComponent::component_t>(i) )){
                             predicted_levels.push_back(static_cast<MemComponent::component_t>(i));
@@ -166,16 +173,19 @@ namespace Helper
         }
 
         bool LPPredictionVerifier(IntPtr pc, MemComponent::component_t actual_level){
+            
             if(lp_unlock==1){
+                predTotalCounter.increase();
+                _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Prediction_MATCH, "\nactual=%s, predict=", MemComponent2String(actual_level).c_str());
+            
                 for(auto e: LPPrediction(pc)){
                     if(e==actual_level){
+                        predHitsCounter.increase();
+                        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Prediction_MATCH, "Hit");
                         return true;
                     }
-                    else{
-                        predMissCounter.increase();
-                    }
-                    predTotalCounter.increase();
                 }
+                _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Prediction_MATCH, "Miss");
             }
             return false;
         }
@@ -195,6 +205,7 @@ namespace Helper
         std::vector<Message> processEpocEndComputation(IntPtr pc, std::unordered_map<IntPtr, LevelPCStat>& mp){
             std::vector<Message> allMsg;
             
+            // level predictor info for pc 
             if(tmpAllLevelLP.find(pc)==tmpAllLevelLP.end()){
                 tmpAllLevelLP[pc]=LevelPredictor();
             }
@@ -214,7 +225,6 @@ namespace Helper
                 
                 if(firstRatio){
                     currRatio=msg.gettotalMiss()/msg.gettotalAccess();
-                    printf("%s,%d\n", MemComponent2String(static_cast<MemComponent::component_t>(uord.first)).c_str(), mp[pc].size());
                     firstRatio=false;
                 }
                 else{
@@ -230,7 +240,7 @@ namespace Helper
                     }
                 }
 
-                allMsg.push_back(msg);
+                allMsg.push_back(msg);// can be used for logging
             }
             return allMsg;
         }
