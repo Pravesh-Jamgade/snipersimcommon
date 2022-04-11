@@ -423,7 +423,7 @@ LOG_ASSERT_ERROR(offset + data_length <= getCacheBlockSize(), "access until %u >
       // if debug level not specified, unlock to log all; or unlock individual level
       this->loggingLevel(ca_address, mem_op_type, cache_hit);
 
-      if(cache_hit)
+      if(pcStatHelper!=nullptr)
          pcStatHelper->insertEntry(m_mem_component, getEIP(), cache_hit);
 
       updateCounters(mem_op_type, ca_address, cache_hit, getCacheState(cache_block_info), Prefetch::NONE);

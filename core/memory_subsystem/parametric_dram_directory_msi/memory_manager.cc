@@ -549,39 +549,28 @@ MemoryManager::coreInitiateMemoryAccess(
          modeled == Core::MEM_MODELED_NONE ? false : true,  eip, path, PCStatCollector);
 
    if(Cache::sendMsgFlag){
+
+      // Calculate LP table for next epoc
       for(auto pc: PCStatCollector->tmpAllLevelPCStat){
          std::vector<Helper::Message> allMsg = PCStatCollector->processEpocEndComputation(pc.first, PCStatCollector->tmpAllLevelPCStat);
-
-         // if only debugEpoc is reached//done because right after first epoc could not seee effetive skipable levels
-         if(debugEpoc==epocCounter.getCount()){
-
-            // logging to find pc with their skippable levels
-            for(auto msg: allMsg){
-               _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_PC_STATUS, "%ld,%s,%ld,%ld,%ld\n", 
-                  pc.first, 
-                  MemComponent2String(msg.getLevel()).c_str(),
-                  msg.gettotalMiss(),
-                  msg.gettotalAccess(),
-                  msg.isLevelSkipable()
-               );
-            } 
-         }
+         for(auto msg: allMsg){
+            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_PC_STATUS, "%ld,%s,%ld,%ld,%ld\n", 
+               pc.first, 
+               MemComponent2String(msg.getLevel()).c_str(),
+               msg.gettotalMiss(),
+               msg.gettotalAccess(),
+               msg.isLevelSkipable()
+            );
+         } 
       }
 
-      if(debugEpoc==epocCounter.getCount())
-      {
-         printf("[enable] epocCounter=%ld, debugEpoc=%ld\n", epocCounter.getCount(), debugEpoc);
-         printf("[lockreset] 2->1\n");
-         // allow predictor measurement//allow accesses to look for LP
-         PCStatCollector->lockreset();//2->1
+      if(PCStatCollector->isLockEnabled()!=1)
+         PCStatCollector->lockenable();
+      else{
+         printf("[LP hitrate] epocNumber=%ld, global=%f, epoch=%f\n", epocCounter.getCount(),PCStatCollector->getGlobalLPHitRate(), PCStatCollector->getEpocLPHitRate());
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_MISS_RATE, "epoc=%ld, global=%f, epoc=%f", epocCounter.getCount(), PCStatCollector->getGlobalLPHitRate(), PCStatCollector->getEpocLPHitRate());
       }
-
-      // if(debugEpoc==epocCounter.getCount()-1){
-         printf("[LP hitrate] epocNumber=%ld, hitrate=%f\n", epocCounter.getCount(),PCStatCollector->getLPHitRate());
-         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_MISS_RATE, "Hit Rate=%f", PCStatCollector->getLPHitRate());
-         // PCStatCollector->lockreset();//1->0// disable lookup to LP//experimenting for only one immediate epoc miss-rate check after key epoc where skip information is calculated
-      // }
-
+      
       PCStatCollector->reset();
       Cache::resetSendMsgFlag();
       epocCounter.increase();

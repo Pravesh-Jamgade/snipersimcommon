@@ -115,22 +115,33 @@ namespace Helper
         //epoc based but cumulative
         std::unordered_map<IntPtr, LevelPCStat> globalAllLevelPCStat;
         std::unordered_map<IntPtr, LevelPredictor> globalAllLevelLP;
-        Counter predHitsCounter;
-        Counter predTotalCounter;
+        Counter epocPredHitsCounter;
+        Counter epocPredTotalCounter;
+        Counter globalPredHitsCounter;
+        Counter globalPredTotalCounter;
 
         // LP in-use after debugEpoc epoc
         int lp_unlock;
 
-        double getLPHitRate(){
-            return (double)predHitsCounter.getCount()/(double)predTotalCounter.getCount();
+        double getGlobalLPHitRate(){
+            return (double)globalPredHitsCounter.getCount()/(double)globalPredTotalCounter.getCount();
+        }
+
+        double getEpocLPHitRate(){
+            return (double)epocPredHitsCounter.getCount()/(double)epocPredTotalCounter.getCount();
         }
 
         void reset(){
             tmpAllLevelPCStat.erase(tmpAllLevelPCStat.begin(), tmpAllLevelPCStat.end());
+            epocPredTotalCounter.reset();
+            epocPredHitsCounter.reset();
+
         }
+
         int getTmpSize(){ return tmpAllLevelPCStat.size();}
         int getGlobalSize(){return globalAllLevelPCStat.size();}
-        void lockreset(){lp_unlock--;}
+        void lockenable(){lp_unlock=1;}
+        int isLockEnabled(){return lp_unlock;}
 
         void insert(std::unordered_map<IntPtr, LevelPCStat>& tmpAllLevelPCStat, int level, IntPtr pc, bool cache_hit){
 
@@ -175,12 +186,14 @@ namespace Helper
         bool LPPredictionVerifier(IntPtr pc, MemComponent::component_t actual_level){
             
             if(lp_unlock==1){
-                predTotalCounter.increase();
+                epocPredTotalCounter.increase();
+                globalPredTotalCounter.increase();
                 _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Prediction_MATCH, "\npc=%ld,actual=%s,predict=", pc,MemComponent2String(actual_level).c_str());
             
                 for(auto e: LPPrediction(pc)){
                     if(e==actual_level){
-                        predHitsCounter.increase();
+                        epocPredHitsCounter.increase();
+                        globalPredHitsCounter.increase();
                         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Prediction_MATCH, "Hit");
                         return true;
                     }

@@ -24,6 +24,7 @@ void PCHistoryTable::insert(IntPtr pc, IntPtr addr)
 // returns address count if already address entry exists else returns 0 for new entry
 UInt64 AddressHistory::insert(IntPtr addr)
 {
+    totalpcCounter.increase();
     std::unordered_map<IntPtr, Helper::Counter*>::const_iterator const_it=addressCount.find(addr);
     Helper::Counter* counter = new Helper::Counter();
     if(const_it!=addressCount.end())

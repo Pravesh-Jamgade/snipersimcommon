@@ -15,6 +15,7 @@ namespace CacheAddonSpace
 {   
     class AddressHistory
     {
+        // particular pc how many times been used;
         Helper::Counter totalpcCounter;
         std::unordered_map<IntPtr,Helper::Counter*> addressCount;
         public:
