@@ -19,7 +19,7 @@ namespace Helper
 
         public:
         
-        Counter(int init=1){this->count=init, this->reuse=init;}
+        Counter(int init=0){this->count=init, this->reuse=init;}
         void increase(){this->count++;}
         void increase(UInt64 byk){this->count=this->count+byk;}
         UInt64 getCount(){return this->count;}
@@ -188,18 +188,26 @@ namespace Helper
             if(lp_unlock==1){
                 epocPredTotalCounter.increase();
                 globalPredTotalCounter.increase();
-                _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Prediction_MATCH, "\npc=%ld,actual=%s,predict=", pc,MemComponent2String(actual_level).c_str());
-            
-                for(auto e: LPPrediction(pc)){
-                    if(e==actual_level){
-                        epocPredHitsCounter.increase();
-                        globalPredHitsCounter.increase();
-                        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Prediction_MATCH, "Hit");
-                        return true;
-                    }
-                    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Prediction_MATCH, "%d,", e);
+                
+                _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Prediction_MATCH, "%ld,", pc);
+
+                std::vector<MemComponent::component_t> vec= LPPrediction(pc);
+                if(vec.size()==0)
+                {
+                    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Prediction_MATCH, "No Predction\n");
+                    return false;
                 }
-                _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Prediction_MATCH, "Miss");
+
+                for(auto e: vec){
+                    if(e==actual_level)
+                    {
+                        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Prediction_MATCH, "False Skip\n");
+                        return false;
+                    }
+                }
+                _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Prediction_MATCH, "True Skip\n");
+                epocPredHitsCounter.increase();
+                globalPredHitsCounter.increase();
             }
             return false;
         }
@@ -238,15 +246,15 @@ namespace Helper
                 Message msg = Message(-1,-1, static_cast<MemComponent::component_t>(uord.first), total, pcStat.getMissCount());
                 
                 if(firstRatio){
-                    currRatio=msg.gettotalMiss()/msg.gettotalAccess();
+                    currRatio=(double)msg.gettotalMiss()/(double)msg.gettotalAccess();
                     firstRatio=false;
                 }
                 else{
-                    currRatio=((double)msg.gettotalMiss()/(double)prevMisses);
+                    currRatio=(double)msg.gettotalMiss()/(double)prevMisses;
                 } 
 
                 prevMisses=msg.gettotalMiss();
-                if( abs( (long long) (msg.gettotalHits()-msg.gettotalMiss())) > 500 ){//if differencce betn miss and hits for x level is > 500 the go check miss ratio
+                if( total > 100 ){
                     if(currRatio > 0.5){// reason is that it should be significant to skip
                         tmpAllLevelLP[pc].addSkipLevel(msg.getLevel());
                         globalAllLevelLP[pc].addSkipLevel(msg.getLevel());

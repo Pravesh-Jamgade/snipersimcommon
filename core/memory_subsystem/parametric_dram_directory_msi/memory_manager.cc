@@ -469,7 +469,19 @@ MemoryManager::MemoryManager(Core* core,
 
 MemoryManager::~MemoryManager()
 {
-
+   for(auto pc: PCStatCollector->globalAllLevelPCStat){
+      std::vector<Helper::Message> allMsg = PCStatCollector->processEpocEndComputation(pc.first, PCStatCollector->globalAllLevelPCStat);
+      for(auto msg: allMsg){
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_PC_STATUS, "%ld,%s,%ld,%ld,%ld\n", 
+            pc.first, 
+            MemComponent2String(msg.getLevel()).c_str(),
+            msg.gettotalMiss(),
+            msg.gettotalAccess(),
+            msg.isLevelSkipable()
+         );
+      } 
+   }
+   
    UInt32 i;
 
    getNetwork()->unregisterCallback(SHARED_MEM_1);
@@ -552,23 +564,21 @@ MemoryManager::coreInitiateMemoryAccess(
 
       // Calculate LP table for next epoc
       for(auto pc: PCStatCollector->tmpAllLevelPCStat){
-         std::vector<Helper::Message> allMsg = PCStatCollector->processEpocEndComputation(pc.first, PCStatCollector->tmpAllLevelPCStat);
-         for(auto msg: allMsg){
-            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_PC_STATUS, "%ld,%s,%ld,%ld,%ld\n", 
-               pc.first, 
-               MemComponent2String(msg.getLevel()).c_str(),
-               msg.gettotalMiss(),
-               msg.gettotalAccess(),
-               msg.isLevelSkipable()
-            );
-         } 
+         PCStatCollector->processEpocEndComputation(pc.first, PCStatCollector->tmpAllLevelPCStat);
       }
 
       if(PCStatCollector->isLockEnabled()!=1)
          PCStatCollector->lockenable();
       else{
-         printf("[LP hitrate] epocNumber=%ld, global=%f, epoch=%f\n", epocCounter.getCount(),PCStatCollector->getGlobalLPHitRate(), PCStatCollector->getEpocLPHitRate());
-         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_MISS_RATE, "epoc=%ld, global=%f, epoc=%f", epocCounter.getCount(), PCStatCollector->getGlobalLPHitRate(), PCStatCollector->getEpocLPHitRate());
+         printf("[LP hitrate] epocNumber=%ld, global=%f, %ld, %ld , epoch=%f, %ld, %ld\n", 
+            epocCounter.getCount(),
+            PCStatCollector->getGlobalLPHitRate(),  PCStatCollector->globalPredTotalCounter.getCount(), PCStatCollector->globalPredHitsCounter.getCount(),
+            PCStatCollector->getEpocLPHitRate(), PCStatCollector->epocPredTotalCounter.getCount(), PCStatCollector->epocPredHitsCounter.getCount()
+         );
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_MISS_RATE, "epoc=%ld, global=%f, %ld, %ld, epoc=%f, %ld, %ld", epocCounter.getCount(), 
+            PCStatCollector->getGlobalLPHitRate(),  PCStatCollector->globalPredTotalCounter.getCount(), PCStatCollector->globalPredHitsCounter.getCount(),
+            PCStatCollector->getEpocLPHitRate(), PCStatCollector->epocPredTotalCounter.getCount(), PCStatCollector->epocPredHitsCounter.getCount()
+         );
       }
       
       PCStatCollector->reset();
