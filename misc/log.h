@@ -32,7 +32,7 @@ class Log
          LP_PC_STATUS,
          LP_Prediction_MATCH,
          LP_MISS_RATE,
-         LP_Prediction_GlOBAL,
+         LP_PC_DEBUG,
          END,
       };
 

@@ -564,18 +564,29 @@ MemoryManager::coreInitiateMemoryAccess(
 
       // Calculate LP table for next epoc
       for(auto pc: PCStatCollector->tmpAllLevelPCStat){
-         PCStatCollector->processEpocEndComputation(pc.first, PCStatCollector->tmpAllLevelPCStat);
+         std::vector<Helper::Message> allMsg=PCStatCollector->processEpocEndComputation(pc.first, PCStatCollector->tmpAllLevelPCStat);
+         if(epocCounter.getCount()==debugEpoc){
+            for(auto msg: allMsg){
+               _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_PC_DEBUG, "%ld,%s,%d,%ld,%ld", 
+                  pc.first,
+                  MemComponent2String(msg.getLevel()).c_str(), 
+                  msg.isLevelSkipable(), 
+                  msg.gettotalMiss(), 
+                  msg.gettotalAccess()
+               );
+            }
+         }
       }
 
       if(PCStatCollector->isLockEnabled()!=1)
          PCStatCollector->lockenable();
       else{
-         printf("[LP hitrate] epocNumber=%ld, global=%f, %ld, %ld , epoch=%f, %ld, %ld\n", 
+         printf("[LP hitrate] epoc#=%ld, global=%f, %ld, %ld , epoch=%f, %ld, %ld\n", 
             epocCounter.getCount(),
             PCStatCollector->getGlobalLPHitRate(),  PCStatCollector->globalPredTotalCounter.getCount(), PCStatCollector->globalPredHitsCounter.getCount(),
             PCStatCollector->getEpocLPHitRate(), PCStatCollector->epocPredTotalCounter.getCount(), PCStatCollector->epocPredHitsCounter.getCount()
          );
-         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_MISS_RATE, "epoc=%ld, global=%f, %ld, %ld, epoc=%f, %ld, %ld", epocCounter.getCount(), 
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_MISS_RATE, "epoc#=%ld, global=%f, %ld, %ld, epoc=%f, %ld, %ld", epocCounter.getCount(), 
             PCStatCollector->getGlobalLPHitRate(),  PCStatCollector->globalPredTotalCounter.getCount(), PCStatCollector->globalPredHitsCounter.getCount(),
             PCStatCollector->getEpocLPHitRate(), PCStatCollector->epocPredTotalCounter.getCount(), PCStatCollector->epocPredHitsCounter.getCount()
          );
