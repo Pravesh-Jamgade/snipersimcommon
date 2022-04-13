@@ -89,8 +89,8 @@ namespace PCPredictorSpace
         double getNoPredRatio(){ return (double)getNoPrediction()/(double)getTotalAccess();}
         double getTrueSkipRatio(){ return (double)(getTrueSkipLoss() +  getTrueSkipOppo()) / (double)getTotalAccess() ;}
         double getFalseSkipRatio(){return (double)getFalseSkip()/(double)getTotalAccess();}
-        double getTrueSkipLossRatio(){return (double)getTrueSkipLoss()/(double)getTotalTrueSkip();}
-        double getTrueSkipOppoRatio(){return (double)getTrueSkipOppo()/(double)getTotalTrueSkip();}
+        double getTrueSkipLossRatio(){return (double)getTrueSkipLoss()/(double)getTotalAccess();}
+        double getTrueSkipOppoRatio(){return (double)getTrueSkipOppo()/(double)getTotalAccess();}
     };
 
     class PCStatHelper

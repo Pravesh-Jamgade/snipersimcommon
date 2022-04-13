@@ -56,8 +56,8 @@ MemoryManager::MemoryManager(Core* core,
       printf("DebugEpoc Counter=%ld\n", debugEpoc);
    }
    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_PC_STATUS, "pc,level,miss,total,skip\n");
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Accuracy_Local, "(local)np,falseSkip,trueSkip,trueSkipLoss,trueSkipOpp\n");
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Accuracy_Global, "(global)np,falseSkip,trueSkip,trueSkipLoss,trueSkipOpp\n");
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Accuracy_Local, "pc,np,fs,tsl,tso\n");
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Accuracy_Global, "pc,np,fs,tsl,tso\n");
   
    // Read Parameters from the Config file
    std::map<MemComponent::component_t, CacheParameters> cache_parameters;
@@ -474,8 +474,8 @@ MemoryManager::~MemoryManager()
    for(auto pc: PCStatCollector->globalAllLevelPCStat){
       std::vector<Helper::Message> allMsg = PCStatCollector->processEpocEndComputation(pc.first, PCStatCollector->globalAllLevelPCStat);
       for(auto msg: allMsg){
-         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_PC_STATUS, "%ld,%s,%ld,%ld,%ld\n", 
-            pc.first, 
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_PC_STATUS, "%s,%s,%ld,%ld,%ld\n", 
+            cache_helper::Misc::toHex(pc.first).c_str(), 
             MemComponent2String(msg.getLevel()).c_str(),
             msg.gettotalMiss(),
             msg.gettotalAccess(),
@@ -584,21 +584,18 @@ MemoryManager::coreInitiateMemoryAccess(
          PCStatCollector->lockenable();
       }
       else{
-         printf("[+] [epoc]%f,%f,%f,%f,%f,[global]%f,%f,%f,%f,%f\n", 
+         printf("[+]%ld [epoc]%f,%f,%f,%f,[global]%f,%f,%f,%f\n", epocCounter.getCount(),
          PCStatCollector->localEpocStat->getNoPredRatio(), PCStatCollector->localEpocStat->getFalseSkipRatio(), 
-         PCStatCollector->localEpocStat->getTrueSkipRatio(), PCStatCollector->localEpocStat->getTrueSkipLossRatio(), 
-         PCStatCollector->localEpocStat->getTrueSkipOppoRatio(), PCStatCollector->globalEpocStat->getNoPredRatio(), 
-         PCStatCollector->localEpocStat->getFalseSkipRatio(), PCStatCollector->globalEpocStat->getTrueSkipRatio(), 
+         PCStatCollector->localEpocStat->getTrueSkipLossRatio(), PCStatCollector->localEpocStat->getTrueSkipOppoRatio(), 
+         PCStatCollector->globalEpocStat->getNoPredRatio(), PCStatCollector->localEpocStat->getFalseSkipRatio(), 
          PCStatCollector->globalEpocStat->getTrueSkipLossRatio(), PCStatCollector->globalEpocStat->getTrueSkipOppoRatio());
 
-         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Accuracy_Local, "%f,%f,%f,%f,%f\n", 
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Accuracy_Local, "%ld,%f,%f,%f,%f\n", epocCounter.getCount(),
          PCStatCollector->localEpocStat->getNoPredRatio(), PCStatCollector->localEpocStat->getFalseSkipRatio(), 
-         PCStatCollector->localEpocStat->getTrueSkipRatio(), PCStatCollector->localEpocStat->getTrueSkipLossRatio(), 
-         PCStatCollector->localEpocStat->getTrueSkipOppoRatio());
-         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Accuracy_Global, "%f,%f,%f,%f,%f\n",
+         PCStatCollector->localEpocStat->getTrueSkipLossRatio(), PCStatCollector->localEpocStat->getTrueSkipOppoRatio());
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Accuracy_Global, "%ld,%f,%f,%f,%f\n", epocCounter.getCount(),
          PCStatCollector->globalEpocStat->getNoPredRatio(), PCStatCollector->globalEpocStat->getFalseSkipRatio(), 
-         PCStatCollector->globalEpocStat->getTrueSkipRatio(), PCStatCollector->globalEpocStat->getTrueSkipLossRatio(), 
-         PCStatCollector->globalEpocStat->getTrueSkipOppoRatio());
+         PCStatCollector->globalEpocStat->getTrueSkipLossRatio(), PCStatCollector->globalEpocStat->getTrueSkipOppoRatio());
       }
       
       PCStatCollector->reset();

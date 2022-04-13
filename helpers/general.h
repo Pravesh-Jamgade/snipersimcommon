@@ -1,9 +1,7 @@
 #include<map>
 #include "fixed_types.h"
-#include "core.h"
 #include <stdio.h>      /* printf */
 #include <unistd.h>
-#include "log.h"
 #include<sstream>
 
 #include <fstream>
@@ -18,6 +16,16 @@ namespace cache_helper
     class Misc
     {
         public:
+
+        static String toHex(IntPtr val){
+            std::stringstream ss;
+            String hval;
+            ss << std::hex << val; 
+            ss >> hval; 
+            ss.clear();
+            return hval;
+        }
+
         static void pathAppend(String& path, String name, bool isTLB=0)// tlb flag not needed anymore as i am not logging its access
         {
             String next = "->";
