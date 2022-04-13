@@ -423,8 +423,10 @@ LOG_ASSERT_ERROR(offset + data_length <= getCacheBlockSize(), "access until %u >
       // if debug level not specified, unlock to log all; or unlock individual level
       this->loggingLevel(ca_address, mem_op_type, cache_hit);
 
-      if(pcStatHelper!=nullptr)
+      if(pcStatHelper!=nullptr){
          pcStatHelper->insertEntry(m_mem_component, getEIP(), cache_hit);
+         pcStatHelper->LPPredictionVerifier(getEIP(), m_mem_component);
+      }
 
       updateCounters(mem_op_type, ca_address, cache_hit, getCacheState(cache_block_info), Prefetch::NONE);
    }
@@ -618,7 +620,6 @@ MYLOG("processMemOpFromCore l%d after next fill", m_mem_component);
    // path += MemComponent2String(m_mem_component);
    // cache_helper::Misc::stateAppend(1,path);
 
-   pcStatHelper->LPPredictionVerifier(getEIP(), m_mem_component);
 
    accessCache(mem_op_type, ca_address, offset, data_buf, data_length, 
    hit_where == HitWhere::where_t(m_mem_component) && count, path);
@@ -914,7 +915,9 @@ SubsecondTime t_issue, bool have_write_lock, String& path, std::shared_ptr<PCPre
       if(pcStatHelper!=nullptr)
       {
          pcStatHelper->insertEntry(m_mem_component, getEIP(), cache_hit);
+         pcStatHelper->LPPredictionVerifier(getEIP(), m_mem_component);
       }
+      
    }
 
    if (cache_hit)
