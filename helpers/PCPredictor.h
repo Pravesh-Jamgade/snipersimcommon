@@ -116,7 +116,6 @@ namespace PCPredictorSpace
 
         void reset(){
             tmpAllLevelPCStat.erase(tmpAllLevelPCStat.begin(), tmpAllLevelPCStat.end());
-            globalEpocStat->reset();
             localEpocStat->reset();
         }
 
