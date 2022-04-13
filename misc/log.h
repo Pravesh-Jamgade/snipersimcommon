@@ -31,8 +31,8 @@ class Log
          AddressAnalyzer=0,
          LP_PC_STATUS,
          LP_Prediction_MATCH,
-         LP_MISS_RATE,
-         LP_PC_DEBUG,
+         LP_Accuracy_Local,
+         LP_Accuracy_Global,
          END,
       };
 

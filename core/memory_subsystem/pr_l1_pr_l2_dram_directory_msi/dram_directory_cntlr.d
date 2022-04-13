@@ -78,6 +78,7 @@
  /home/user/station/version/sniper/decoder_lib/decoder.h \
  /home/user/station/version/sniper/common/core/memory_subsystem/pr_l1_pr_l2_dram_directory_msi/shmem_perf.h \
  /home/user/station/version/sniper/common/helpers/helpers.h \
+ /home/user/station/version/sniper/common/helpers/PCPredictor.h \
  /home/user/station/version/sniper/common/core/memory_subsystem/parametric_dram_directory_msi/nuca_cache.h \
  /home/user/station/version/sniper/common/config/config.hpp \
  /home/user/station/version/sniper/common/config/key.hpp \

@@ -343,7 +343,7 @@ CacheCntlr::processMemOpFromCore(
       Byte* data_buf, UInt32 data_length,
       bool modeled,
       bool count,
-      IntPtr eip, String& path, std::shared_ptr<Helper::PCStatHelper> pcStatHelper)
+      IntPtr eip, String& path, std::shared_ptr<PCPredictorSpace::PCStatHelper> pcStatHelper)
 {
 
    // [UPDATE]
@@ -866,7 +866,7 @@ CacheCntlr::doPrefetch(IntPtr prefetch_address, SubsecondTime t_start)
 HitWhere::where_t
 CacheCntlr::processShmemReqFromPrevCache(CacheCntlr* requester, Core::mem_op_t mem_op_type, IntPtr address, 
 bool modeled, bool count, Prefetch::prefetch_type_t isPrefetch, 
-SubsecondTime t_issue, bool have_write_lock, String& path, std::shared_ptr<Helper::PCStatHelper> pcStatHelper)
+SubsecondTime t_issue, bool have_write_lock, String& path, std::shared_ptr<PCPredictorSpace::PCStatHelper> pcStatHelper)
 {
 
    #ifdef PRIVATE_L2_OPTIMIZATION

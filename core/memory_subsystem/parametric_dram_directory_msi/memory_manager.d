@@ -66,6 +66,7 @@
  /home/user/station/version/sniper/decoder_lib/decoder.h \
  /home/user/station/version/sniper/common/core/memory_subsystem/pr_l1_pr_l2_dram_directory_msi/shmem_perf.h \
  /home/user/station/version/sniper/common/helpers/helpers.h \
+ /home/user/station/version/sniper/common/helpers/PCPredictor.h \
  /home/user/station/version/sniper/common/core/memory_subsystem/parametric_dram_directory_msi/../pr_l1_pr_l2_dram_directory_msi/dram_directory_cntlr.h \
  /home/user/station/version/sniper/common/core/memory_subsystem/parametric_dram_directory_msi/../pr_l1_pr_l2_dram_directory_msi/dram_directory_cache.h \
  /home/user/station/version/sniper/common/core/memory_subsystem/directory_schemes/directory.h \

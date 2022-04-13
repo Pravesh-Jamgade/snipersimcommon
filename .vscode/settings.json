@@ -67,6 +67,7 @@
         "typeinfo": "cpp",
         "regex": "cpp",
         "future": "cpp",
-        "shared_mutex": "cpp"
+        "shared_mutex": "cpp",
+        "*.ipp": "cpp"
     }
 }

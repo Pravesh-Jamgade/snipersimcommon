@@ -20,6 +20,7 @@
 //[update]
 #include "cache_helper.h"
 #include "helpers.h"
+#include "PCPredictor.h"
 
 class DramCache;
 class ShmemPerf;
@@ -127,7 +128,7 @@ namespace ParametricDramDirectoryMSI
          //[update]
          std::vector<String> confName, objName;
          std::shared_ptr<cache_helper::CacheHelper> cacheHelper;
-         std::shared_ptr<Helper::PCStatHelper> PCStatCollector;
+         std::shared_ptr<PCPredictorSpace::PCStatHelper> PCStatCollector;
          Helper::Counter epocCounter;
          UInt64 debugEpoc;
    };

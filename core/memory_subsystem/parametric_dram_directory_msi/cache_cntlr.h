@@ -22,6 +22,7 @@
 //[update]
 #include "cache_helper.h"
 #include "helpers.h"
+#include "PCPredictor.h"
 
 class DramCntlrInterface;
 class ATD;
@@ -326,7 +327,7 @@ namespace ParametricDramDirectoryMSI
          // Handle Request from previous level cache
          HitWhere::where_t processShmemReqFromPrevCache(CacheCntlr* requester, Core::mem_op_t mem_op_type, 
          IntPtr address, bool modeled, bool count, Prefetch::prefetch_type_t isPrefetch,
-         SubsecondTime t_issue, bool have_write_lock, String& path, std::shared_ptr<Helper::PCStatHelper> pcStatHelper=nullptr);
+         SubsecondTime t_issue, bool have_write_lock, String& path, std::shared_ptr<PCPredictorSpace::PCStatHelper> pcStatHelper=nullptr);
 
          // Process Request from L1 Cache
          boost::tuple<HitWhere::where_t, SubsecondTime> accessDRAM(Core::mem_op_t mem_op_type, IntPtr address, bool isPrefetch, Byte* data_buf);
@@ -400,7 +401,7 @@ namespace ParametricDramDirectoryMSI
                IntPtr ca_address, UInt32 offset,
                Byte* data_buf, UInt32 data_length,
                bool modeled,
-               bool count, IntPtr eip, String& path, std::shared_ptr<Helper::PCStatHelper> pcStatHelper);
+               bool count, IntPtr eip, String& path, std::shared_ptr<PCPredictorSpace::PCStatHelper> pcStatHelper);
          void updateHits(Core::mem_op_t mem_op_type, UInt64 hits);
 
          // Notify next level cache of so it can update its sharing set

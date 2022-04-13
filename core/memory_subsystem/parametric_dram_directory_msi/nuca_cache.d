@@ -50,6 +50,7 @@
  /home/user/station/version/sniper/decoder_lib/decoder.h \
  /home/user/station/version/sniper/common/core/memory_subsystem/pr_l1_pr_l2_dram_directory_msi/shmem_perf.h \
  /home/user/station/version/sniper/common/helpers/helpers.h \
+ /home/user/station/version/sniper/common/helpers/PCPredictor.h \
  /home/user/station/version/sniper/common/core/memory_subsystem/memory_manager_base.h \
  /home/user/station/version/sniper/common/network/network.h \
  /home/user/station/version/sniper/common/network/packet_type.h \
