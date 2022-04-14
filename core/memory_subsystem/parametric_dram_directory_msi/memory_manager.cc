@@ -59,6 +59,7 @@ MemoryManager::MemoryManager(Core* core,
    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Accuracy_Global, "epoc,np,fs,tsl,tso\n");
    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PERF, "epoc,h,m\n");
    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_GLOBAL_PERF, "epoc,h,m\n");
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_PERF, "epoc,h,m\n");
    
    // Read Parameters from the Config file
    std::map<MemComponent::component_t, CacheParameters> cache_parameters;
@@ -612,6 +613,10 @@ MemoryManager::coreInitiateMemoryAccess(
          PCStatCollector->globalEpocStat->getNoPredRatio(), PCStatCollector->globalEpocStat->getFalseSkipRatio(), 
          PCStatCollector->globalEpocStat->getTrueSkipLossRatio(), PCStatCollector->globalEpocStat->getTrueSkipOppoRatio());
       }
+
+      _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_PERF, "%ld,%f,%f\n", epocCounter.getCount(),
+         PCStatCollector->getLPLocalEpocHitRatio(), 
+         PCStatCollector->getLPLocalEpocMissRatio());
 
       _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PERF, "%ld,%f,%f\n", epocCounter.getCount(),
          PCStatCollector->getLocalEpocHitRatio(), 

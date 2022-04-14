@@ -103,6 +103,7 @@ namespace PCPredictorSpace
             lp_unlock=2;
             globalEpocStat = new EpocStat();
             localEpocStat = new EpocStat();
+            lpPerformance = new EpocPerformanceStat();
             localPerformance=std::unique_ptr<EpocPerformanceStat>(new EpocPerformanceStat());
             globalPerformance=std::unique_ptr<EpocPerformanceStat>(new EpocPerformanceStat());
             allMemLocalPerformance=std::vector<EpocPerformanceStat>(llc - MemComponent::component_t::L1_DCACHE + 1);
@@ -119,6 +120,7 @@ namespace PCPredictorSpace
         
         EpocStat *globalEpocStat, *localEpocStat;// LP prediction accuracy
         std::unique_ptr<EpocPerformanceStat> localPerformance, globalPerformance;// hit/miss LP prediction accuracy on local and global
+        EpocPerformanceStat *lpPerformance;
         std::vector<EpocPerformanceStat> allMemLocalPerformance, allMemGlobalPerformance;// mem level wise m/h performance on local and global
         
         // LP in-use after debugEpoc epoc
@@ -133,7 +135,9 @@ namespace PCPredictorSpace
 
         void lockenable(){lp_unlock=1;}
         int isLockEnabled(){return lp_unlock;}
-
+        
+        double getLPLocalEpocHitRatio(){return 1-localPerformance->getMissRatio();}
+        double getLPLocalEpocMissRatio(){return localPerformance->getMissRatio();}
         double getLocalEpocHitRatio(){return 1-localPerformance->getMissRatio();}
         double getLocalEpocMissRatio(){return localPerformance->getMissRatio();}
         double getGlobalEpocHitRatio(){return 1-globalPerformance->getMissRatio();}
@@ -169,13 +173,14 @@ namespace PCPredictorSpace
             {
                 auto ptr = tmpAllLevelLP.find(pc);
                 if(ptr!=tmpAllLevelLP.end()){
+                    lpPerformance->increaseHit();
                     //TODO: remove these constant values
                     for(int i=3;i<= 5; i++){// (5-3+1)=3 level's of cache
                         if(ptr->second.canSkipLevel(static_cast<MemComponent::component_t>(i) )){
                             predicted_levels.push_back(static_cast<MemComponent::component_t>(i));
                         }
                     }
-                }
+                }else lpPerformance->increaseMiss();
             }
             return predicted_levels;
         }
