@@ -62,6 +62,7 @@ namespace PCPredictorSpace
         UInt64 getHitCount(){return hit.getCount();}
         UInt64 getMissCount(){return miss.getCount();}
         double getMissRatio(){return (double)miss.getCount()/(double)(miss.getCount()+hit.getCount()); }
+        double getHitRatio(){return (double)hit.getCount()/(double)(miss.getCount()+hit.getCount()); }
         double getMissHitRate(){return (double)miss.getCount()/(double)(hit.getCount()); }
     };
 
@@ -182,9 +183,9 @@ namespace PCPredictorSpace
                     for(int i=MemComponent::component_t::L1_DCACHE;i<= llc; i++){// (5-3+1)=3 level's of cache
                         if(ptr->second.canSkipLevel(static_cast<MemComponent::component_t>(i) )){
                             predicted_levels.push_back(static_cast<MemComponent::component_t>(i));
-                            lpskipPerformance[i-MemComponent::component_t::L1_DCACHE].getHitCount();
+                            lpskipPerformance[i-MemComponent::component_t::L1_DCACHE].increaseHit();
                         }
-                        else lpskipPerformance[i-MemComponent::component_t::L1_DCACHE].getMissCount();
+                        else lpskipPerformance[i-MemComponent::component_t::L1_DCACHE].increaseMiss();
                     }
                 }else lpPerformance->increaseMiss();
             }

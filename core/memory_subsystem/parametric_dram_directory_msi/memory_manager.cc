@@ -644,7 +644,7 @@ MemoryManager::coreInitiateMemoryAccess(
          double missRatioGlobal = PCStatCollector->allMemGlobalPerformance[i-MemComponent::component_t::L1_DCACHE].getMissRatio();
          _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_GLOBAL_MEM_LEVEL_PERF, "%f,", missRatioGlobal);
 
-         double missRatio = PCStatCollector->lpskipPerformance[i-MemComponent::component_t::L1_DCACHE].getMissRatio();
+         double missRatio = PCStatCollector->lpskipPerformance[i-MemComponent::component_t::L1_DCACHE].getHitRatio();
          _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_MEM_LEVEL_PERF, "%f,", missRatio);
       }
       
