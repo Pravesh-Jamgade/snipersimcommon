@@ -11,10 +11,10 @@
 #include "log.h"
 #include "helpers.h"
 #include "algorithm"
+#include <memory>
 
 namespace PCPredictorSpace
 {
-
     class LevelPredictor
     {   
         UInt64 levelToSkip;
@@ -95,55 +95,71 @@ namespace PCPredictorSpace
 
     class PCStatHelper
     {
+        typedef PCStat EpocPerformanceStat;
+        typedef std::map<int, PCStat> LevelPCStat;
+
         public:
-        PCStatHelper(){
+        PCStatHelper(MemComponent::component_t llc){
             lp_unlock=2;
             globalEpocStat = new EpocStat();
             localEpocStat = new EpocStat();
+            localPerformance=std::unique_ptr<EpocPerformanceStat>(new EpocPerformanceStat());
+            globalPerformance=std::unique_ptr<EpocPerformanceStat>(new EpocPerformanceStat());
+            allMemLocalPerformance=std::vector<EpocPerformanceStat>(llc - MemComponent::component_t::L1_DCACHE + 1);
+            allMemGlobalPerformance=std::vector<EpocPerformanceStat>(llc - MemComponent::component_t::L1_DCACHE + 1);
         }
-        typedef std::map<int, PCStat> LevelPCStat;
-        //epoc based but reset for next epoc usage
-        std::unordered_map<IntPtr, LevelPCStat> tmpAllLevelPCStat;
-        std::unordered_map<IntPtr, LevelPredictor> tmpAllLevelLP;
-        //epoc based but cumulative
-        std::unordered_map<IntPtr, LevelPCStat> globalAllLevelPCStat;
-        std::unordered_map<IntPtr, LevelPredictor> globalAllLevelLP;
         
-        EpocStat *globalEpocStat, *localEpocStat;
+        //epoc based but reset for next epoc usage
+        std::unordered_map<IntPtr, LevelPCStat> tmpAllLevelPCStat;//being reset
+        std::unordered_map<IntPtr, LevelPredictor> tmpAllLevelLP;//not reset
 
+        //epoc based but cumulative
+        std::unordered_map<IntPtr, LevelPCStat> globalAllLevelPCStat;//not reset
+        std::unordered_map<IntPtr, LevelPredictor> globalAllLevelLP;//not reset
+        
+        EpocStat *globalEpocStat, *localEpocStat;// LP prediction accuracy
+        std::unique_ptr<EpocPerformanceStat> localPerformance, globalPerformance;// hit/miss LP prediction accuracy on local and global
+        std::vector<EpocPerformanceStat> allMemLocalPerformance, allMemGlobalPerformance;// mem level wise m/h performance on local and global
+        
         // LP in-use after debugEpoc epoc
         int lp_unlock;
 
         void reset(){
             tmpAllLevelPCStat.erase(tmpAllLevelPCStat.begin(), tmpAllLevelPCStat.end());
             localEpocStat->reset();
+            localPerformance.reset(new EpocPerformanceStat());
+            allMemLocalPerformance.erase(allMemLocalPerformance.begin(), allMemLocalPerformance.end());
         }
 
-        int getTmpSize(){ return tmpAllLevelPCStat.size();}
-        int getGlobalSize(){return globalAllLevelPCStat.size();}
         void lockenable(){lp_unlock=1;}
         int isLockEnabled(){return lp_unlock;}
 
-        void insert(std::unordered_map<IntPtr, LevelPCStat>& tmpAllLevelPCStat, int level, IntPtr pc, bool cache_hit){
+        double getLocalEpocHitRatio(){return 1-localPerformance->getMissRatio();}
+        double getLocalEpocMissRatio(){return localPerformance->getMissRatio();}
+        double getGlobalEpocHitRatio(){return 1-globalPerformance->getMissRatio();}
+        double getGlobalEpocMissRatio(){return globalPerformance->getMissRatio();}
 
-            auto findPc = tmpAllLevelPCStat.find(pc);
-            if(findPc!=tmpAllLevelPCStat.end()){
-               
-                auto findLevel=findPc->second.find(level);
-                if(findLevel!=tmpAllLevelPCStat[pc].end()){
-                    if(cache_hit)
-                        findLevel->second.increaseHit();
-                    else findLevel->second.increaseMiss();
-                }
-                else{
-                    tmpAllLevelPCStat[pc].insert({level,PCStat()});
-                }
+        void countLevelPerformance(int level, bool cache_hit){
+            if(cache_hit){
+                allMemGlobalPerformance[level - MemComponent::component_t::L1_DCACHE].increaseHit();
+                allMemLocalPerformance[level - MemComponent::component_t::L1_DCACHE].increaseHit();
             }
             else{
-                LevelPCStat levelPCStat;
-                levelPCStat.insert({level,PCStat()});
-                tmpAllLevelPCStat.insert({pc,levelPCStat});
+                allMemGlobalPerformance[level - MemComponent::component_t::L1_DCACHE].increaseMiss();
+                allMemLocalPerformance[level - MemComponent::component_t::L1_DCACHE].increaseMiss();
             }
+        }
+
+        void countPerformance(bool cache_hit){
+            if(cache_hit){
+                localPerformance->increaseHit();
+                globalPerformance->increaseHit();
+            }
+            else{
+                localPerformance->increaseMiss();
+                globalPerformance->increaseMiss();
+            }
+            
         }
 
         std::vector<MemComponent::component_t> LPPrediction(IntPtr pc){
@@ -211,15 +227,43 @@ namespace PCPredictorSpace
             return false;
         }
 
-        void insertEntry(int level, IntPtr pc, bool cache_hit){
-            
+        void insert(std::unordered_map<IntPtr, LevelPCStat>& tmpAllLevelPCStat, int level, IntPtr pc, bool cache_hit){
+
+            auto findPc = tmpAllLevelPCStat.find(pc);
+            if(findPc!=tmpAllLevelPCStat.end()){
+               
+                auto findLevel=findPc->second.find(level);
+                if(findLevel!=tmpAllLevelPCStat[pc].end()){
+                    if(cache_hit)
+                        findLevel->second.increaseHit();
+                    else findLevel->second.increaseMiss();
+                }
+                else{
+                    tmpAllLevelPCStat[pc].insert({level,PCStat()});
+                }
+            }
+            else{
+                LevelPCStat levelPCStat;
+                levelPCStat.insert({level,PCStat()});
+                tmpAllLevelPCStat.insert({pc,levelPCStat});
+            }
+        }
+
+        void insertToBoth(int level, IntPtr pc, bool cache_hit){
             if(level<=2){
                 return;
             }
-            
+            countLevelPerformance(level,cache_hit);
             insert(tmpAllLevelPCStat, level,pc,cache_hit);            
             insert(globalAllLevelPCStat, level,pc,cache_hit);            
-            insertEntry(level-1, pc, false);
+            insertToBoth(level-1, pc, false);
+        }
+
+        void insertEntry(int level, IntPtr pc, bool cache_hit){
+            if(level<2)
+                return;
+            countPerformance(cache_hit);
+            insertToBoth(level,pc,cache_hit);
         }
 
         // will return epoc based pc stat to log, as well it adds skipable levels;

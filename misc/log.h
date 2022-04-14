@@ -33,6 +33,10 @@ class Log
          LP_Prediction_MATCH,
          LP_Accuracy_Local,
          LP_Accuracy_Global,
+         LP_LOCAL_PERF,
+         LP_GLOBAL_PERF,
+         LP_LOCAL_MEM_LEVEL_PERF,
+         LP_GLOBAL_MEM_LEVEL_PERF,
          END,
       };
 

@@ -47,18 +47,19 @@ MemoryManager::MemoryManager(Core* core,
    m_dram_cntlr_present(false),
    m_enabled(false)
 {
-
+   //[update]
    cacheHelper = core->getCacheHelper();
-   PCStatCollector = std::make_shared<PCPredictorSpace::PCStatHelper>();
    if(Sim()->getCfg()->hasKey("debug/epocNumber"))
    {
       debugEpoc=Sim()->getCfg()->getInt("debug/epocNumber");
       printf("DebugEpoc Counter=%ld\n", debugEpoc);
    }
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_PC_STATUS, "pc,level,miss,total,skip\n");
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Accuracy_Local, "pc,np,fs,tsl,tso\n");
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Accuracy_Global, "pc,np,fs,tsl,tso\n");
-  
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_PC_STATUS, "epoc,level,miss,total,skip\n");
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Accuracy_Local, "epoc,np,fs,tsl,tso\n");
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Accuracy_Global, "epoc,np,fs,tsl,tso\n");
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PERF, "epoc,h,m\n");
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_GLOBAL_PERF, "epoc,h,m\n");
+   
    // Read Parameters from the Config file
    std::map<MemComponent::component_t, CacheParameters> cache_parameters;
    std::map<MemComponent::component_t, String> cache_names;
@@ -205,6 +206,20 @@ MemoryManager::MemoryManager(Core* core,
       LOG_PRINT_ERROR("Error reading memory system parameters from the config file");
    }
 
+   //[update]
+   PCStatCollector = std::make_shared<PCPredictorSpace::PCStatHelper>(m_last_level_cache);
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_MEM_LEVEL_PERF, "epoc,");
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_GLOBAL_MEM_LEVEL_PERF, "epoc,");
+   for(int i=MemComponent::component_t::L1_DCACHE; i<= m_last_level_cache; i++){
+      _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_MEM_LEVEL_PERF, "%s,", 
+         MemComponent2String(static_cast<MemComponent::component_t>(i)).c_str());
+      _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_GLOBAL_MEM_LEVEL_PERF, "%s,", 
+         MemComponent2String(static_cast<MemComponent::component_t>(i)).c_str());
+   }
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_MEM_LEVEL_PERF, "\n");
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_GLOBAL_MEM_LEVEL_PERF, "\n");
+  
+  
    m_user_thread_sem = new Semaphore(0);
    m_network_thread_sem = new Semaphore(0);
 
@@ -597,6 +612,29 @@ MemoryManager::coreInitiateMemoryAccess(
          PCStatCollector->globalEpocStat->getNoPredRatio(), PCStatCollector->globalEpocStat->getFalseSkipRatio(), 
          PCStatCollector->globalEpocStat->getTrueSkipLossRatio(), PCStatCollector->globalEpocStat->getTrueSkipOppoRatio());
       }
+
+      _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PERF, "%ld,%f,%f\n", epocCounter.getCount(),
+         PCStatCollector->getLocalEpocHitRatio(), 
+         PCStatCollector->getLocalEpocMissRatio());
+
+      _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_GLOBAL_PERF, "%ld,%f,%f\n", epocCounter.getCount(),
+         PCStatCollector->getGlobalEpocHitRatio(), 
+         PCStatCollector->getGlobalEpocMissRatio());
+
+      _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_MEM_LEVEL_PERF, "%ld,", epocCounter.getCount());
+      _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_GLOBAL_MEM_LEVEL_PERF, "%ld,", epocCounter.getCount());
+
+      for(int i=MemComponent::component_t::L1_DCACHE; i<= m_last_level_cache; i++){
+         double missRatioLocal = PCStatCollector->allMemLocalPerformance[i-MemComponent::component_t::L1_DCACHE].getMissRatio();
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_MEM_LEVEL_PERF, "%f,", epocCounter.getCount(), missRatioLocal);
+
+         double missRatioGlobal = PCStatCollector->allMemGlobalPerformance[i-MemComponent::component_t::L1_DCACHE].getMissRatio();
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_GLOBAL_MEM_LEVEL_PERF, "%f,", epocCounter.getCount(), missRatioGlobal);
+      }
+      
+      _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_MEM_LEVEL_PERF, "\n");
+      _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_GLOBAL_MEM_LEVEL_PERF, "\n");
+
       
       PCStatCollector->reset();
       Cache::resetSendMsgFlag();
