@@ -38,6 +38,7 @@ class Log
          LP_LOCAL_MEM_LEVEL_PERF,
          LP_GLOBAL_MEM_LEVEL_PERF,
          LP_PERF,
+         LP_MEM_LEVEL_PERF,
          END,
       };
 

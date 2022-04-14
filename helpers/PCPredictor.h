@@ -97,17 +97,19 @@ namespace PCPredictorSpace
     {
         typedef PCStat EpocPerformanceStat;
         typedef std::map<int, PCStat> LevelPCStat;
-
+        MemComponent::component_t llc;
         public:
         PCStatHelper(MemComponent::component_t llc){
             lp_unlock=2;
             globalEpocStat = new EpocStat();
             localEpocStat = new EpocStat();
-            lpPerformance = new EpocPerformanceStat();
+            lpPerformance = std::unique_ptr<EpocPerformanceStat>(new EpocPerformanceStat());
             localPerformance=std::unique_ptr<EpocPerformanceStat>(new EpocPerformanceStat());
             globalPerformance=std::unique_ptr<EpocPerformanceStat>(new EpocPerformanceStat());
             allMemLocalPerformance=std::vector<EpocPerformanceStat>(llc - MemComponent::component_t::L1_DCACHE + 1);
             allMemGlobalPerformance=std::vector<EpocPerformanceStat>(llc - MemComponent::component_t::L1_DCACHE + 1);
+            lpskipPerformance=std::vector<EpocPerformanceStat>(llc - MemComponent::component_t::L1_DCACHE + 1);
+            this->llc=llc;
         }
         
         //epoc based but reset for next epoc usage
@@ -119,9 +121,9 @@ namespace PCPredictorSpace
         std::unordered_map<IntPtr, LevelPredictor> globalAllLevelLP;//not reset
         
         EpocStat *globalEpocStat, *localEpocStat;// LP prediction accuracy
-        std::unique_ptr<EpocPerformanceStat> localPerformance, globalPerformance;// hit/miss LP prediction accuracy on local and global
-        EpocPerformanceStat *lpPerformance;
-        std::vector<EpocPerformanceStat> allMemLocalPerformance, allMemGlobalPerformance;// mem level wise m/h performance on local and global
+        std::unique_ptr<EpocPerformanceStat> localPerformance, globalPerformance;// hit/miss 
+        std::unique_ptr<EpocPerformanceStat> lpPerformance;//LP prediction accuracy on local 
+        std::vector<EpocPerformanceStat> allMemLocalPerformance, allMemGlobalPerformance, lpskipPerformance;// mem level wise m/h performance on local and global
         
         // LP in-use after debugEpoc epoc
         int lp_unlock;
@@ -131,6 +133,8 @@ namespace PCPredictorSpace
             localEpocStat->reset();
             localPerformance.reset(new EpocPerformanceStat());
             allMemLocalPerformance.erase(allMemLocalPerformance.begin(), allMemLocalPerformance.end());
+            lpPerformance.reset(new EpocPerformanceStat());
+            lpskipPerformance.erase(lpskipPerformance.begin(),lpskipPerformance.end());
         }
 
         void lockenable(){lp_unlock=1;}
@@ -175,10 +179,12 @@ namespace PCPredictorSpace
                 if(ptr!=tmpAllLevelLP.end()){
                     lpPerformance->increaseHit();
                     //TODO: remove these constant values
-                    for(int i=3;i<= 5; i++){// (5-3+1)=3 level's of cache
+                    for(int i=MemComponent::component_t::L1_DCACHE;i<= llc; i++){// (5-3+1)=3 level's of cache
                         if(ptr->second.canSkipLevel(static_cast<MemComponent::component_t>(i) )){
                             predicted_levels.push_back(static_cast<MemComponent::component_t>(i));
+                            lpskipPerformance[i-MemComponent::component_t::L1_DCACHE].getHitCount();
                         }
+                        else lpskipPerformance[i-MemComponent::component_t::L1_DCACHE].getMissCount();
                     }
                 }else lpPerformance->increaseMiss();
             }
