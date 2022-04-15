@@ -29,16 +29,16 @@ class Log
       enum LogDst
       {
          AddressAnalyzer=0,
-         LP_PC_STATUS,
+         MEM_GLOBAL_STATUS,
          LP_Prediction_MATCH,
-         LP_Accuracy_Local,
-         LP_Accuracy_Global,
+         LP_ACCESS_TYPE_ACCURACY_LOCAL,
+         LP_ACCESS_TYPE_ACCURACY_GLOBAL,
+         MEM_LOCAL_PERF,
+         MEM_GLOBAL_PERF,
+         MEM_LOCAL_LEVEL_PERF,
+         MEM_GLOBAL_LEVEL_PERF,
          LP_LOCAL_PERF,
-         LP_GLOBAL_PERF,
          LP_LOCAL_MEM_LEVEL_PERF,
-         LP_GLOBAL_MEM_LEVEL_PERF,
-         LP_PERF,
-         LP_MEM_LEVEL_PERF,
          END,
       };
 

@@ -141,10 +141,12 @@ namespace PCPredictorSpace
         void lockenable(){lp_unlock=1;}
         int isLockEnabled(){return lp_unlock;}
         
-        double getLPLocalEpocHitRatio(){return 1-localPerformance->getMissRatio();}
-        double getLPLocalEpocMissRatio(){return localPerformance->getMissRatio();}
+        double getLPLocalEpocHitRatio(){return 1-lpPerformance->getMissRatio();}
+        double getLPLocalEpocMissRatio(){return lpPerformance->getMissRatio();}
+
         double getLocalEpocHitRatio(){return 1-localPerformance->getMissRatio();}
         double getLocalEpocMissRatio(){return localPerformance->getMissRatio();}
+        
         double getGlobalEpocHitRatio(){return 1-globalPerformance->getMissRatio();}
         double getGlobalEpocMissRatio(){return globalPerformance->getMissRatio();}
 
