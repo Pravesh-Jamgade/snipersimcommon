@@ -94,6 +94,21 @@ namespace PCPredictorSpace
         double getTrueSkipOppoRatio(){return (double)getTrueSkipOppo()/(double)getTotalAccess();}
     };
 
+    class LPHelper
+    {
+        public:
+        static int lp_unlock;
+        static std::unordered_map<IntPtr, LevelPredictor> tmpAllLevelLP;
+        static int getLockStatus(){return lp_unlock;}
+        static void lockenable(){lp_unlock=1;}
+        static int isLockEnabled(){return lp_unlock;}
+        static void insert(IntPtr pc, MemComponent::component_t level){
+            if(tmpAllLevelLP.find(pc)!=tmpAllLevelLP.end())
+                tmpAllLevelLP[pc].addSkipLevel(level);
+            else tmpAllLevelLP.insert({pc, LevelPredictor()});
+        }        
+    };
+
     class PCStatHelper
     {
         typedef PCStat EpocPerformanceStat;
@@ -101,7 +116,6 @@ namespace PCPredictorSpace
         MemComponent::component_t llc;
         public:
         PCStatHelper(MemComponent::component_t llc){
-            lp_unlock=2;
             globalEpocStat = new EpocStat();
             localEpocStat = new EpocStat();
             lpPerformance = std::unique_ptr<EpocPerformanceStat>(new EpocPerformanceStat());
@@ -115,11 +129,10 @@ namespace PCPredictorSpace
         
         //epoc based but reset for next epoc usage
         std::unordered_map<IntPtr, LevelPCStat> tmpAllLevelPCStat;//being reset
-        std::unordered_map<IntPtr, LevelPredictor> tmpAllLevelLP;//not reset
 
         //epoc based but cumulative
         std::unordered_map<IntPtr, LevelPCStat> globalAllLevelPCStat;//not reset
-        std::unordered_map<IntPtr, LevelPredictor> globalAllLevelLP;//not reset
+        // std::unordered_map<IntPtr, LevelPredictor> globalAllLevelLP;//not reset
         
         EpocStat *globalEpocStat, *localEpocStat;// LP prediction accuracy
         std::unique_ptr<EpocPerformanceStat> localPerformance, globalPerformance;// hit/miss 
@@ -127,7 +140,7 @@ namespace PCPredictorSpace
         std::vector<EpocPerformanceStat> allMemLocalPerformance, allMemGlobalPerformance, lpskipPerformance;// mem level wise m/h performance on local and global
         
         // LP in-use after debugEpoc epoc
-        int lp_unlock;
+        // int lp_unlock;
 
         void reset(){
             tmpAllLevelPCStat.erase(tmpAllLevelPCStat.begin(), tmpAllLevelPCStat.end());
@@ -138,8 +151,8 @@ namespace PCPredictorSpace
             lpskipPerformance.erase(lpskipPerformance.begin(),lpskipPerformance.end());
         }
 
-        void lockenable(){lp_unlock=1;}
-        int isLockEnabled(){return lp_unlock;}
+        void lockenable(){LPHelper::lockenable();}
+        int isLockEnabled(){return LPHelper::isLockEnabled();}
         
         double getLPLocalEpocHitRatio(){return 1-lpPerformance->getMissRatio();}
         double getLPLocalEpocMissRatio(){return lpPerformance->getMissRatio();}
@@ -176,10 +189,10 @@ namespace PCPredictorSpace
         std::vector<MemComponent::component_t> LPPrediction(IntPtr pc){
             std::vector<MemComponent::component_t> predicted_levels;
             // LP prediction
-            if(lp_unlock==1)
+            if(LPHelper::getLockStatus()==1)
             {
-                auto ptr = tmpAllLevelLP.find(pc);
-                if(ptr!=tmpAllLevelLP.end()){
+                auto ptr = LPHelper::tmpAllLevelLP.find(pc);
+                if(ptr!=LPHelper::tmpAllLevelLP.end()){
                     lpPerformance->increaseHit();
                     //TODO: remove these constant values
                     for(int i=MemComponent::component_t::L1_DCACHE;i<= llc; i++){// (5-3+1)=3 level's of cache
@@ -196,7 +209,7 @@ namespace PCPredictorSpace
 
         bool LPPredictionVerifier(IntPtr pc, MemComponent::component_t actual_level){
             
-            if(lp_unlock==1){
+            if(LPHelper::getLockStatus()==1){
                 // total count
                 localEpocStat->incTotalAccessCounter();
                 globalEpocStat->incTotalAccessCounter();
@@ -283,16 +296,6 @@ namespace PCPredictorSpace
         // will return epoc based pc stat to log, as well it adds skipable levels;
         std::vector<Helper::Message> processEpocEndComputation(IntPtr pc, std::unordered_map<IntPtr, LevelPCStat>& mp){
             std::vector<Helper::Message> allMsg;
-            
-            // level predictor info for pc 
-            if(tmpAllLevelLP.find(pc)==tmpAllLevelLP.end()){
-                tmpAllLevelLP[pc]=LevelPredictor();
-            }
-
-            if(globalAllLevelLP.find(pc)==globalAllLevelLP.end()){
-                globalAllLevelLP[pc]=LevelPredictor();
-            }
-
             bool firstRatio=true; 
             double currRatio;
             UInt64 prevMisses;
@@ -313,8 +316,7 @@ namespace PCPredictorSpace
                 prevMisses=msg.gettotalMiss();
                 if( total > 100 ){
                     if(currRatio > 0.5){// reason is that it should be significant to skip
-                        tmpAllLevelLP[pc].addSkipLevel(msg.getLevel());
-                        globalAllLevelLP[pc].addSkipLevel(msg.getLevel());
+                        LPHelper::insert(pc, msg.getLevel());
                         msg.addLevelSkip();
                     }
                 }
