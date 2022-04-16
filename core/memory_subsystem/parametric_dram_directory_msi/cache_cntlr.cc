@@ -426,7 +426,7 @@ LOG_ASSERT_ERROR(offset + data_length <= getCacheBlockSize(), "access until %u >
       if(pcStatHelper!=nullptr){
          pcStatHelper->insertEntry(m_mem_component, getEIP(), cache_hit);
          if(cache_hit)
-            pcStatHelper->LPPredictionVerifier(getEIP(), m_mem_component);
+            pcStatHelper->LPPredictionVerifier2(getEIP(), m_mem_component);
       }
 
       updateCounters(mem_op_type, ca_address, cache_hit, getCacheState(cache_block_info), Prefetch::NONE);
@@ -917,7 +917,7 @@ SubsecondTime t_issue, bool have_write_lock, String& path, std::shared_ptr<PCPre
       {
          pcStatHelper->insertEntry(m_mem_component, getEIP(), cache_hit);
          if(cache_hit)
-            pcStatHelper->LPPredictionVerifier(getEIP(), m_mem_component);
+            pcStatHelper->LPPredictionVerifier2(getEIP(), m_mem_component);
       }
       
    }

@@ -1,4 +1,4 @@
-/home/user/station/version/sniper/common/performance_model/branch_predictors/branch_predictor_return_value.o /home/user/station/version/sniper/common/performance_model/branch_predictors/branch_predictor_return_value.d: $(wildcard \
- /home/user/station/version/sniper/common/performance_model/branch_predictors/branch_predictor_return_value.cc \
- /home/user/station/version/sniper/common/performance_model/branch_predictors/branch_predictor_return_value.h \
- /home/user/station/version/sniper/common/misc/fixed_types.h)
+/mnt/B/sniper/common/performance_model/branch_predictors/branch_predictor_return_value.o /mnt/B/sniper/common/performance_model/branch_predictors/branch_predictor_return_value.d: $(wildcard \
+ /mnt/B/sniper/common/performance_model/branch_predictors/branch_predictor_return_value.cc \
+ /mnt/B/sniper/common/performance_model/branch_predictors/branch_predictor_return_value.h \
+ /mnt/B/sniper/common/misc/fixed_types.h)

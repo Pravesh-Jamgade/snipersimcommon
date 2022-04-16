@@ -16,7 +16,8 @@
                 "path": [
                     "/home/user/station/version/sniper/decoder_lib"
                 ]
-            }
+            },
+            "configurationProvider": "ms-vscode.makefile-tools"
         }
     ],
     "version": 4
