@@ -567,35 +567,34 @@ MemoryManager::coreInitiateMemoryAccess(
          modeled == Core::MEM_MODELED_NONE || modeled == Core::MEM_MODELED_COUNT ? false : true,
          modeled == Core::MEM_MODELED_NONE ? false : true,  eip, path, PCStatCollector);
 
-   if(Cache::sendMsgFlag){
+   // if(Cache::sendMsgFlag){
 
-      // Calculate LP table for next epoc
-      auto pc = PCStatCollector->tmpAllLevelPCStat.begin();
-      for(;pc!=PCStatCollector->tmpAllLevelPCStat.end();pc++){
-         std::vector<Helper::Message> allMsg=PCStatCollector->processEpocEndComputation(pc->first, PCStatCollector->tmpAllLevelPCStat);
-      }
+   //    // Calculate LP table for next epoc
+   //    for(auto pc=PCStatCollector->tmpAllLevelPCStat.begin(); pc!=PCStatCollector->tmpAllLevelPCStat.end(); pc++){
+   //       std::vector<Helper::Message> allMsg=PCStatCollector->processEpocEndComputation(pc->first, PCStatCollector->tmpAllLevelPCStat);
+   //    }
 
-      if(PCStatCollector->isLockEnabled()!=1){
-         PCStatCollector->lockenable();
-      }
-      else{
-         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_MEM_LEVEL_PERF, "[epoc]\n");
+   //    if(PCStatCollector->isLockEnabled()!=1){
+   //       PCStatCollector->lockenable();
+   //    }
+   //    else{
+   //       _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_MEM_LEVEL_PERF, "[epoc]\n");
 
-         for(auto pcvalues: PCStatCollector->allLevelsPerPCPerEpocLPPerf){
-            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_MEM_LEVEL_PERF, "%ld", pcvalues.first);
+   //       for(auto pcvalues: PCStatCollector->allLevelsPerPCPerEpocLPPerf){
+   //          _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_MEM_LEVEL_PERF, "%ld", pcvalues.first);
 
-            for(int i=MemComponent::component_t::L1_DCACHE; i< m_last_level_cache; i++){  
-               _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_MEM_LEVEL_PERF, "%f,", 
-                  pcvalues.second[i-MemComponent::component_t::L1_DCACHE].getMissRatio());
-            }
-            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_MEM_LEVEL_PERF, "\n");
-         }
-      }
+   //          for(int i=MemComponent::component_t::L1_DCACHE; i< m_last_level_cache; i++){  
+   //             _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_MEM_LEVEL_PERF, "%f,", 
+   //                pcvalues.second[i-MemComponent::component_t::L1_DCACHE].getMissRatio());
+   //          }
+   //          _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_MEM_LEVEL_PERF, "\n");
+   //       }
+   //    }
       
-      PCStatCollector->reset();
-      Cache::resetSendMsgFlag();
-      epocCounter.increase();
-   }
+   //    PCStatCollector->reset();
+   //    Cache::resetSendMsgFlag();
+   //    epocCounter.increase();
+   // }
 
    return hitWhere;
 }
