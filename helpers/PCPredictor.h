@@ -254,6 +254,45 @@ namespace PCPredictorSpace
             return false;
         }
 
+        bool LPPredictionVerifier2(IntPtr pc, MemComponent::component_t actual_level){
+            
+            if(LPHelper::getLockStatus()==1){
+
+                LevelPredictor *prediction=NULL;
+                if(LPHelper::tmpAllLevelLP.find(pc) != LPHelper::tmpAllLevelLP.end()){
+                    prediction = &LPHelper::tmpAllLevelLP[pc];
+                }
+                else{
+                    // no prediction has found
+                    return false;
+                }
+
+                LevelPredictor lp = LevelPredictor();
+                for(int i=MemComponent::component_t::L1_DCACHE;i<=llc;i++){
+                    if(i==actual_level)
+                        continue;
+                    lp.addSkipLevel(static_cast<MemComponent::component_t>(i));
+                }
+                
+                if(allLevelsPerPCPerEpocLPPerf.find(pc)==allLevelsPerPCPerEpocLPPerf.end())
+                {
+                    allLevelsPerPCPerEpocLPPerf[pc] = std::vector<EpocPerformanceStat>();
+                } 
+            
+                for(int i=MemComponent::component_t::L1_DCACHE;i<=llc;i++){
+                    if(lp.canSkipLevel(static_cast<MemComponent::component_t>(i)) != 
+                            prediction->canSkipLevel(static_cast<MemComponent::component_t>(i))){
+                        allLevelsPerPCPerEpocLPPerf[pc][i - MemComponent::component_t::L1_DCACHE].increaseMiss();// hazardous
+                    }
+                    else{
+                        allLevelsPerPCPerEpocLPPerf[pc][i - MemComponent::component_t::L1_DCACHE].increaseHit();
+                    }
+                }
+            }
+            
+            return false;
+        }
+
         void insert(std::unordered_map<IntPtr, LevelPCStat>& tmpAllLevelPCStat, int level, IntPtr pc, bool cache_hit){
 
             auto findPc = tmpAllLevelPCStat.find(pc);
