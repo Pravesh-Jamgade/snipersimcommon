@@ -1,3 +1,3 @@
-/home/user/station/version/sniper/common/misc/basic_hash.o /home/user/station/version/sniper/common/misc/basic_hash.d: $(wildcard /home/user/station/version/sniper/common/misc/basic_hash.cc \
- /home/user/station/version/sniper/common/misc/basic_hash.h \
- /home/user/station/version/sniper/common/misc/fixed_types.h)
+/mnt/B/sniper/common/misc/basic_hash.o /mnt/B/sniper/common/misc/basic_hash.d: $(wildcard /mnt/B/sniper/common/misc/basic_hash.cc \
+ /mnt/B/sniper/common/misc/basic_hash.h \
+ /mnt/B/sniper/common/misc/fixed_types.h)

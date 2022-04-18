@@ -222,10 +222,14 @@ MemoryManager::MemoryManager(Core* core,
 
       _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_MEM_LEVEL_PERF, "%s,",
          MemComponent2String(static_cast<MemComponent::component_t>(i)).c_str());
+
+      _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "%s,", 
+         MemComponent2String(static_cast<MemComponent::component_t>(i)).c_str());
    }
    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::MEM_LOCAL_LEVEL_PERF, "\n");
    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::MEM_GLOBAL_LEVEL_PERF, "\n");
    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_MEM_LEVEL_PERF, "\n");
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "\n");
   
   
    m_user_thread_sem = new Semaphore(0);
@@ -631,6 +635,15 @@ MemoryManager::coreInitiateMemoryAccess(
             _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_MEM_LEVEL_PERF, "%f,", missRatio);
          }
          _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_MEM_LEVEL_PERF, "\n");
+
+         for(auto pc: PCStatCollector->perPCperLevelperEpocLPPerf){
+            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "%ld,", epocCounter.getCount());
+            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "%ld,", cache_helper::Misc::toHex(pc.first) );
+            for(auto levelPerf: PCStatCollector->perPCperLevelperEpocLPPerf[pc.first]){
+               _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "%f,", levelPerf.getMissRatio());
+            }
+            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "\n")
+         }
       }
 
       _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::MEM_LOCAL_PERF, "%ld,%f,%f\n", epocCounter.getCount(),

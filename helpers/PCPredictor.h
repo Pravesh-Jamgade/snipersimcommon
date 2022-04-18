@@ -139,6 +139,7 @@ namespace PCPredictorSpace
         std::unique_ptr<EpocPerformanceStat> lpPerformance;//LP prediction accuracy on local 
         std::vector<EpocPerformanceStat> allMemLocalPerformance, allMemGlobalPerformance, lpskipPerformance;// mem level wise m/h performance on local and global
         
+        std::unordered_map<IntPtr, std::vector<EpocPerformanceStat>> perPCperLevelperEpocLPPerf;
         // LP in-use after debugEpoc epoc
         // int lp_unlock;
 
@@ -149,6 +150,7 @@ namespace PCPredictorSpace
             allMemLocalPerformance.erase(allMemLocalPerformance.begin(), allMemLocalPerformance.end());
             lpPerformance.reset(new EpocPerformanceStat());
             lpskipPerformance.erase(lpskipPerformance.begin(),lpskipPerformance.end());
+            perPCperLevelperEpocLPPerf.erase(perPCperLevelperEpocLPPerf.begin(), perPCperLevelperEpocLPPerf.end());
         }
 
         void lockenable(){LPHelper::lockenable();}
@@ -210,6 +212,7 @@ namespace PCPredictorSpace
         bool LPPredictionVerifier(IntPtr pc, MemComponent::component_t actual_level){
             
             if(LPHelper::getLockStatus()==1){
+                LPPredictionVerifier2(pc,actual_level);
                 // total count
                 localEpocStat->incTotalAccessCounter();
                 globalEpocStat->incTotalAccessCounter();
@@ -274,18 +277,18 @@ namespace PCPredictorSpace
                     lp.addSkipLevel(static_cast<MemComponent::component_t>(i));
                 }
                 
-                if(allLevelsPerPCPerEpocLPPerf.find(pc)==allLevelsPerPCPerEpocLPPerf.end())
+                if(perPCperLevelperEpocLPPerf.find(pc)==perPCperLevelperEpocLPPerf.end())
                 {
-                    allLevelsPerPCPerEpocLPPerf[pc] = std::vector<EpocPerformanceStat>();
+                    perPCperLevelperEpocLPPerf[pc] = std::vector<EpocPerformanceStat>(llc - MemComponent::component_t::L1_DCACHE+1);
                 } 
             
                 for(int i=MemComponent::component_t::L1_DCACHE;i<=llc;i++){
                     if(lp.canSkipLevel(static_cast<MemComponent::component_t>(i)) != 
                             prediction->canSkipLevel(static_cast<MemComponent::component_t>(i))){
-                        allLevelsPerPCPerEpocLPPerf[pc][i - MemComponent::component_t::L1_DCACHE].increaseMiss();// hazardous
+                        perPCperLevelperEpocLPPerf[pc][i - MemComponent::component_t::L1_DCACHE].increaseMiss();// hazardous
                     }
                     else{
-                        allLevelsPerPCPerEpocLPPerf[pc][i - MemComponent::component_t::L1_DCACHE].increaseHit();
+                        perPCperLevelperEpocLPPerf[pc][i - MemComponent::component_t::L1_DCACHE].increaseHit();
                     }
                 }
             }
@@ -353,7 +356,9 @@ namespace PCPredictorSpace
                 } 
 
                 prevMisses=msg.gettotalMiss();
-                if( total > 100 ){
+
+                UInt64 diff = abs((long long)pcStat.getHitCount()- (long long)pcStat.getMissCount());
+                if( diff > 100 ){
                     if(currRatio > 0.5){// reason is that it should be significant to skip
                         LPHelper::insert(pc, msg.getLevel());
                         msg.addLevelSkip();

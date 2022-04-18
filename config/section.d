@@ -1,4 +1,4 @@
-/home/user/station/version/sniper/common/config/section.o /home/user/station/version/sniper/common/config/section.d: $(wildcard /home/user/station/version/sniper/common/config/section.cpp \
- /home/user/station/version/sniper/common/config/section.hpp \
- /home/user/station/version/sniper/common/misc/fixed_types.h \
- /home/user/station/version/sniper/common/config/key.hpp)
+/mnt/B/sniper/common/config/section.o /mnt/B/sniper/common/config/section.d: $(wildcard /mnt/B/sniper/common/config/section.cpp \
+ /mnt/B/sniper/common/config/section.hpp \
+ /mnt/B/sniper/common/misc/fixed_types.h \
+ /mnt/B/sniper/common/config/key.hpp)
