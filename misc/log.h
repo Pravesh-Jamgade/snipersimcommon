@@ -40,6 +40,7 @@ class Log
          LP_LOCAL_PERF,
          LP_LOCAL_MEM_LEVEL_PERF,
          LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF,
+         LP_LOCAL_PC_STAT,
          END,
       };
 

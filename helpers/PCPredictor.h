@@ -128,6 +128,7 @@ namespace PCPredictorSpace
         }
         
         std::unordered_map<IntPtr, Helper::Counter> perEpocperPCStat;
+        UInt64 totalAccessPerEpoc;
 
         //epoc based but reset for next epoc usage
         std::unordered_map<IntPtr, LevelPCStat> tmpAllLevelPCStat;//being reset
@@ -154,6 +155,7 @@ namespace PCPredictorSpace
             lpskipPerformance.erase(lpskipPerformance.begin(),lpskipPerformance.end());
             perPCperLevelperEpocLPPerf.erase(perPCperLevelperEpocLPPerf.begin(), perPCperLevelperEpocLPPerf.end());
             perEpocperPCStat.erase(perEpocperPCStat.begin(), perEpocperPCStat.end());
+            totalAccessPerEpoc=0;
         }
 
         void lockenable(){LPHelper::lockenable();}
@@ -184,6 +186,14 @@ namespace PCPredictorSpace
             
         }
 
+        void countTotalAccess(){
+            totalAccessPerEpoc++;
+        }
+
+        UInt64 getThreshold(){
+            return totalAccessPerEpoc/tmpAllLevelPCStat.size();
+        }
+
         std::vector<MemComponent::component_t> LPPrediction(IntPtr pc){
             std::vector<MemComponent::component_t> predicted_levels;
             // LP prediction
@@ -211,6 +221,7 @@ namespace PCPredictorSpace
             }
             else perEpocperPCStat[pc].increase();
         }
+
         bool LPPredictionVerifier(IntPtr pc, MemComponent::component_t actual_level){
             
             if(LPHelper::getLockStatus()==1){
@@ -334,12 +345,14 @@ namespace PCPredictorSpace
         void insertEntry(int level, IntPtr pc, bool cache_hit){
             if(level<2)
                 return;
+            countTotalAccess();
             countPerformance(cache_hit);
             insertToBoth(level,pc,cache_hit);
         }
 
         // will return epoc based pc stat to log, as well it adds skipable levels;
-        std::vector<Helper::Message> processEpocEndComputation(IntPtr pc, std::unordered_map<IntPtr, LevelPCStat>& mp){
+        std::vector<Helper::Message> processEpocEndComputation(IntPtr pc, std::unordered_map<IntPtr, LevelPCStat>& mp)
+        {
             std::vector<Helper::Message> allMsg;
             bool firstRatio=true; 
             double currRatio;
@@ -348,7 +361,8 @@ namespace PCPredictorSpace
             {
                 PCStat pcStat= uord.second;
                 UInt64 total = pcStat.getHitCount() + pcStat.getMissCount();
-                Helper::Message msg = Helper::Message(-1,-1, static_cast<MemComponent::component_t>(uord.first), total, pcStat.getMissCount());
+                Helper::Message msg = Helper::Message(-1,-1, static_cast<MemComponent::component_t>(uord.first), total,
+                 pcStat.getMissCount());
                 
                 if(firstRatio){
                     currRatio=(double)msg.gettotalMiss()/(double)msg.gettotalAccess();
@@ -360,12 +374,9 @@ namespace PCPredictorSpace
 
                 prevMisses=msg.gettotalMiss();
 
-                UInt64 diff = abs((long long)pcStat.getHitCount()- (long long)pcStat.getMissCount());
-                if( diff > 100 ){
-                    if(currRatio > 0.5){// reason is that it should be significant to skip
-                        LPHelper::insert(pc, msg.getLevel());
-                        msg.addLevelSkip();
-                    }
+                if( total > getThreshold()){// totalAccesses in epoc divide by totalPC is thresold above which keep pc in LP table
+                    LPHelper::insert(pc, msg.getLevel());
+                    msg.addLevelSkip();
                 }
 
                 allMsg.push_back(msg);// can be used for logging
