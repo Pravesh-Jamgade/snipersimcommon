@@ -17,6 +17,8 @@
 
 //[update]
 #include "cache_helper.h"
+#include "PCPredictor.h"
+#include "simulator.h"
 #include<memory>
 
 CoreManager::CoreManager()
@@ -30,10 +32,12 @@ CoreManager::CoreManager()
 
    //[update]
    cacheHelper=std::make_shared<cache_helper::CacheHelper>();
-
+   PCStatCollector=std::make_shared<PCPredictorSpace::PCStatHelper>();
+   epocCounter=std::make_shared<Helper::Counter>();
+   
    for (UInt32 i = 0; i < Config::getSingleton()->getTotalCores(); i++)
    {
-      Core* core = new Core(i,cacheHelper);//[update]
+      Core* core = new Core(i,cacheHelper, PCStatCollector, epocCounter);//[update]
       m_cores.push_back(core);
    }
 

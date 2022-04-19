@@ -17,6 +17,9 @@
  /mnt/B/sniper/common/performance_model/hit_where.h \
  /mnt/B/sniper/common/helpers/cache_helper.h \
  /mnt/B/sniper/common/misc/log.h \
+ /mnt/B/sniper/common/helpers/PCPredictor.h \
+ /mnt/B/sniper/common/helpers/libpqueue/src/pqueue.h \
+ /mnt/B/sniper/common/helpers/helpers.h \
  /mnt/B/sniper/common/system/hooks_manager.h \
  /mnt/B/sniper/common/system/thread_manager.h \
  /mnt/B/sniper/common/system/simulator.h \

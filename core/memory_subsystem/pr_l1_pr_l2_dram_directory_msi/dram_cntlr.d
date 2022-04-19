@@ -17,6 +17,9 @@
  /mnt/B/sniper/common/misc/lock.h \
  /mnt/B/sniper/common/network/packet_type.h \
  /mnt/B/sniper/common/core/bbv_count.h /mnt/B/sniper/common/misc/cpuid.h \
+ /mnt/B/sniper/common/helpers/PCPredictor.h \
+ /mnt/B/sniper/common/helpers/libpqueue/src/pqueue.h \
+ /mnt/B/sniper/common/helpers/helpers.h \
  /mnt/B/sniper/common/core/memory_subsystem/pr_l1_pr_l2_dram_directory_msi/shmem_perf.h \
  /mnt/B/sniper/common/core/memory_subsystem/memory_manager_base.h \
  /mnt/B/sniper/common/network/network.h \

@@ -18,6 +18,9 @@
  /mnt/B/sniper/common/performance_model/hit_where.h \
  /mnt/B/sniper/common/helpers/cache_helper.h \
  /mnt/B/sniper/common/misc/log.h \
+ /mnt/B/sniper/common/helpers/PCPredictor.h \
+ /mnt/B/sniper/common/helpers/libpqueue/src/pqueue.h \
+ /mnt/B/sniper/common/helpers/helpers.h \
  /mnt/B/sniper/common/network/network_model_emesh_hop_counter.h \
  /mnt/B/sniper/common/network/network_model_emesh_hop_by_hop.h \
  /mnt/B/sniper/common/performance_model/queue_model.h \

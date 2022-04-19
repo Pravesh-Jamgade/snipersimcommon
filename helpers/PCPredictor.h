@@ -118,7 +118,7 @@ namespace PCPredictorSpace
         typedef std::map<int, PCStat> LevelPCStat;
         MemComponent::component_t llc;
         public:
-        PCStatHelper(MemComponent::component_t llc){
+        PCStatHelper(MemComponent::component_t llc=MemComponent::component_t::LAST_LEVEL_CACHE){
             localEpocStat = new EpocStat();
             lpPerformance = std::unique_ptr<EpocPerformanceStat>(new EpocPerformanceStat());
             localPerformance=std::unique_ptr<EpocPerformanceStat>(new EpocPerformanceStat());
@@ -127,6 +127,7 @@ namespace PCPredictorSpace
             this->llc=llc;
         }
         
+        void setLLC(MemComponent::component_t llc){this->llc=llc;}
         std::unordered_map<IntPtr, Helper::Counter> perEpocperPCStat;
         UInt64 totalAccessPerEpoc;
 
@@ -217,33 +218,28 @@ namespace PCPredictorSpace
 
         void addPerEpocPerPCinfo(IntPtr pc){
             if(perEpocperPCStat.find(pc)!=perEpocperPCStat.end()){
-                perEpocperPCStat.insert({pc, Helper::Counter()});
+                perEpocperPCStat[pc].increase();
             }
-            else perEpocperPCStat[pc].increase();
+            else perEpocperPCStat[pc]=Helper::Counter();
         }
 
         bool LPPredictionVerifier(IntPtr pc, MemComponent::component_t actual_level){
             
             if(LPHelper::getLockStatus()==1){
                 LPPredictionVerifier2(pc,actual_level);
-                addPerEpocPerPCinfo(pc);
                 // total count
                 localEpocStat->incTotalAccessCounter();
-
-                _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Prediction_MATCH, "%ld,", pc);
 
                 std::vector<MemComponent::component_t> vec= LPPrediction(pc);
                 if(vec.size()==0)
                 {
                     localEpocStat->incNoPredictionCounter();
-                    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Prediction_MATCH, "No Predction\n");
                     return false;
                 }
 
                 if(std::find(vec.begin(),vec.end(), actual_level)!=vec.end())
                 {
                     localEpocStat->incFalseSkipCounter();
-                    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Prediction_MATCH, "False Skip\n");
                     return false;
                 }
                 
@@ -259,9 +255,6 @@ namespace PCPredictorSpace
                     // true skip + opportunity
                     localEpocStat->incTrueSkipOppoCounter();
                 }
-
-                _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_Prediction_MATCH, "True Skip\n");
-                
             }
             return false;
         }
@@ -269,14 +262,11 @@ namespace PCPredictorSpace
         bool LPPredictionVerifier2(IntPtr pc, MemComponent::component_t actual_level){
             
             if(LPHelper::getLockStatus()==1){
-                printf("[+]");
                 LevelPredictor *prediction=NULL;
                 if(LPHelper::tmpAllLevelLP.find(pc) != LPHelper::tmpAllLevelLP.end()){
-                    printf("%ld,", pc);
                     prediction = &LPHelper::tmpAllLevelLP[pc];
                 }
                 else{
-                    printf("NP=%ld\n", pc);
                     // no prediction has found
                     return false;
                 }
@@ -290,21 +280,18 @@ namespace PCPredictorSpace
                 
                 if(perPCperLevelperEpocLPPerf.find(pc)==perPCperLevelperEpocLPPerf.end())
                 {
-                    printf("new entry,");
                     perPCperLevelperEpocLPPerf.insert({pc,std::vector<EpocPerformanceStat>(llc - MemComponent::component_t::L1_DCACHE+1, PCStat())});
                 } 
             
                 for(int i=MemComponent::component_t::L1_DCACHE;i<=llc;i++){
                     if(lp.canSkipLevel(static_cast<MemComponent::component_t>(i)) != 
                             prediction->canSkipLevel(static_cast<MemComponent::component_t>(i))){
-                        printf("hazard=%s,", MemComponent2String(static_cast<MemComponent::component_t>(i)).c_str());
                         perPCperLevelperEpocLPPerf[pc][i - MemComponent::component_t::L1_DCACHE].increaseMiss();// hazardous
                     }
                     else{
                         perPCperLevelperEpocLPPerf[pc][i - MemComponent::component_t::L1_DCACHE].increaseHit();
                     }
                 }
-                printf("\n");
             }
             
             return false;
@@ -345,6 +332,7 @@ namespace PCPredictorSpace
         void insertEntry(int level, IntPtr pc, bool cache_hit){
             if(level<2)
                 return;
+            addPerEpocPerPCinfo(pc);
             countTotalAccess();
             countPerformance(cache_hit);
             insertToBoth(level,pc,cache_hit);
@@ -357,6 +345,12 @@ namespace PCPredictorSpace
             bool firstRatio=true; 
             double currRatio;
             UInt64 prevMisses;
+
+            // if per pc access is less than threshold then return
+            if( perEpocperPCStat[pc].getCount() < getThreshold())
+                return allMsg;
+
+            // insert into LP table per level skip status               
             for(auto uord: mp[pc])
             {
                 PCStat pcStat= uord.second;
@@ -374,10 +368,8 @@ namespace PCPredictorSpace
 
                 prevMisses=msg.gettotalMiss();
 
-                if( total > getThreshold()){// totalAccesses in epoc divide by totalPC is thresold above which keep pc in LP table
-                    LPHelper::insert(pc, msg.getLevel());
-                    msg.addLevelSkip();
-                }
+                LPHelper::insert(pc, msg.getLevel());
+                msg.addLevelSkip();
 
                 allMsg.push_back(msg);// can be used for logging
             }

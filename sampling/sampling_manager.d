@@ -17,6 +17,9 @@
  /mnt/B/sniper/common/performance_model/hit_where.h \
  /mnt/B/sniper/common/helpers/cache_helper.h \
  /mnt/B/sniper/common/misc/log.h \
+ /mnt/B/sniper/common/helpers/PCPredictor.h \
+ /mnt/B/sniper/common/helpers/libpqueue/src/pqueue.h \
+ /mnt/B/sniper/common/helpers/helpers.h \
  /mnt/B/sniper/common/system/magic_server.h \
  /mnt/B/sniper/common/misc/progress.h \
  /mnt/B/sniper/common/misc/subsecond_time.h \

@@ -48,7 +48,9 @@ MemoryManager::MemoryManager(Core* core,
    m_enabled(false)
 {
    //[update]
-   cacheHelper = core->getCacheHelper();
+   this->cacheHelper = core->getCacheHelper();
+   this->PCStatCollector = core->getPCStatHelper();
+   this->epocCounter = core->getEpocCounter();
    if(Sim()->getCfg()->hasKey("debug/epocNumber"))
    {
       debugEpoc=Sim()->getCfg()->getInt("debug/epocNumber");
@@ -58,7 +60,7 @@ MemoryManager::MemoryManager(Core* core,
    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_ACCESS_TYPE_ACCURACY_LOCAL, "epoc,np,fs,tsl,tso\n");
    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::MEM_LOCAL_PERF, "epoc,h,m\n");
    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PERF, "epoc,h,m\n");
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PC_STAT, "epoc,pc,level,missratio\n");
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PC_STAT, "epoc,pc,level,misses,hits\n");
    
    // Read Parameters from the Config file
    std::map<MemComponent::component_t, CacheParameters> cache_parameters;
@@ -207,7 +209,8 @@ MemoryManager::MemoryManager(Core* core,
    }
 
    //[update]
-   PCStatCollector = std::make_shared<PCPredictorSpace::PCStatHelper>(m_last_level_cache);
+    this->PCStatCollector->setLLC(m_last_level_cache);
+
    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::MEM_LOCAL_LEVEL_PERF, "epoc,");
    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_MEM_LEVEL_PERF, "epoc,");
    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "epoc,pc,");
@@ -587,69 +590,79 @@ MemoryManager::coreInitiateMemoryAccess(
 
    if(Cache::sendMsgFlag){
 
+      // caculate LP table for next epoc
+      for(auto pc: PCStatCollector->tmpAllLevelPCStat){
+         std::vector<Helper::Message> allMsg=PCStatCollector->processEpocEndComputation(pc.first, PCStatCollector->tmpAllLevelPCStat);
+      }
+
+      // dump LP table
+      for(auto pc: PCPredictorSpace::LPHelper::tmpAllLevelLP){
+         auto findPC = PCStatCollector->tmpAllLevelPCStat.find(pc.first);
+         if(findPC!= PCStatCollector->tmpAllLevelPCStat.end()){
+            for(auto levelStat: findPC->second){
+               _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PC_STAT, "%ld,%ld,%s,%ld,%ld\n", 
+                  epocCounter->getCount(),
+                  pc.first,
+                  MemComponent2String(static_cast<MemComponent::component_t>(levelStat.first)).c_str(), 
+                  levelStat.second.getMissCount(),
+                  levelStat.second.getHitCount()
+
+               );
+            }
+         }
+      }
+
       if(PCStatCollector->isLockEnabled()!=1){
          PCStatCollector->lockenable();
       }
       else{
-         // dumping current LP from current epoc
-         for(auto pc: PCPredictorSpace::LPHelper::tmpAllLevelLP){
-            auto findPC = PCStatCollector->tmpAllLevelPCStat.find(pc.first);
-            if(findPC!= PCStatCollector->tmpAllLevelPCStat.end()){
-               for(auto levelStat: findPC->second){
-                  _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PC_STAT, "%ld,%ld,%s,%f\n", 
-                     epocCounter.getCount(),
-                     pc.first,
-                     MemComponent2String(static_cast<MemComponent::component_t>(levelStat.first)).c_str(), 
-                     levelStat.second.getMissRatio()
-                  );
-               }
-            }
-         }
 
-         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_ACCESS_TYPE_ACCURACY_LOCAL, "%ld,%f,%f,%f,%f\n", epocCounter.getCount(),
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_ACCESS_TYPE_ACCURACY_LOCAL, "%ld,%f,%f,%f,%f\n", epocCounter->getCount(),
          PCStatCollector->localEpocStat->getNoPredRatio(), PCStatCollector->localEpocStat->getFalseSkipRatio(), 
          PCStatCollector->localEpocStat->getTrueSkipLossRatio(), PCStatCollector->localEpocStat->getTrueSkipOppoRatio());
          
-         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PERF, "%ld,%f,%f\n", epocCounter.getCount(),
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PERF, "%ld,%f,%f\n", epocCounter->getCount(),
          PCStatCollector->getLPLocalEpocHitRatio(), 
          PCStatCollector->getLPLocalEpocMissRatio());
 
-         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_MEM_LEVEL_PERF, "%ld,", epocCounter.getCount());
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_MEM_LEVEL_PERF, "%ld,", epocCounter->getCount());
          for(int i=MemComponent::component_t::L1_DCACHE; i<= m_last_level_cache; i++){
             double missRatio = PCStatCollector->lpskipPerformance[i-MemComponent::component_t::L1_DCACHE].getHitRatio();
             _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_MEM_LEVEL_PERF, "%f,", missRatio);
          }
          _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_MEM_LEVEL_PERF, "\n");
 
-         for(auto pc: PCStatCollector->perPCperLevelperEpocLPPerf){
-            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "%ld,%ld,", 
-               epocCounter.getCount(), pc.first);
-            for(auto levelPerf: PCStatCollector->perPCperLevelperEpocLPPerf[pc.first]){
-               _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "%f,", levelPerf.getMissRatio());
+         for(auto pc=PCStatCollector->perPCperLevelperEpocLPPerf.begin(); 
+               pc!=PCStatCollector->perPCperLevelperEpocLPPerf.end(); pc++){
+            
+            if(PCStatCollector->perPCperLevelperEpocLPPerf[pc->first].size() == 0){
+               continue;
             }
+            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "%ld,%ld,", epocCounter->getCount(), pc->first);    
+           
+            for(auto levelPerf=PCStatCollector->perPCperLevelperEpocLPPerf[pc->first].begin(); 
+               levelPerf!=PCStatCollector->perPCperLevelperEpocLPPerf[pc->first].end(); levelPerf++){
+               _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "%f,", levelPerf->getMissRatio());
+            }
+
             _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "\n")
          }
       }
 
-      _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::MEM_LOCAL_PERF, "%ld,%f,%f\n", epocCounter.getCount(),
+      _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::MEM_LOCAL_PERF, "%ld,%f,%f\n", epocCounter->getCount(),
          PCStatCollector->getLocalEpocHitRatio(), 
          PCStatCollector->getLocalEpocMissRatio());
 
-      _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::MEM_LOCAL_LEVEL_PERF, "%ld,", epocCounter.getCount());
+      _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::MEM_LOCAL_LEVEL_PERF, "%ld,", epocCounter->getCount());
       for(int i=MemComponent::component_t::L1_DCACHE; i<= m_last_level_cache; i++){
          double missRatioLocal = PCStatCollector->allMemLocalPerformance[i-MemComponent::component_t::L1_DCACHE].getMissRatio();
          _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::MEM_LOCAL_LEVEL_PERF, "%f,", missRatioLocal);
       }
       _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::MEM_LOCAL_LEVEL_PERF, "\n");
 
-      // caculate LP table for next epoc
-      for(auto pc: PCStatCollector->tmpAllLevelPCStat){
-         std::vector<Helper::Message> allMsg=PCStatCollector->processEpocEndComputation(pc.first, PCStatCollector->tmpAllLevelPCStat);
-      }
- 
       PCStatCollector->reset();
       Cache::resetSendMsgFlag();
-      epocCounter.increase();
+      epocCounter->increase();
    }
 
    return hitWhere;

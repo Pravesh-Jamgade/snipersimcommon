@@ -21,6 +21,7 @@ class CheetahManager;
 #include "cpuid.h"
 #include "hit_where.h"
 #include "cache_helper.h"
+#include "PCPredictor.h"
 
 struct MemoryResult {
    HitWhere::where_t hit_where;
@@ -81,7 +82,8 @@ class Core
 
       static const char * CoreStateString(State state);
 
-      Core(SInt32 id, std::shared_ptr<cache_helper::CacheHelper> cacheHelper);
+      Core(SInt32 id, std::shared_ptr<cache_helper::CacheHelper> cacheHelper, 
+         std::shared_ptr<PCPredictorSpace::PCStatHelper> pcStathelper, std::shared_ptr<Helper::Counter> epocCounter);
       ~Core();
 
       // Query and update branch predictor, return true on mispredict
@@ -136,8 +138,13 @@ class Core
 
       //[update]
       std::shared_ptr<cache_helper::CacheHelper> getCacheHelper(){return this->cacheHelper;}
+      std::shared_ptr<PCPredictorSpace::PCStatHelper> getPCStatHelper(){return this->pcStatHelper;}
+      std::shared_ptr<Helper::Counter>getEpocCounter(){return this->epocCounter;}
+
       UInt64 getCycleCount();
       std::shared_ptr<cache_helper::CacheHelper> cacheHelper;
+      std::shared_ptr<PCPredictorSpace::PCStatHelper> pcStatHelper;
+      std::shared_ptr<Helper::Counter> epocCounter;
 
    private:
       core_id_t m_core_id;
