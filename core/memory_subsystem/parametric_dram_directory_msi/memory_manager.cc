@@ -60,7 +60,9 @@ MemoryManager::MemoryManager(Core* core,
    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_ACCESS_TYPE_ACCURACY_LOCAL, "epoc,np,fs,tsl,tso\n");
    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::MEM_LOCAL_PERF, "epoc,h,m\n");
    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PERF, "epoc,h,m\n");
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PC_STAT, "epoc,pc,level,misses,hits\n");
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PC_STAT, "epoc,pc,level,misses,hits,total\n");
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_PC_PER_EPOC, "epoc,pc,totalAccess\n");
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_EPOC, "epoc,totalAccess,threshold\n");
    
    // Read Parameters from the Config file
    std::map<MemComponent::component_t, CacheParameters> cache_parameters;
@@ -213,7 +215,7 @@ MemoryManager::MemoryManager(Core* core,
 
    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::MEM_LOCAL_LEVEL_PERF, "epoc,");
    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_MEM_LEVEL_PERF, "epoc,");
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "epoc,pc,");
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "epoc,pc,totalAccessByPC");
 
    for(int i=MemComponent::component_t::L1_DCACHE; i<= m_last_level_cache; i++){
 
@@ -228,7 +230,7 @@ MemoryManager::MemoryManager(Core* core,
    }
    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::MEM_LOCAL_LEVEL_PERF, "\n");
    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_MEM_LEVEL_PERF, "\n");
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "\n");
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "epocTotalAccess,threshold\n");
   
   
    m_user_thread_sem = new Semaphore(0);
@@ -595,18 +597,29 @@ MemoryManager::coreInitiateMemoryAccess(
          std::vector<Helper::Message> allMsg=PCStatCollector->processEpocEndComputation(pc.first, PCStatCollector->tmpAllLevelPCStat);
       }
 
+      // log per epoc total accesses, threshold 
+      _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_EPOC, "%ld,%ld,%ld\n", 
+         epocCounter->getCount(), PCStatCollector->getTotalAccessInCurrEpoc(), PCStatCollector->getThreshold());
+
+      // log all pc from epoc and their total count
+      for(auto pc: PCStatCollector->perEpocperPCStat){
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_PC_PER_EPOC, "%ld,%ld,%ld\n", epocCounter->getCount(), pc.first, pc.second.getCount())
+      }
+      
       // dump LP table
       for(auto pc: PCPredictorSpace::LPHelper::tmpAllLevelLP){
          auto findPC = PCStatCollector->tmpAllLevelPCStat.find(pc.first);
          if(findPC!= PCStatCollector->tmpAllLevelPCStat.end()){
             for(auto levelStat: findPC->second){
-               _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PC_STAT, "%ld,%ld,%s,%ld,%ld\n", 
-                  epocCounter->getCount(),
+               _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PC_STAT, 
+                  "%ld,%ld,%s,%ld,%ld,%ld\n", 
+
+                  epocCounter->getCount(), 
                   pc.first,
                   MemComponent2String(static_cast<MemComponent::component_t>(levelStat.first)).c_str(), 
                   levelStat.second.getMissCount(),
-                  levelStat.second.getHitCount()
-
+                  levelStat.second.getHitCount(),
+                  levelStat.second.getTotalCount()
                );
             }
          }
@@ -632,20 +645,21 @@ MemoryManager::coreInitiateMemoryAccess(
          }
          _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_MEM_LEVEL_PERF, "\n");
 
+         // log per pc per level miss ratio for epoc
          for(auto pc=PCStatCollector->perPCperLevelperEpocLPPerf.begin(); 
                pc!=PCStatCollector->perPCperLevelperEpocLPPerf.end(); pc++){
             
             if(PCStatCollector->perPCperLevelperEpocLPPerf[pc->first].size() == 0){
                continue;
             }
-            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "%ld,%ld,", epocCounter->getCount(), pc->first);    
+            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "%ld,", 
+               epocCounter->getCount());    
            
             for(auto levelPerf=PCStatCollector->perPCperLevelperEpocLPPerf[pc->first].begin(); 
                levelPerf!=PCStatCollector->perPCperLevelperEpocLPPerf[pc->first].end(); levelPerf++){
                _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "%f,", levelPerf->getMissRatio());
             }
-
-            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "\n")
+            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "\n");
          }
       }
 

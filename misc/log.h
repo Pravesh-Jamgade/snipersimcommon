@@ -41,7 +41,8 @@ class Log
          LP_LOCAL_MEM_LEVEL_PERF,
          LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF,
          LP_LOCAL_PC_STAT,
-         DEBUG_PER_PC_EPOC_NOPRED,
+         DEBUG_PC_PER_EPOC,
+         DEBUG_TOTAL_ACCESS_PER_EPOC,
          END,
       };
 

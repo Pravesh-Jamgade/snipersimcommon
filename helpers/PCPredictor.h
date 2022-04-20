@@ -59,7 +59,15 @@ namespace PCPredictorSpace
         {
             hit=Helper::Counter();
             miss=Helper::Counter();
-        }      
+        }
+        PCStat(bool cache_hit)
+        {
+            hit=Helper::Counter();
+            miss=Helper::Counter();
+            if(cache_hit)
+                hit.increase();
+            else miss.increase();
+        }       
         void increaseMiss(){miss.increase();}
         void increaseHit(){hit.increase();}
         UInt64 getHitCount(){return hit.getCount();}
@@ -67,6 +75,7 @@ namespace PCPredictorSpace
         double getMissRatio(){return (double)miss.getCount()/(double)(miss.getCount()+hit.getCount()); }
         double getHitRatio(){return (double)hit.getCount()/(double)(miss.getCount()+hit.getCount()); }
         double getMissHitRate(){return (double)miss.getCount()/(double)(hit.getCount()); }
+        UInt64 getTotalCount(){return hit.getCount()+miss.getCount();}
     };
 
     class EpocStat
@@ -159,6 +168,8 @@ namespace PCPredictorSpace
             totalAccessPerEpoc=0;
         }
 
+        UInt64 getTotalAccessInCurrEpoc(){return totalAccessPerEpoc;}
+
         void lockenable(){LPHelper::lockenable();}
         int isLockEnabled(){return LPHelper::isLockEnabled();}
         
@@ -220,7 +231,7 @@ namespace PCPredictorSpace
             if(perEpocperPCStat.find(pc)!=perEpocperPCStat.end()){
                 perEpocperPCStat[pc].increase();
             }
-            else perEpocperPCStat[pc]=Helper::Counter();
+            else perEpocperPCStat[pc]=Helper::Counter(1);
         }
 
         bool LPPredictionVerifier(IntPtr pc, MemComponent::component_t actual_level){
@@ -262,14 +273,10 @@ namespace PCPredictorSpace
         bool LPPredictionVerifier2(IntPtr pc, MemComponent::component_t actual_level){
             
             if(LPHelper::getLockStatus()==1){
-                LevelPredictor *prediction=NULL;
+                LevelPredictor *prediction = new LevelPredictor();
                 if(LPHelper::tmpAllLevelLP.find(pc) != LPHelper::tmpAllLevelLP.end()){
                     prediction = &LPHelper::tmpAllLevelLP[pc];
-                }
-                else{
-                    // no prediction has found
-                    return false;
-                }
+                }else return false;
 
                 LevelPredictor lp = LevelPredictor();
                 for(int i=MemComponent::component_t::L1_DCACHE;i<=llc;i++){
@@ -309,28 +316,30 @@ namespace PCPredictorSpace
                     else findLevel->second.increaseMiss();
                 }
                 else{
-                    tmpAllLevelPCStat[pc].insert({level,PCStat()});
+                    PCStat pcstat = PCStat(cache_hit);
+                    tmpAllLevelPCStat[pc].insert({level, pcstat});
                 }
             }
             else{
-                LevelPCStat levelPCStat;
-                levelPCStat.insert({level,PCStat()});
+                LevelPCStat levelPCStat = LevelPCStat();
+                PCStat pcstat = PCStat(cache_hit);
+                levelPCStat.insert({level,pcstat});
                 tmpAllLevelPCStat.insert({pc,levelPCStat});
             }
         }
 
         void insertToBoth(int level, IntPtr pc, bool cache_hit){
-            if(level<=2){
-                return;
-            }
+            // if(level<=2){
+            //     return;
+            // }
             countLevelPerformance(level,cache_hit);
             insert(tmpAllLevelPCStat, level,pc,cache_hit);            
             insert(globalAllLevelPCStat, level,pc,cache_hit);            
-            insertToBoth(level-1, pc, false);
+            // insertToBoth(level-1, pc, false);
         }
 
         void insertEntry(int level, IntPtr pc, bool cache_hit){
-            if(level<2)
+            if(level<=2)
                 return;
             addPerEpocPerPCinfo(pc);
             countTotalAccess();
@@ -368,7 +377,8 @@ namespace PCPredictorSpace
 
                 prevMisses=msg.gettotalMiss();
 
-                LPHelper::insert(pc, msg.getLevel());
+                if(currRatio>0.5)
+                    LPHelper::insert(pc, msg.getLevel());
                 msg.addLevelSkip();
 
                 allMsg.push_back(msg);// can be used for logging
