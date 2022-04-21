@@ -232,8 +232,9 @@ namespace PCPredictorSpace
             }
         }
 
-        void countTotalAccess(){
-            totalAccessPerEpoc++;
+        void countTotalAccess(int level){
+            if(level<=3)// counting only accesses at L1D 
+                totalAccessPerEpoc++;
         }
 
         void countPerLevelAccess(int level, bool cache_hit)
@@ -392,7 +393,7 @@ namespace PCPredictorSpace
             if(level<=2)
                 return;
             addPerEpocPerPCinfo(pc);
-            countTotalAccess();
+            countTotalAccess(level);
             countPerformance(cache_hit);
             insertToBoth(level,pc,cache_hit);
         }
