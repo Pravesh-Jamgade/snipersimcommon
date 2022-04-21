@@ -216,6 +216,8 @@ MemoryManager::MemoryManager(Core* core,
    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::MEM_LOCAL_LEVEL_PERF, "epoc,");
    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_MEM_LEVEL_PERF, "epoc,");
    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "epoc,pc,totalAccessByPC");
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_LEVEL_PER_EPOC, "epoc,");
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_PC_PER_LEVEL_PER_EPOC, "epoc,");
 
    for(int i=MemComponent::component_t::L1_DCACHE; i<= m_last_level_cache; i++){
 
@@ -227,11 +229,18 @@ MemoryManager::MemoryManager(Core* core,
 
       _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "%s,", 
          MemComponent2String(static_cast<MemComponent::component_t>(i)).c_str());
+
+      _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_LEVEL_PER_EPOC, "%s,", 
+         MemComponent2String(static_cast<MemComponent::component_t>(i)).c_str());
+
+      _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_PC_PER_LEVEL_PER_EPOC, "%s,", 
+         MemComponent2String(static_cast<MemComponent::component_t>(i)).c_str());
    }
    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::MEM_LOCAL_LEVEL_PERF, "\n");
    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_MEM_LEVEL_PERF, "\n");
    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "epocTotalAccess,threshold\n");
-  
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_LEVEL_PER_EPOC, "\n");
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_PC_PER_LEVEL_PER_EPOC, "\n");
   
    m_user_thread_sem = new Semaphore(0);
    m_network_thread_sem = new Semaphore(0);
@@ -605,7 +614,29 @@ MemoryManager::coreInitiateMemoryAccess(
       for(auto pc: PCStatCollector->perEpocperPCStat){
          _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_PC_PER_EPOC, "%ld,%ld,%ld\n", epocCounter->getCount(), pc.first, pc.second.getCount())
       }
-      
+
+      // log per level access per epoc
+      _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_LEVEL_PER_EPOC, "%ld,", epocCounter->getCount());
+      for(int level=MemComponent::component_t::L1_DCACHE; level<= m_last_level_cache; level++){
+         auto perLevelCount = PCStatCollector->perLevelAccessCount.find(level);
+         if(perLevelCount!=PCStatCollector->perLevelAccessCount.end()){
+            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_LEVEL_PER_EPOC, "%ld,", 
+               perLevelCount->second.getCount());
+         }
+         else _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_LEVEL_PER_EPOC, "0,");
+      }
+      _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_LEVEL_PER_EPOC, "\n");
+
+      log per pc per level per epoc access
+      _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_PC_PER_LEVEL_PER_EPOC, "%ld,", epocCounter->getCount());
+      for(auto pc : PCStatCollector->tmpAllLevelPCStat){
+         for(auto levelPCStat: pc.second){
+            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_PC_PER_LEVEL_PER_EPOC, "%ld,", 
+               levelPCStat.second.getTotalCount());
+         }
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_PC_PER_LEVEL_PER_EPOC, "\n");
+      }
+
       // dump LP table
       for(auto pc: PCPredictorSpace::LPHelper::tmpAllLevelLP){
          auto findPC = PCStatCollector->tmpAllLevelPCStat.find(pc.first);
@@ -652,8 +683,8 @@ MemoryManager::coreInitiateMemoryAccess(
             if(PCStatCollector->perPCperLevelperEpocLPPerf[pc->first].size() == 0){
                continue;
             }
-            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "%ld,", 
-               epocCounter->getCount());    
+            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "%ld,%ld,", 
+               epocCounter->getCount(), pc->first);    
            
             for(auto levelPerf=PCStatCollector->perPCperLevelperEpocLPPerf[pc->first].begin(); 
                levelPerf!=PCStatCollector->perPCperLevelperEpocLPPerf[pc->first].end(); levelPerf++){

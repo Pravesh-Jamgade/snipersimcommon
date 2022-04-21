@@ -43,6 +43,8 @@ class Log
          LP_LOCAL_PC_STAT,
          DEBUG_PC_PER_EPOC,
          DEBUG_TOTAL_ACCESS_PER_EPOC,
+         DEBUG_TOTAL_ACCESS_PER_LEVEL_PER_EPOC,
+         DEBUG_TOTAL_ACCESS_PER_PC_PER_LEVEL_PER_EPOC,
          END,
       };
 

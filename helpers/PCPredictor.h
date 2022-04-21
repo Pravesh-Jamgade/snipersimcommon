@@ -142,19 +142,27 @@ namespace PCPredictorSpace
 
         //epoc based but reset for next epoc usage
         std::unordered_map<IntPtr, LevelPCStat> tmpAllLevelPCStat;//being reset
-
         //epoc based but cumulative
         std::unordered_map<IntPtr, LevelPCStat> globalAllLevelPCStat;//not reset
-        // std::unordered_map<IntPtr, LevelPredictor> globalAllLevelLP;//not reset
+        // LP prediciton accuracy by types of prediction
+        EpocStat *localEpocStat;
+        // per epoc hit,miss information (to understand how good/bad epoc did)
+        std::unique_ptr<EpocPerformanceStat> localPerformance;
+        // per epoc hit,miss information for LP lookup (to understand how useful LP table was in next incomming epoc)
+        std::unique_ptr<EpocPerformanceStat> lpPerformance;
+        // per epoc per level hit,miss information
+        std::vector<EpocPerformanceStat> allMemLocalPerformance;
+        // per epoc per level skip,noskip information for LP (to understand how levels are being used by skip or noskip in an epoc)
+        std::vector<EpocPerformanceStat> lpskipPerformance;
         
-        EpocStat *localEpocStat;// LP prediction accuracy
-        std::unique_ptr<EpocPerformanceStat> localPerformance;// hit/miss 
-        std::unique_ptr<EpocPerformanceStat> lpPerformance;//LP prediction accuracy on local 
-        std::vector<EpocPerformanceStat> allMemLocalPerformance, lpskipPerformance;// mem level wise m/h performance on local and global
-        
+        // per level keep track of total access
+        std::map<int, Helper::Counter> perLevelAccessCount;
+        // per level keep track of uniq pc count
+        std::map<int, Helper::Counter> perLevelUniqPC;
+        // per pc per level per epoc LP perfromance (missmatch between actual and prediction for all levels)
         std::unordered_map<IntPtr, std::vector<EpocPerformanceStat>> perPCperLevelperEpocLPPerf;
-        // LP in-use after debugEpoc epoc
-        // int lp_unlock;
+        // per pc per level per epoc hit miss performance
+        std::unordered_map<IntPtr, std::vector<EpocPerformanceStat>> perPCperLevelPerEpocHitMissPerf;
 
         void reset(){
             tmpAllLevelPCStat.erase(tmpAllLevelPCStat.begin(), tmpAllLevelPCStat.end());
@@ -164,18 +172,45 @@ namespace PCPredictorSpace
             lpPerformance.reset(new EpocPerformanceStat());
             lpskipPerformance.erase(lpskipPerformance.begin(),lpskipPerformance.end());
             perPCperLevelperEpocLPPerf.erase(perPCperLevelperEpocLPPerf.begin(), perPCperLevelperEpocLPPerf.end());
+            perPCperLevelPerEpocHitMissPerf.erase(perPCperLevelPerEpocHitMissPerf.begin(), perPCperLevelPerEpocHitMissPerf.end());
             perEpocperPCStat.erase(perEpocperPCStat.begin(), perEpocperPCStat.end());
             totalAccessPerEpoc=0;
+            perLevelAccessCount.erase(perLevelAccessCount.begin(), perLevelAccessCount.end());
+            perLevelUniqPC.erase(perLevelUniqPC.begin(), perLevelUniqPC.end());
+            
         }
-
-        UInt64 getTotalAccessInCurrEpoc(){return totalAccessPerEpoc;}
 
         void lockenable(){LPHelper::lockenable();}
         int isLockEnabled(){return LPHelper::isLockEnabled();}
-        
+
+        UInt64 getPerLevelUniqPCCount(int level){
+            auto findLevel = perLevelUniqPC.find(level);
+            if(findLevel!=perLevelUniqPC.end()){
+                return perLevelUniqPC[level].getCount();
+            }
+            printf("\n\n_______________********______________getPerLevelUniqPCCount_\n\n");
+            return 1;
+        }
+
+        UInt64 getPerLevelAccessCount(int level){
+            auto findLevel = perLevelAccessCount.find(level);
+            if(findLevel!=perLevelAccessCount.end())
+                return findLevel->second.getCount();
+            printf("\n\n_______________********______________getPerLevelAccessCount_\n\n");
+            return 1;
+        }
+
+        UInt64 getThreshold(){
+            return totalAccessPerEpoc/tmpAllLevelPCStat.size();
+        }
+
+        UInt64 getThresholdByLevel(int level){
+            return getPerLevelAccessCount(level)/getPerLevelUniqPCCount(level);
+        }
+
+        UInt64 getTotalAccessInCurrEpoc(){return totalAccessPerEpoc;}
         double getLPLocalEpocHitRatio(){return 1-lpPerformance->getMissRatio();}
         double getLPLocalEpocMissRatio(){return lpPerformance->getMissRatio();}
-
         double getLocalEpocHitRatio(){return 1-localPerformance->getMissRatio();}
         double getLocalEpocMissRatio(){return localPerformance->getMissRatio();}
 
@@ -195,15 +230,29 @@ namespace PCPredictorSpace
             else{
                 localPerformance->increaseMiss();
             }
-            
         }
 
         void countTotalAccess(){
             totalAccessPerEpoc++;
         }
 
-        UInt64 getThreshold(){
-            return totalAccessPerEpoc/tmpAllLevelPCStat.size();
+        void countPerLevelAccess(int level, bool cache_hit)
+        {
+            // per level total access count
+            if(perLevelAccessCount.find(level)!=perLevelAccessCount.end()){
+                perLevelAccessCount[level].increase();
+            }
+            else perLevelAccessCount.insert({level, Helper::Counter(1)});
+        }
+
+        void countPerLevelUniqPC(int level, int pc){
+            auto findLevel = perLevelUniqPC.find(level);
+            if(findLevel!=perLevelUniqPC.end()){
+                findLevel->second.increase();
+            }
+            else{
+                perLevelUniqPC.insert({level, Helper::Counter(1)});
+            }
         }
 
         std::vector<MemComponent::component_t> LPPrediction(IntPtr pc){
@@ -214,7 +263,6 @@ namespace PCPredictorSpace
                 auto ptr = LPHelper::tmpAllLevelLP.find(pc);
                 if(ptr!=LPHelper::tmpAllLevelLP.end()){
                     lpPerformance->increaseHit();
-                    //TODO: remove these constant values
                     for(int i=MemComponent::component_t::L1_DCACHE;i<= llc; i++){// (5-3+1)=3 level's of cache
                         if(ptr->second.canSkipLevel(static_cast<MemComponent::component_t>(i) )){
                             predicted_levels.push_back(static_cast<MemComponent::component_t>(i));
@@ -333,6 +381,8 @@ namespace PCPredictorSpace
             //     return;
             // }
             countLevelPerformance(level,cache_hit);
+            countPerLevelAccess(level,cache_hit);
+            countPerLevelUniqPC(level,pc);
             insert(tmpAllLevelPCStat, level,pc,cache_hit);            
             insert(globalAllLevelPCStat, level,pc,cache_hit);            
             // insertToBoth(level-1, pc, false);
@@ -355,9 +405,9 @@ namespace PCPredictorSpace
             double currRatio;
             UInt64 prevMisses;
 
-            // if per pc access is less than threshold then return
-            if( perEpocperPCStat[pc].getCount() < getThreshold())
-                return allMsg;
+            // // if per pc access is less than threshold then do not consider to add it into LP table as avg aacesses are less
+            // if( perEpocperPCStat[pc].getCount() < getThreshold())
+            //     return allMsg;
 
             // insert into LP table per level skip status               
             for(auto uord: mp[pc])
@@ -377,9 +427,14 @@ namespace PCPredictorSpace
 
                 prevMisses=msg.gettotalMiss();
 
-                if(currRatio>0.5)
+                // for per level filterrring
+                UInt64 thresh = getThresholdByLevel(msg.getLevel());
+                UInt64 pccount = uord.second.getTotalCount();
+
+                if(pccount < thresh){
                     LPHelper::insert(pc, msg.getLevel());
-                msg.addLevelSkip();
+                    msg.addLevelSkip();
+                }
 
                 allMsg.push_back(msg);// can be used for logging
             }
