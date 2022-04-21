@@ -615,11 +615,14 @@ MemoryManager::coreInitiateMemoryAccess(
       _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_LEVEL_PER_EPOC, "\n");
 
       //log per pc per level per epoc access
-      _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_PC_PER_LEVEL_PER_EPOC, "%ld,", epocCounter->getCount());
       for(auto pc : PCStatCollector->tmpAllLevelPCStat){
-         for(auto levelPCStat: pc.second){
-            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_PC_PER_LEVEL_PER_EPOC, "%ld,", 
-               levelPCStat.second.getTotalCount());
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_PC_PER_LEVEL_PER_EPOC, "%ld,%ld,", epocCounter->getCount(),pc.first);
+         for(int level=MemComponent::component_t::L1_DCACHE; level<= m_last_level_cache; level++){
+            auto findLevel = pc.second.find(level);
+            if(findLevel!=pc.second.end()){
+               _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_PC_PER_LEVEL_PER_EPOC, "%ld,", findLevel->second.getTotalCount());
+            }
+            else _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_PC_PER_LEVEL_PER_EPOC, "0,");
          }
          _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_PC_PER_LEVEL_PER_EPOC, "\n");
       }
