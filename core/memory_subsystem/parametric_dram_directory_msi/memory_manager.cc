@@ -57,7 +57,7 @@ MemoryManager::MemoryManager(Core* core,
       printf("DebugEpoc Counter=%ld\n", debugEpoc);
    }
    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::MEM_GLOBAL_STATUS, "pc,level,miss,total,skip\n");
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PC_STAT, "epoc,pc,level,misses,hits,total\n");
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PC_STAT, "epoc,pc,level,misses,hits,total,missratio\n");
    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_PC_PER_EPOC, "epoc,pc,totalAccess\n");
    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_EPOC, "epoc,totalAccess,threshold\n");
    
@@ -210,7 +210,7 @@ MemoryManager::MemoryManager(Core* core,
    //[update]
     this->PCStatCollector->setLLC(m_last_level_cache);
 
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "epoc,pc,totalAccessByPC");
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "epoc,pc");
    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_LEVEL_PER_EPOC, "epoc,");
    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_PC_PER_LEVEL_PER_EPOC, "epoc,");
 
@@ -225,7 +225,7 @@ MemoryManager::MemoryManager(Core* core,
       _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_PC_PER_LEVEL_PER_EPOC, "%s,", 
          MemComponent2String(static_cast<MemComponent::component_t>(i)).c_str());
    }
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "epocTotalAccess,threshold\n");
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "\n");
    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_LEVEL_PER_EPOC, "\n");
    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_PC_PER_LEVEL_PER_EPOC, "\n");
   
@@ -496,7 +496,7 @@ MemoryManager::MemoryManager(Core* core,
 MemoryManager::~MemoryManager()
 {
    for(auto pc: PCStatCollector->globalAllLevelPCStat){
-      std::vector<Helper::Message> allMsg = PCStatCollector->processEpocEndComputation(pc.first, PCStatCollector->globalAllLevelPCStat);
+      std::vector<Helper::Message> allMsg = PCStatCollector->processEpocEndComputation(pc.first, PCStatCollector->globalAllLevelPCStat,0);
       for(auto msg: allMsg){
          _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::MEM_GLOBAL_STATUS, "%ld,%s,%ld,%ld,%ld\n", 
             pc.first, 
@@ -590,7 +590,7 @@ MemoryManager::coreInitiateMemoryAccess(
 
       // caculate LP table for next epoc
       for(auto pc: PCStatCollector->tmpAllLevelPCStat){
-         std::vector<Helper::Message> allMsg=PCStatCollector->processEpocEndComputation(pc.first, PCStatCollector->tmpAllLevelPCStat);
+         std::vector<Helper::Message> allMsg=PCStatCollector->processEpocEndComputation(pc.first, PCStatCollector->tmpAllLevelPCStat, epocCounter->getCount());
       }
 
       // log per epoc total accesses, threshold 
@@ -633,14 +633,15 @@ MemoryManager::coreInitiateMemoryAccess(
          if(findPC!= PCStatCollector->tmpAllLevelPCStat.end()){
             for(auto levelStat: findPC->second){
                _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PC_STAT, 
-                  "%ld,%ld,%s,%ld,%ld,%ld\n", 
+                  "%ld,%ld,%s,%ld,%ld,%ld,%f\n", 
 
                   epocCounter->getCount(), 
                   pc.first,
                   MemComponent2String(static_cast<MemComponent::component_t>(levelStat.first)).c_str(), 
                   levelStat.second.getMissCount(),
                   levelStat.second.getHitCount(),
-                  levelStat.second.getTotalCount()
+                  levelStat.second.getTotalCount(),
+                  levelStat.second.getMissRatio()
                );
             }
          }
@@ -663,7 +664,7 @@ MemoryManager::coreInitiateMemoryAccess(
            
             for(auto levelPerf=PCStatCollector->perPCperLevelperEpocLPPerf[pc->first].begin(); 
                levelPerf!=PCStatCollector->perPCperLevelperEpocLPPerf[pc->first].end(); levelPerf++){
-               _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "%f,", levelPerf->getMissRatio());
+               _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "%f", levelPerf->getMissRatio());
             }
             _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "\n");
          }

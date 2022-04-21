@@ -399,16 +399,13 @@ namespace PCPredictorSpace
         }
 
         // will return epoc based pc stat to log, as well it adds skipable levels;
-        std::vector<Helper::Message> processEpocEndComputation(IntPtr pc, std::unordered_map<IntPtr, LevelPCStat>& mp)
+        std::vector<Helper::Message> processEpocEndComputation(IntPtr pc, std::unordered_map<IntPtr, LevelPCStat>& mp, UInt64 counter)
         {
             std::vector<Helper::Message> allMsg;
-            bool firstRatio=true; 
-            double currRatio;
-            UInt64 prevMisses;
 
-            // // if per pc access is less than threshold then do not consider to add it into LP table as avg aacesses are less
-            // if( perEpocperPCStat[pc].getCount() < getThreshold())
-            //     return allMsg;
+            // if per pc access is less than threshold then do not consider to add it into LP table as avg aacesses are less
+            if( perEpocperPCStat[pc].getCount() < getThreshold())
+                return allMsg;
 
             // insert into LP table per level skip status               
             for(auto uord: mp[pc])
@@ -418,26 +415,18 @@ namespace PCPredictorSpace
                 Helper::Message msg = Helper::Message(-1,-1, static_cast<MemComponent::component_t>(uord.first), total,
                  pcStat.getMissCount());
                 
-                if(firstRatio){
-                    currRatio=(double)msg.gettotalMiss()/(double)msg.gettotalAccess();
-                    firstRatio=false;
-                }
-                else{
-                    currRatio=(double)msg.gettotalMiss()/(double)prevMisses;
-                } 
-
-                prevMisses=msg.gettotalMiss();
-
+               
                 // for per level filterrring
                 UInt64 thresh = getThresholdByLevel(msg.getLevel());
                 UInt64 pccount = uord.second.getTotalCount();
 
-                if(pccount < thresh){
+                if(msg.getMissRatio()>0.4){
+                    allMsg.push_back(msg);// can be used for logging
                     LPHelper::insert(pc, msg.getLevel());
+                    _LOG_CUSTOM_LOGGER(Log::Warning,Log::LogDst::DEBUG_INSERT_TO_LP, "%ld,%ld,%s,%f,%f\n", 
+                        counter,pc,MemComponent2String(msg.getLevel()).c_str(),msg.getMissRatio(), uord.second.getMissRatio());
                     msg.addLevelSkip();
                 }
-
-                allMsg.push_back(msg);// can be used for logging
             }
             return allMsg;
         }
