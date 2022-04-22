@@ -587,7 +587,8 @@ MemoryManager::coreInitiateMemoryAccess(
          modeled == Core::MEM_MODELED_NONE ? false : true,  eip, path, PCStatCollector);
 
    if(Cache::sendMsgFlag){
-
+      
+      PCPredictorSpace::LPHelper::clearLPTable();
       // caculate LP table for next epoc
       for(auto pc: PCStatCollector->tmpAllLevelPCStat){
          std::vector<Helper::Message> allMsg=PCStatCollector->processEpocEndComputation(pc.first, PCStatCollector->tmpAllLevelPCStat, epocCounter->getCount());

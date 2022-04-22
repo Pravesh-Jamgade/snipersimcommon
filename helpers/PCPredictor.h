@@ -118,7 +118,8 @@ namespace PCPredictorSpace
             if(tmpAllLevelLP.find(pc)!=tmpAllLevelLP.end())
                 tmpAllLevelLP[pc].addSkipLevel(level);
             else tmpAllLevelLP.insert({pc, LevelPredictor(level)});
-        }        
+        }
+        static void clearLPTable(){tmpAllLevelLP.erase(tmpAllLevelLP.begin(), tmpAllLevelLP.end());}        
     };
 
     class PCStatHelper
@@ -398,6 +399,8 @@ namespace PCPredictorSpace
             insertToBoth(level,pc,cache_hit);
         }
 
+        bool learnFromPrevEpoc(IntPtr pc, MemComponent::component_t level);
+
         // will return epoc based pc stat to log, as well it adds skipable levels;
         std::vector<Helper::Message> processEpocEndComputation(IntPtr pc, std::unordered_map<IntPtr, LevelPCStat>& mp, UInt64 counter)
         {
@@ -420,7 +423,7 @@ namespace PCPredictorSpace
                 UInt64 thresh = getThresholdByLevel(msg.getLevel());
                 UInt64 pccount = uord.second.getTotalCount();
 
-                if(msg.getMissRatio()>0.4){
+                if(msg.getMissRatio()>0.4){//learnFromPrevEpoc(pc, msg.getLevel())
                     allMsg.push_back(msg);// can be used for logging
                     LPHelper::insert(pc, msg.getLevel());
                     _LOG_CUSTOM_LOGGER(Log::Warning,Log::LogDst::DEBUG_INSERT_TO_LP, "%ld,%ld,%s,%f,%f\n", 
