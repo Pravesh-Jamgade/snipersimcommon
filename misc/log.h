@@ -37,6 +37,7 @@ class Log
          DEBUG_TOTAL_ACCESS_PER_LEVEL_PER_EPOC,
          DEBUG_TOTAL_ACCESS_PER_PC_PER_LEVEL_PER_EPOC,
          DEBUG_INSERT_TO_LP,
+         DEBUG_VEF_PC_LP2,
          END,
       };
 

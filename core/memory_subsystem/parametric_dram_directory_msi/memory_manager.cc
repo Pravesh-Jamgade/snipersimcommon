@@ -671,9 +671,9 @@ MemoryManager::coreInitiateMemoryAccess(
          }
       }
 
-      PCStatCollector->reset();
-      Cache::resetSendMsgFlag();
       epocCounter->increase();
+      PCStatCollector->reset(epocCounter->getCount());
+      Cache::resetSendMsgFlag();
    }
 
    return hitWhere;

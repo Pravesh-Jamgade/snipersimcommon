@@ -165,7 +165,8 @@ namespace PCPredictorSpace
         // per pc per level per epoc hit miss performance
         std::unordered_map<IntPtr, std::vector<EpocPerformanceStat>> perPCperLevelPerEpocHitMissPerf;
 
-        void reset(){
+        UInt64 counter;
+        void reset(UInt64 x){
             tmpAllLevelPCStat.erase(tmpAllLevelPCStat.begin(), tmpAllLevelPCStat.end());
             localEpocStat->reset();
             localPerformance.reset(new EpocPerformanceStat());
@@ -178,7 +179,7 @@ namespace PCPredictorSpace
             totalAccessPerEpoc=0;
             perLevelAccessCount.erase(perLevelAccessCount.begin(), perLevelAccessCount.end());
             perLevelUniqPC.erase(perLevelUniqPC.begin(), perLevelUniqPC.end());
-            
+            counter=x;
         }
 
         void lockenable(){LPHelper::lockenable();}
@@ -327,7 +328,8 @@ namespace PCPredictorSpace
                 if(LPHelper::tmpAllLevelLP.find(pc) != LPHelper::tmpAllLevelLP.end()){
                     prediction = &LPHelper::tmpAllLevelLP[pc];
                 }else return false;
-
+                
+                _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_VEF_PC_LP2, "%ld, %ld,\n", counter,pc);
                 LevelPredictor lp = LevelPredictor();
                 for(int i=MemComponent::component_t::L1_DCACHE;i<=llc;i++){
                     if(i==actual_level)
