@@ -210,7 +210,7 @@ MemoryManager::MemoryManager(Core* core,
    //[update]
     this->PCStatCollector->setLLC(m_last_level_cache);
 
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "epoc,pc");
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "epoc,pc,");
    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_LEVEL_PER_EPOC, "epoc,");
    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_PC_PER_LEVEL_PER_EPOC, "epoc,");
 
@@ -664,7 +664,7 @@ MemoryManager::coreInitiateMemoryAccess(
            
             for(auto levelPerf=PCStatCollector->perPCperLevelperEpocLPPerf[pc->first].begin(); 
                levelPerf!=PCStatCollector->perPCperLevelperEpocLPPerf[pc->first].end(); levelPerf++){
-               _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "%f", levelPerf->getMissRatio());
+               _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "%f,", levelPerf->getMissRatio());
             }
             _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "\n");
          }
