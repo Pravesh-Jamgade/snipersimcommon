@@ -15,13 +15,15 @@ void PCStatHelper::updateLPTable()
 
 bool PCStatHelper::learnFromPrevEpoc(IntPtr pc, MemComponent::component_t level)
 {   
-    auto findPC = LPHelper::tmpAllLevelLP.find(pc);
-    if(findPC!=LPHelper::tmpAllLevelLP.end()){
-        auto findPrePC = perPCperLevelperEpocLPPerf.find(pc);
-        if(findPrePC!=perPCperLevelperEpocLPPerf.end()){
-
+    auto findPC = perPCperLevelperEpocLPPerf.find(pc);
+    if(findPC!=perPCperLevelperEpocLPPerf.end()){
+        EpocPerformanceStat ep = findPC->second[level];        
+        double missratio = ep.getMissRatio();
+        if(missratio>0.5){
+            return false;//dont skip
         }
     }
+    return true;//skip
 }
 
 void PCStatHelper::logPerLevelPerEpocAccessThreshold()
@@ -152,7 +154,7 @@ void PCStatHelper::logInit(){
       logPerPCPerLevelAccessCountperEpoc();
 
       logPerLevelAccessCountPerEpoc();
-      
+
       logPerLevelPerEpocAccessThreshold();
 
       logPerLevelPCCount();
