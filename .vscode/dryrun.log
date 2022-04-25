@@ -290,7 +290,6 @@ make: Entering directory '/mnt/B/sniper/common'
 
 
 
-
         Unable to find /mnt/B/sniper/common/misc/semaphore.h
 
         You may want to try running 'make empty_deps'
@@ -416,14 +415,8 @@ make: Entering directory '/mnt/B/sniper/common'
         You may want to try running 'make empty_deps'
 
 
-
-
-
         Unable to find /mnt/B/sniper/common/misc/callstack.h
-
         You may want to try running 'make empty_deps'
-
-
 
 
 
@@ -538,9 +531,7 @@ make: Entering directory '/mnt/B/sniper/common'
 
 
 
-
         Unable to find /mnt/B/sniper/common/misc/progress.h
-
         You may want to try running 'make empty_deps'
 
 
@@ -649,8 +640,6 @@ make: Entering directory '/mnt/B/sniper/common'
 
 
 
-
-
         Unable to find /mnt/B/sniper/common/transport/transport.h
 
         You may want to try running 'make empty_deps'
@@ -746,76 +735,40 @@ make: Entering directory '/mnt/B/sniper/common'
 
 
 
-
         Unable to find /mnt/B/sniper/common/system/sim_thread.h
-
         You may want to try running 'make empty_deps'
-
-
-
 
 
         Unable to find /mnt/B/sniper/common/performance_model/instruction.h
-
         You may want to try running 'make empty_deps'
-
-
-
 
 
         Unable to find /mnt/B/sniper/common/performance_model/operand.h
-
         You may want to try running 'make empty_deps'
-
-
-
 
 
         Unable to find /mnt/B/sniper/common/scheduler/scheduler.h
-
         You may want to try running 'make empty_deps'
-
-
-
 
 
         Unable to find /mnt/B/sniper/common/system/syscall_server.h
-
         You may want to try running 'make empty_deps'
-
-
-
 
 
         Unable to find /mnt/B/sniper/common/system/pthread_emu.h
-
         You may want to try running 'make empty_deps'
-
-
-
 
 
         Unable to find /mnt/B/sniper/common/user/sync_api.h
-
         You may want to try running 'make empty_deps'
-
-
-
 
 
         Unable to find /mnt/B/sniper/common/system/sync_server.h
-
         You may want to try running 'make empty_deps'
-
-
-
 
 
         Unable to find /mnt/B/sniper/common/misc/stable_iterator.h
-
         You may want to try running 'make empty_deps'
-
-
 
 
 
@@ -1212,34 +1165,20 @@ make: Entering directory '/mnt/B/sniper/common'
 
 
         Unable to find /mnt/B/sniper/python_kit/intel64/include/python2.7/genobject.h
-
         You may want to try running 'make empty_deps'
-
-
-
 
 
         Unable to find /mnt/B/sniper/python_kit/intel64/include/python2.7/descrobject.h
-
         You may want to try running 'make empty_deps'
-
-
 
 
 
         Unable to find /mnt/B/sniper/python_kit/intel64/include/python2.7/warnings.h
-
         You may want to try running 'make empty_deps'
-
-
-
 
 
         Unable to find /mnt/B/sniper/python_kit/intel64/include/python2.7/weakrefobject.h
-
         You may want to try running 'make empty_deps'
-
-
 
 
 
@@ -1486,7 +1425,6 @@ make: Entering directory '/mnt/B/sniper/common'
         Unable to find /mnt/B/sniper/common/sampling/instr_count_sampling.h
 
         You may want to try running 'make empty_deps'
-
 
 
 
@@ -2096,38 +2034,20 @@ make: Entering directory '/mnt/B/sniper/common'
         You may want to try running 'make empty_deps'
 
 
-
-
-
         Unable to find /mnt/B/sniper/common/core/memory_subsystem/fast_nehalem/memory_manager.h
-
         You may want to try running 'make empty_deps'
-
-
-
 
 
         Unable to find /mnt/B/sniper/common/core/memory_subsystem/memory_manager_fast.h
-
         You may want to try running 'make empty_deps'
-
-
-
 
 
         Unable to find /mnt/B/sniper/common/core/memory_subsystem/memory_manager_base.h
-
         You may want to try running 'make empty_deps'
-
-
-
 
 
         Unable to find /mnt/B/sniper/common/core/memory_subsystem/pr_l1_pr_l2_dram_directory_msi/shmem_perf.h
-
         You may want to try running 'make empty_deps'
-
-
 
 
 
@@ -2146,99 +2066,57 @@ make: Entering directory '/mnt/B/sniper/common'
 
 
 
-
         Unable to find /mnt/B/sniper/common/performance_model/contention_model.h
-
         You may want to try running 'make empty_deps'
-
-
-
 
 
         Unable to find /mnt/B/sniper/common/core/memory_subsystem/cache/pr_l1_cache_block_info.h
-
         You may want to try running 'make empty_deps'
-
-
 
 
 
         Unable to find /mnt/B/sniper/common/performance_model/queue_model.h
-
         You may want to try running 'make empty_deps'
-
-
-
 
 
         Unable to find /mnt/B/sniper/common/core/memory_subsystem/parametric_dram_directory_msi/prefetcher.h
-
         You may want to try running 'make empty_deps'
-
-
-
 
 
         Unable to find /mnt/B/sniper/common/core/memory_subsystem/parametric_dram_directory_msi/tlb.h
-
         You may want to try running 'make empty_deps'
-
-
 
 
 
         Unable to find /mnt/B/sniper/common/core/memory_subsystem/parametric_dram_directory_msi/ghb_prefetcher.h
-
         You may want to try running 'make empty_deps'
-
-
-
 
 
         Unable to find /mnt/B/sniper/common/core/memory_subsystem/parametric_dram_directory_msi/simple_prefetcher.h
-
         You may want to try running 'make empty_deps'
-
-
-
 
 
         Unable to find /mnt/B/sniper/common/core/memory_subsystem/parametric_dram_directory_msi/memory_manager.h
-
         You may want to try running 'make empty_deps'
-
-
-
 
 
         Unable to find /mnt/B/sniper/common/core/memory_subsystem/parametric_dram_directory_msi/cache_cntlr.h
-
         You may want to try running 'make empty_deps'
-
-
 
 
 
         Unable to find /mnt/B/sniper/common/core/memory_subsystem/cache/shared_cache_block_info.h
-
         You may want to try running 'make empty_deps'
-
 
 
 
 
         Unable to find /mnt/B/sniper/common/core/memory_subsystem/address_home_lookup.h
-
         You may want to try running 'make empty_deps'
-
-
-
 
 
         Unable to find /mnt/B/sniper/common/core/memory_subsystem/cache/req_queue_list_template.h
-
         You may want to try running 'make empty_deps'
-
 
 
 
@@ -2360,13 +2238,8 @@ make: Entering directory '/mnt/B/sniper/common'
         You may want to try running 'make empty_deps'
 
 
-
-
-
         Unable to find /mnt/B/sniper/common/core/memory_subsystem/parametric_dram_directory_msi/a53prefetcher.h
-
         You may want to try running 'make empty_deps'
-
 
 
 
@@ -2446,7 +2319,6 @@ make: Entering directory '/mnt/B/sniper/common'
         Unable to find /mnt/B/sniper/common/core/memory_subsystem/cache/cache_set_nmru.h
 
         You may want to try running 'make empty_deps'
-
 
 
 
@@ -2570,11 +2442,8 @@ make: Entering directory '/mnt/B/sniper/common'
 
 
 
-
         Unable to find /mnt/B/sniper/common/performance_model/performance_models/micro_op/memory_access.h
-
         You may want to try running 'make empty_deps'
-
 
 
 
@@ -2884,47 +2753,28 @@ make: Entering directory '/mnt/B/sniper/common'
 
 
         Unable to find /mnt/B/sniper/common/performance_model/branch_predictors/pentium_m_branch_predictor.h
-
         You may want to try running 'make empty_deps'
-
-
-
 
 
         Unable to find /mnt/B/sniper/common/performance_model/branch_predictors/branch_predictor_return_value.h
-
         You may want to try running 'make empty_deps'
-
-
-
 
 
         Unable to find /mnt/B/sniper/common/performance_model/branch_predictors/pentium_m_global_predictor.h
-
         You may want to try running 'make empty_deps'
-
-
-
 
 
         Unable to find /mnt/B/sniper/common/performance_model/branch_predictors/global_predictor.h
-
         You may want to try running 'make empty_deps'
-
 
 
 
 
         Unable to find /mnt/B/sniper/common/performance_model/branch_predictors/saturating_predictor.h
-
         You may want to try running 'make empty_deps'
 
 
-
-
-
         Unable to find /mnt/B/sniper/common/performance_model/branch_predictors/pentium_m_branch_target_buffer.h
-
         You may want to try running 'make empty_deps'
 
 
@@ -2943,330 +2793,3 @@ make: Entering directory '/mnt/B/sniper/common'
 
         You may want to try running 'make empty_deps'
 
-
-
-
-
-        Unable to find /mnt/B/sniper/common/performance_model/branch_predictors/pentium_m_loop_branch_predictor.h
-
-        You may want to try running 'make empty_deps'
-
-
-
-
-
-        Unable to find /mnt/B/sniper/common/performance_model/branch_predictors/lpb.h
-
-        You may want to try running 'make empty_deps'
-
-
-
-
-
-        Unable to find /mnt/B/sniper/common/performance_model/branch_predictors/pentium_m_indirect_branch_target_buffer.h
-
-        You may want to try running 'make empty_deps'
-
-
-
-
-
-        Unable to find /mnt/B/sniper/common/performance_model/branch_predictors/ibtb.h
-
-        You may want to try running 'make empty_deps'
-
-
-
-
-
-        Unable to find /mnt/B/sniper/common/performance_model/branch_predictors/n_bit_branch_predictor.h
-
-        You may want to try running 'make empty_deps'
-
-
-
-
-
-        Unable to find /mnt/B/sniper/common/performance_model/branch_predictors/a53branchpredictor.h
-
-        You may want to try running 'make empty_deps'
-
-
-
-
-
-        Unable to find /mnt/B/sniper/common/performance_model/branch_predictors/one_bit_branch_predictor.h
-
-        You may want to try running 'make empty_deps'
-
-
-
-
-
-        Unable to find /mnt/B/sniper/common/performance_model/queue_model_history_list.h
-
-        You may want to try running 'make empty_deps'
-
-
-
-
-
-        Unable to find /mnt/B/sniper/common/misc/moving_average.h
-
-        You may want to try running 'make empty_deps'
-
-
-
-
-
-        Unable to find /mnt/B/sniper/common/performance_model/queue_model_contention.h
-
-        You may want to try running 'make empty_deps'
-
-
-
-
-
-        Unable to find /mnt/B/sniper/common/performance_model/dram_perf_model_readwrite.h
-
-        You may want to try running 'make empty_deps'
-
-
-
-
-
-        Unable to find /mnt/B/sniper/common/performance_model/cache_perf_model_parallel.h
-
-        You may want to try running 'make empty_deps'
-
-
-
-
-
-        Unable to find /mnt/B/sniper/common/performance_model/cache_perf_model_sequential.h
-
-        You may want to try running 'make empty_deps'
-
-
-
-
-
-        Unable to find /mnt/B/sniper/common/performance_model/dram_perf_model_constant.h
-
-        You may want to try running 'make empty_deps'
-
-
-
-
-
-        Unable to find /mnt/B/sniper/common/performance_model/branch_predictors/bimodal-helper.h
-
-        You may want to try running 'make empty_deps'
-
-
-
-
-
-        Unable to find /mnt/B/sniper/common/performance_model/branch_predictors/TPredictorHelper.h
-
-        You may want to try running 'make empty_deps'
-
-
-
-
-
-        Unable to find /mnt/B/sniper/common/performance_model/branch_predictors/1bit_predictor.h
-
-        You may want to try running 'make empty_deps'
-
-
-
-
-
-        Unable to find /mnt/B/sniper/common/performance_model/branch_predictors/2bit_predictor.h
-
-        You may want to try running 'make empty_deps'
-
-
-
-
-
-        Unable to find /mnt/B/sniper/common/performance_model/queue_model_basic.h
-
-        You may want to try running 'make empty_deps'
-
-
-
-
-
-        Unable to find /mnt/B/sniper/common/performance_model/queue_model_windowed_mg1.h
-
-        You may want to try running 'make empty_deps'
-
-
-
-
-
-        Unable to find /mnt/B/sniper/common/performance_model/dram_perf_model_normal.h
-
-        You may want to try running 'make empty_deps'
-
-
-
-
-
-        Unable to find /mnt/B/sniper/common/performance_model/dram_directory_perf_model_base.h
-
-        You may want to try running 'make empty_deps'
-
-
-
-
-
-        Unable to find /mnt/B/sniper/common/performance_model/dram_directory_perf_model.h
-
-        You may want to try running 'make empty_deps'
-
-
-
-
-
-        Unable to find /mnt/B/sniper/common/performance_model/mmu_perf_model_base.h
-
-        You may want to try running 'make empty_deps'
-
-
-
-
-
-        Unable to find /mnt/B/sniper/common/performance_model/mmu_perf_model.h
-
-        You may want to try running 'make empty_deps'
-
-
-
-
-
-        Unable to find /mnt/B/sniper/common/network/network_model_emesh_hop_counter.h
-
-        You may want to try running 'make empty_deps'
-
-
-
-
-
-        Unable to find /mnt/B/sniper/common/network/network_model_bus.h
-
-        You may want to try running 'make empty_deps'
-
-
-
-
-
-        Unable to find /mnt/B/sniper/common/network/network_types.h
-
-        You may want to try running 'make empty_deps'
-
-
-
-
-
-        Unable to find /mnt/B/sniper/common/network/network_model_magic.h
-
-        You may want to try running 'make empty_deps'
-
-
-
-
-
-        Unable to find /mnt/B/sniper/common/network/network_model_emesh_hop_by_hop.h
-
-        You may want to try running 'make empty_deps'
-
-
-
-[DEP   ] common/network/packet_type.d
- 
-
-        Unable to find /mnt/B/sniper/common/fault_injection/fault_injector_random.h
-        You may want to try running 'make empty_deps'
-
-
-[DEP   ] common/misc/circular_log.d
- 
-[DEP   ] common/misc/logmem.d
- 
-[DEP   ] common/misc/packetize.d
- 
-[DEP   ] common/misc/timer.d
- 
-[DEP   ] common/misc/spin_loop_detector.d
- 
-[DEP   ] common/misc/subsecond_time.d
- 
-[DEP   ] common/misc/log.d
- 
-[DEP   ] common/misc/pthread_thread.d
- 
-[DEP   ] common/misc/tags.d
- 
-[DEP   ] common/misc/stats.d
- 
-[DEP   ] common/misc/barrier.d
- 
-[DEP   ] common/misc/progress.d
- 
-[DEP   ] common/misc/config.d
- 
-[DEP   ] common/misc/checksum.d
- 
-[DEP   ] common/misc/bottlegraph.d
- 
-[DEP   ] common/misc/fxsupport.d
- 
-[DEP   ] common/system/fastforward_performance_manager.d
- 
-[DEP   ] common/system/magic_client.d
- 
-[DEP   ] common/system/barrier_sync_client.d
- 
-[DEP   ] common/system/core_manager.d
- 
-[DEP   ] common/system/clock_skew_minimization_object.d
- 
-[DEP   ] common/system/core_thread.d
- 
-[DEP   ] common/system/thread_manager.d
- 
-[DEP   ] common/system/sim_thread.d
- 
-[DEP   ] common/system/pthread_emu.d
- 
-[DEP   ] common/system/simulator.d
- 
-[DEP   ] common/system/inst_mode.d
- 
-[DEP   ] common/system/thread_stats_manager.d
- 
-[DEP   ] common/system/barrier_sync_server.d
- 
-[DEP   ] common/system/sim_thread_manager.d
- 
-[DEP   ] common/system/dvfs_manager.d
- 
-[DEP   ] common/system/routine_tracer_funcstats.d
- 
-[DEP   ] common/system/magic_server.d
- 
-[DEP   ] common/system/syscall_server.d
- 
-[DEP   ] common/system/sync_client.d
- 
-[DEP   ] common/system/sync_server.d
- 
-[DEP   ] common/system/memory_tracker.d
- 
-[DEP   ] common/system/hooks_manager.d
- 
-[DEP   ] common/system/routine_tracer_ondemand.d
- 

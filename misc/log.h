@@ -38,6 +38,8 @@ class Log
          DEBUG_TOTAL_ACCESS_PER_PC_PER_LEVEL_PER_EPOC,
          DEBUG_INSERT_TO_LP,
          DEBUG_VEF_PC_LP2,
+         DEBUG_LEVEL_THRESHOLD,
+         DEBUG_LEVEL_UNI_PC,
          END,
       };
 
