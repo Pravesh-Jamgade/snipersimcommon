@@ -453,7 +453,7 @@ namespace PCPredictorSpace
                 UInt64 thresh = getThresholdByLevel(msg.getLevel());
                 UInt64 pccount = uord.second.getTotalCount();
                 
-                if(pccount < thresh && learnFromPrevEpoc(pc,msg.getLevel())){//learnFromPrevEpoc(pc, msg.getLevel())
+                if(msg.getMissRatio()>0.4 && learnFromPrevEpoc(pc,msg.getLevel())){//learnFromPrevEpoc(pc, msg.getLevel())
                     allMsg.push_back(msg);// can be used for logging
                     LPHelper::insert(pc, msg.getLevel());
                     _LOG_CUSTOM_LOGGER(Log::Warning,Log::LogDst::DEBUG_INSERT_TO_LP, "%ld,%ld,%s,%f,%f\n", 
