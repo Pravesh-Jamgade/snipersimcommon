@@ -351,10 +351,10 @@ namespace PCPredictorSpace
                         perPCperLevelperEpocLPPerf[pc][i - MemComponent::component_t::L1_DCACHE].increaseHit();
                     }
 
-                    // if(lp.canSkipLevel(static_cast<MemComponent::component_t>(i))==0){
-                    //     // lets not count miss-match further
-                    //     return false;
-                    // }
+                    if(lp.canSkipLevel(static_cast<MemComponent::component_t>(i))==0){
+                        // lets not count miss-match further
+                        return false;
+                    }
                 }
             }
             
@@ -453,7 +453,7 @@ namespace PCPredictorSpace
                 UInt64 thresh = getThresholdByLevel(msg.getLevel());
                 UInt64 pccount = uord.second.getTotalCount();
                 
-                if(msg.getMissRatio()>0.4 && learnFromPrevEpoc(pc,msg.getLevel())){//learnFromPrevEpoc(pc, msg.getLevel())
+                if(pccount < thresh && learnFromPrevEpoc(pc,msg.getLevel())){//learnFromPrevEpoc(pc, msg.getLevel())
                     allMsg.push_back(msg);// can be used for logging
                     LPHelper::insert(pc, msg.getLevel());
                     _LOG_CUSTOM_LOGGER(Log::Warning,Log::LogDst::DEBUG_INSERT_TO_LP, "%ld,%ld,%s,%f,%f\n", 
