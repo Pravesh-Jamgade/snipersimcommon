@@ -13,6 +13,12 @@
  /mnt/B/sniper/common/performance_model/hit_where.h \
  /mnt/B/sniper/common/helpers/cache_helper.h \
  /mnt/B/sniper/common/misc/log.h \
+<<<<<<< HEAD
+=======
+ /mnt/B/sniper/common/helpers/PCPredictor.h \
+ /mnt/B/sniper/common/helpers/libpqueue/src/pqueue.h \
+ /mnt/B/sniper/common/helpers/helpers.h \
+>>>>>>> debug_per_level_thres_for_LP_eligibility
  /mnt/B/sniper/common/performance_model/performance_models/core_model/core_model.h \
  /mnt/B/sniper/common/misc/allocator.h \
  /mnt/B/sniper/common/misc/FSBAllocator.hh \

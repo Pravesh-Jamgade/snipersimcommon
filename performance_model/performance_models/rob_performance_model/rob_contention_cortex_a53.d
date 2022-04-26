@@ -23,6 +23,12 @@
  /mnt/B/sniper/common/network/packet_type.h \
  /mnt/B/sniper/common/core/bbv_count.h /mnt/B/sniper/common/misc/cpuid.h \
  /mnt/B/sniper/common/helpers/cache_helper.h \
+<<<<<<< HEAD
+=======
+ /mnt/B/sniper/common/helpers/PCPredictor.h \
+ /mnt/B/sniper/common/helpers/libpqueue/src/pqueue.h \
+ /mnt/B/sniper/common/helpers/helpers.h \
+>>>>>>> debug_per_level_thres_for_LP_eligibility
  /mnt/B/sniper/common/system/inst_mode.h \
  /mnt/B/sniper/decoder_lib/decoder.h \
  /mnt/B/sniper/common/performance_model/contention_model.h \

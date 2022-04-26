@@ -14,6 +14,12 @@
  /mnt/B/sniper/common/performance_model/hit_where.h \
  /mnt/B/sniper/common/helpers/cache_helper.h \
  /mnt/B/sniper/common/misc/log.h \
+<<<<<<< HEAD
+=======
+ /mnt/B/sniper/common/helpers/PCPredictor.h \
+ /mnt/B/sniper/common/helpers/libpqueue/src/pqueue.h \
+ /mnt/B/sniper/common/helpers/helpers.h \
+>>>>>>> debug_per_level_thres_for_LP_eligibility
  /mnt/B/sniper/common/scheduler/scheduler_static.h \
  /mnt/B/sniper/common/scheduler/scheduler_pinned.h \
  /mnt/B/sniper/common/scheduler/scheduler_pinned_base.h \

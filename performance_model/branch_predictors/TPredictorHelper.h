@@ -11,13 +11,6 @@
 #include "branch_predictor.h"
 
 #define IP_TO_INDEX(_ip) ((_ip >> 4) & 0x1ff)
-class Helper
-{
-public:
-    UInt32 get_index(IntPtr ip){
-        return IP_TO_INDEX(ip);
-    }
-};
 
 class Counter
 {
@@ -96,7 +89,7 @@ class Local:public Table{
     ~Local(){}    
 };
 
-class TPredictorHelper:public BranchPredictor, Helper
+class TPredictorHelper:virtual public BranchPredictor
 {
     public:
     TPredictorHelper(String name, core_id_t core_id):BranchPredictor(name, core_id),
@@ -104,6 +97,11 @@ class TPredictorHelper:public BranchPredictor, Helper
         , lpt_s(false), gpt_s(false), cpt_s(false){}
 
     ~TPredictorHelper(){}
+    
+    UInt32 get_index(IntPtr ip){
+        return IP_TO_INDEX(ip);
+    }
+    
     bool predict(bool indirect, IntPtr ip, IntPtr target)
     {
         // lookup in btb
