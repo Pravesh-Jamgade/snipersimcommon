@@ -41,7 +41,9 @@ class Log
          DEBUG_LEVEL_THRESHOLD,
          DEBUG_LEVEL_UNI_PC,
          DEBUG_PER_EPOC_N_SKIP,
-         LP_PERF,
+         LP_PERF_L1,
+         LP_PERF_L2,
+         LP_PERF_L3,
          END,
       };
 
