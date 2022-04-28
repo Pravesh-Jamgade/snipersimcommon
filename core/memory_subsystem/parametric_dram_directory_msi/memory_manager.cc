@@ -56,11 +56,7 @@ MemoryManager::MemoryManager(Core* core,
       debugEpoc=Sim()->getCfg()->getInt("debug/epocNumber");
       printf("DebugEpoc Counter=%ld\n", debugEpoc);
    }
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::MEM_GLOBAL_STATUS, "pc,level,miss,total,skip\n");
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PC_STAT, "epoc,pc,level,misses,hits,total,missratio\n");
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_PC_PER_EPOC, "epoc,pc,totalAccess\n");
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_EPOC, "epoc,totalAccess,threshold\n");
-   
+
    // Read Parameters from the Config file
    std::map<MemComponent::component_t, CacheParameters> cache_parameters;
    std::map<MemComponent::component_t, String> cache_names;
@@ -210,25 +206,6 @@ MemoryManager::MemoryManager(Core* core,
    //[update]
     this->PCStatCollector->setLLC(m_last_level_cache);
 
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "epoc,pc,");
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_LEVEL_PER_EPOC, "epoc,");
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_PC_PER_LEVEL_PER_EPOC, "epoc,");
-
-   for(int i=MemComponent::component_t::L1_DCACHE; i<= m_last_level_cache; i++){
-
-      _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "%s,", 
-         MemComponent2String(static_cast<MemComponent::component_t>(i)).c_str());
-
-      _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_LEVEL_PER_EPOC, "%s,", 
-         MemComponent2String(static_cast<MemComponent::component_t>(i)).c_str());
-
-      _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_PC_PER_LEVEL_PER_EPOC, "%s,", 
-         MemComponent2String(static_cast<MemComponent::component_t>(i)).c_str());
-   }
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "\n");
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_LEVEL_PER_EPOC, "\n");
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_PC_PER_LEVEL_PER_EPOC, "\n");
-  
    m_user_thread_sem = new Semaphore(0);
    m_network_thread_sem = new Semaphore(0);
 
@@ -495,18 +472,18 @@ MemoryManager::MemoryManager(Core* core,
 
 MemoryManager::~MemoryManager()
 {
-   for(auto pc: PCStatCollector->globalAllLevelPCStat){
-      std::vector<Helper::Message> allMsg = PCStatCollector->processEpocEndComputation(pc.first, PCStatCollector->globalAllLevelPCStat,0);
-      for(auto msg: allMsg){
-         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::MEM_GLOBAL_STATUS, "%ld,%s,%ld,%ld,%ld\n", 
-            pc.first, 
-            MemComponent2String(msg.getLevel()).c_str(),
-            msg.gettotalMiss(),
-            msg.gettotalAccess(),
-            msg.isLevelSkipable()
-         );
-      } 
-   }
+   // for(auto pc: PCStatCollector->globalAllLevelPCStat){
+   //    std::vector<Helper::Message> allMsg = PCStatCollector->processEpocEndComputation(pc.first, PCStatCollector->globalAllLevelPCStat,0);
+   //    for(auto msg: allMsg){
+   //       _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::MEM_GLOBAL_STATUS, "%ld,%s,%ld,%ld,%ld\n", 
+   //          pc.first, 
+   //          MemComponent2String(msg.getLevel()).c_str(),
+   //          msg.gettotalMiss(),
+   //          msg.gettotalAccess(),
+   //          msg.isLevelSkipable()
+   //       );
+   //    } 
+   // }
    
    UInt32 i;
 

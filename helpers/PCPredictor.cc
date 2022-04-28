@@ -4,13 +4,64 @@ using namespace PCPredictorSpace;
 
 int LPHelper::lp_unlock=2;
 std::unordered_map<IntPtr, LevelPredictor> LPHelper::tmpAllLevelLP;
+std::unordered_map<IntPtr, LevelPredictor> LPHelper::copyTmpAllLevelLP;
+
+bool PCStatHelper::interpretMMratio(double ratio){
+    return ratio>0.5;
+}
+
+void PCStatHelper::processEndPerformanceAnalysis(IntPtr pc){
+    // check if pc has decision from x-1 epoc
+    auto findPC = LPHelper::copyTmpAllLevelLP.find(pc);
+    if(findPC!=LPHelper::copyTmpAllLevelLP.end()){
+
+        LevelPredictor levelP = findPC->second;
+
+        // check if pc has missmatch from x epoc
+        auto findPCx = perPCperLevelperEpocLPPerf.find(pc);
+
+        if(findPCx!=perPCperLevelperEpocLPPerf.end()){
+            
+            // get per missmatch ratio for pc
+            std::vector<EpocPerformanceStat> mmratio = findPCx->second;
+
+            // iterate over each level and accumulate result levelwise
+            for(int i =MemComponent::component_t::L1_DCACHE; i<= llc; i++){
+
+                MemComponent::component_t comp = static_cast<MemComponent::component_t>(i);
+
+                if(levelP.canSkipLevel(comp)){// skip
+                    if(interpretMMratio(mmratio[i-MemComponent::component_t::L1_DCACHE].getMissRatio())){// mm high
+                        perLevelLPperf[comp].inc(LPPerf::State::fs);//hazard
+                    }
+                    else{
+                        perLevelLPperf[comp].inc(LPPerf::ts);//benefit
+                    }
+                }
+                else{// no-skip
+                    if(interpretMMratio(mmratio[i-MemComponent::component_t::L1_DCACHE].getMissRatio())){// mm high
+                        perLevelLPperf[comp].inc(LPPerf::fns);//lost oppo
+                    }else{
+                        perLevelLPperf[comp].inc(LPPerf::tns);//benefit
+                    }
+                }  
+            }
+        }
+        else return;
+    }
+     else return;
+}
 
 // caculate LP table for next epoc
 void PCStatHelper::updateLPTable()
 {
-      for(auto pc: tmpAllLevelPCStat){
-         std::vector<Helper::Message> allMsg=processEpocEndComputation(pc.first, tmpAllLevelPCStat, counter);
-      }
+    for(auto pc: tmpAllLevelPCStat){
+        if(isLockEnabled()){
+            processEndPerformanceAnalysis(pc.first);
+        }
+        std::vector<Helper::Message> allMsg=processEpocEndComputation(pc.first, tmpAllLevelPCStat, counter);
+        logPerEpocSkiporNotSkipStatus(allMsg, pc.first);
+    }
 }
 
 bool PCStatHelper::learnFromPrevEpoc(IntPtr pc, MemComponent::component_t level)
@@ -138,12 +189,95 @@ void PCStatHelper::logPerPCPerLevelMissratioPerEpoc(){
     }
 }
 
+void PCStatHelper::logPerEpocSkiporNotSkipStatus(std::vector<Helper::Message>&allMsg, IntPtr pc){
+    
+}
+
+void PCStatHelper::logPerEpocSkiporNotskipWhileEpoc()
+{
+    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_NOSKIP_PER_EPOC, "%ld,", counter);
+    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_SKIP_PER_EPOC, "%ld,", counter);
+
+    for(auto level: perLevelSkipWhileEpoc){
+        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_SKIP_PER_EPOC, "%d,", level.second.getCount());
+    }
+
+    for(auto level: perLevelNoSkipWhileEpoc){
+        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_NOSKIP_PER_EPOC, "%d,", level.second.getCount());
+    }
+    
+    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_NOSKIP_PER_EPOC, "\n");
+    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_SKIP_PER_EPOC, "\n");
+}
+
+void PCStatHelper::logLPPerfPerLevel(){
+    for(auto level: perLevelLPperf){
+        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_PERF, "%ld,%f,%f,%f,%f\n", 
+                counter,
+                level.second.getRatio(LPPerf::fs),
+                level.second.getRatio(LPPerf::ts),
+                level.second.getRatio(LPPerf::fns),
+                level.second.getRatio(LPPerf::tns)
+        );
+    }
+}
+
 void PCStatHelper::logInit(){
       
-      
-      LPHelper::clearLPTable();
-      
+    LPHelper::clearLPTable();
+    if(LPHelper::getLockStatus() !=1){
+        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_PERF, "epoc,pc,fs,ts,fns,tns\n");
+        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_LEVEL_UNI_PC, "epoc,pc1,pc2,pc3\n");
+        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_PER_EPOC_N_SKIP, "epoc,skip,actual\n");
+        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::MEM_GLOBAL_STATUS, "pc,level,miss,total,skip\n");
+        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PC_STAT, "epoc,pc,level,misses,hits,total,missratio\n");
+        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_PC_PER_EPOC, "epoc,pc,totalAccess\n");
+        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_EPOC, "epoc,totalAccess,threshold\n");
+
+        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_SKIP_PER_EPOC, "epoc,");
+        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_NOSKIP_PER_EPOC, "epoc,");
+        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "epoc,pc,");
+        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_LEVEL_PER_EPOC, "epoc,");
+        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_PC_PER_LEVEL_PER_EPOC, "epoc,");
+
+        for(int i=MemComponent::component_t::L1_DCACHE; i<= llc; i++){
+            
+            MemComponent::component_t comp = static_cast<MemComponent::component_t>(i);
+
+            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "%s,", 
+                MemComponent2String(comp).c_str());
+
+            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_LEVEL_PER_EPOC, "%s,", 
+                MemComponent2String(comp).c_str());
+
+            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_PC_PER_LEVEL_PER_EPOC, "%s,", 
+                MemComponent2String(comp).c_str());
+            
+            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_SKIP_PER_EPOC, "%s,", 
+                MemComponent2String(comp).c_str());
+            
+            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_NOSKIP_PER_EPOC, "%s,", 
+                MemComponent2String(comp).c_str());
+            
+                perLevelNoSkip[comp]=Helper::Counter(0);
+                perLevelSkip[comp]=Helper::Counter(0);
+                perLevelNoSkipWhileEpoc[comp]=Helper::Counter(0);
+                perLevelSkipWhileEpoc[comp]=Helper::Counter(0);
+                perLevelLPperf[comp]=LPPerf();
+        }
+
+        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "\n");
+        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_LEVEL_PER_EPOC, "\n");
+        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_PC_PER_LEVEL_PER_EPOC, "\n");
+        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_SKIP_PER_EPOC, "\n");
+        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_NOSKIP_PER_EPOC, "\n");
+    } 
+
+      logPerEpocSkiporNotskipWhileEpoc();
+
       updateLPTable();
+
+      logLPPerfPerLevel();
 
       logPerEpocTotalAccess();
       
