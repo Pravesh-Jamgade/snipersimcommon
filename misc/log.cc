@@ -27,7 +27,7 @@ static String formatFileName(const char* s)
 
 Log::Log(Config &config)
    : _coreCount(config.getTotalCores())
-   , _startTime(0)
+   , _startTime(0), _is_xlog_enable(0)
 {
    initFileDescriptors();
    getEnabledModules();
@@ -410,8 +410,10 @@ void Log::log(const char *format, ...)
 }
 
 
-void Log::log(Log::LogDst logDst, const char *format, ...)
+void Log::log(Log::LogDst logDst, const char *format, ...)// Log::LogState logState,
 {
+   // if(logState == LogState::DISABLE)
+   //    return ;
    core_id_t core_id;
    bool sim_thread;
    discoverCore(&core_id, &sim_thread);

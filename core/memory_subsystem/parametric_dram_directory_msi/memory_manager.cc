@@ -472,18 +472,18 @@ MemoryManager::MemoryManager(Core* core,
 
 MemoryManager::~MemoryManager()
 {
-   // for(auto pc: PCStatCollector->globalAllLevelPCStat){
-   //    std::vector<Helper::Message> allMsg = PCStatCollector->processEpocEndComputation(pc.first, PCStatCollector->globalAllLevelPCStat,0);
-   //    for(auto msg: allMsg){
-   //       _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::MEM_GLOBAL_STATUS, "%ld,%s,%ld,%ld,%ld\n", 
-   //          pc.first, 
-   //          MemComponent2String(msg.getLevel()).c_str(),
-   //          msg.gettotalMiss(),
-   //          msg.gettotalAccess(),
-   //          msg.isLevelSkipable()
-   //       );
-   //    } 
-   // }
+   for(auto pc: PCStatCollector->globalAllLevelPCStat){
+      std::vector<Helper::Message> allMsg = PCStatCollector->processEpocEndComputation(pc.first, PCStatCollector->globalAllLevelPCStat,0);
+      for(auto msg: allMsg){
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::MEM_GLOBAL_STATUS, "%ld,%s,%ld,%ld,%ld\n", 
+            pc.first, 
+            MemComponent2String(msg.getLevel()).c_str(),
+            msg.gettotalMiss(),
+            msg.gettotalAccess(),
+            msg.isLevelSkipable()
+         );
+      } 
+   }
    
    UInt32 i;
 

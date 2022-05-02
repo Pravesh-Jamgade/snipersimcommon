@@ -26,6 +26,12 @@ class Log
          Error,
       };
 
+      enum LogState
+      {
+         DISABLE=0,
+         ENABLE=1,
+      };
+
       enum LogDst
       {
          AddressAnalyzer=0,
@@ -49,12 +55,15 @@ class Log
 
       void log(ErrorState err, const char *source_file, SInt32 source_line, const char* format, ...);
       void log( const char *format, ...);
-      void log(Log::LogDst logDst, const char *format, ...);
+      void log(Log::LogDst logDst, const char *format, ...);//, Log::LogState logState
 
       bool isEnabled(const char* module);
       bool isLoggingEnabled() const { return _anyLoggingEnabled; }
 
       String getModule(const char *filename);
+
+      bool is_xlog_enabled(int x);
+      void set_xlog(int x);
 
    private:
       UInt64 getTimestamp();
@@ -83,6 +92,7 @@ class Log
       // [update]
       FILE** _loggerFiles;
       Lock** _loggerLocks;
+      UInt64 _is_xlog_enable;
 
       core_id_t _coreCount;
       UInt64 _startTime;

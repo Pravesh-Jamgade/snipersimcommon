@@ -361,7 +361,7 @@ namespace PCPredictorSpace
                 for(int i=MemComponent::component_t::L1_DCACHE;i<=llc;i++){
                     MemComponent::component_t comp = static_cast<MemComponent::component_t>(i);
                     bool actSkip = lp.canSkipLevel(comp);
-                    bool predSkip = prediction->canSkipLevel(comp);
+                    bool predSkip = prediction-> (comp);
 
                     // if(comp == llc && predSkip==1){
                     //     _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TEMP, "%ld\n", counter);
