@@ -15,7 +15,7 @@ UInt64 PCStatHelper::getTotalLPAccessCount(){
 }
 
 bool PCStatHelper::interpretMMratio(double ratio){
-    return ratio>0.5;
+    return ratio>0.5111;
 }
 
 void PCStatHelper::processEndPerformanceAnalysis(IntPtr pc){

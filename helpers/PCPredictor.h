@@ -526,7 +526,7 @@ namespace PCPredictorSpace
                 UInt64 thresh = getThresholdByLevel(msg.getLevel());
                 UInt64 pccount = uord.second.getTotalCount();
                 
-                if(learnFromPrevEpoc(pc,msg.getLevel())){//learnFromPrevEpoc(pc, msg.getLevel())
+                if(msg.getMissRatio()>0.5111 && learnFromPrevEpoc(pc,msg.getLevel())){//learnFromPrevEpoc(pc, msg.getLevel())
                     LPHelper::insert(pc, msg.getLevel());
                     msg.addLevelSkip();
                     perLevelSkip[msg.getLevel()].increase();
