@@ -72,12 +72,33 @@ void PCStatHelper::processEndPerformanceAnalysis(IntPtr pc){
 // caculate LP table for next epoc
 void PCStatHelper::updateLPTable()
 {
+    std::vector<std::pair<UInt64, IntPtr>> bag;
+    // pick top ten pc;
+    for(auto pc: tmpAllLevelPCStat){
+        bag.push_back(
+            { perEpocperPCStat[pc.first].getCount(), pc.first}
+        );
+    }
+
+    sort(bag.begin(), bag.end());
+    
+    std::vector<IntPtr> highpc;
+    int co=10;
+    for(auto it=bag.rbegin();it!=bag.rend() && co;it++){
+        co--;
+        highpc.push_back(it->second);
+    }
+
     for(auto pc: tmpAllLevelPCStat){
         if(isLockEnabled()){
             processEndPerformanceAnalysis(pc.first);
         }
-        std::vector<Helper::Message> allMsg=processEpocEndComputation(pc.first, tmpAllLevelPCStat, counter);
-        logPerEpocSkiporNotSkipStatus(allMsg, pc.first);
+        // if pc is high pc then on update table
+        auto findPc = std::find(highpc.begin(), highpc.end(), pc.first);
+        if(findPc!=highpc.end()){
+            std::vector<Helper::Message> allMsg=processEpocEndComputation(pc.first, tmpAllLevelPCStat, counter);
+            logPerEpocSkiporNotSkipStatus(allMsg, pc.first);
+        }
     }
 }
 
