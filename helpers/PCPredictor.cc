@@ -6,18 +6,27 @@ int LPHelper::lp_unlock=2;
 std::unordered_map<IntPtr, LevelPredictor> LPHelper::tmpAllLevelLP;
 std::unordered_map<IntPtr, LevelPredictor> LPHelper::copyTmpAllLevelLP;
 
-UInt64 PCStatHelper::getTotalLPAccessCount(){
-    UInt64 sum=0;
-    for(auto level: perLevelLPAccessCount){
-        sum+=level.second.getCount();
+void PCStatHelper::LPLookup(IntPtr pc){
+    if(LPHelper::isLockEnabled()!=1)
+        return;
+   
+    // increase count if pc predicition found
+    auto findPred = LPHelper::tmpAllLevelLP.find(pc);
+    if(findPred!=LPHelper::tmpAllLevelLP.end()){
+        lpEntryFound++;
+        _LOG_CUSTOM_LOGGER(Log::Warnig, Log::LogDst::DEBUG_VER_LP_ACCESS,"*%ld,%ld\n",lpEntryFound,pc);
     }
-    return sum;
+}
+
+UInt64 PCStatHelper::getTotalLPAccessCount(){
+    return lpEntryFound;
 }
 
 bool PCStatHelper::interpretMMratio(double ratio){
     return ratio>0.5111;
 }
 
+//at the end of epoc
 void PCStatHelper::processEndPerformanceAnalysis(IntPtr pc){
     // check if pc has decision from x-1 epoc
     auto findPC = LPHelper::copyTmpAllLevelLP.find(pc);
@@ -39,7 +48,7 @@ void PCStatHelper::processEndPerformanceAnalysis(IntPtr pc){
                 MemComponent::component_t comp = static_cast<MemComponent::component_t>(i);
 
                 if(levelP.canSkipLevel(comp)){// skip
-                    if(interpretMMratio(mmratio[i-MemComponent::component_t::L1_DCACHE].getMissRatio())){// mm high
+                    if( (mmratio[i-MemComponent::component_t::L1_DCACHE].getMissRatio())){// mm high
                         perLevelLPperf[comp].inc(LPPerf::State::fs);//hazard
                     }
                     else{
@@ -201,17 +210,17 @@ void PCStatHelper::logPerEpocSkiporNotSkipStatus(std::vector<Helper::Message>&al
     
 }
 
-void PCStatHelper::logPerEpocSkiporNotskipWhileEpoc()
-{
-    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_NOSKIP_PER_EPOC, "%ld,", counter);
-    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_SKIP_PER_EPOC, "%ld,", counter);
+// void PCStatHelper::logPerEpocSkiporNotskipWhileEpoc()
+// {
+    // _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_NOSKIP_PER_EPOC, "%ld,", counter);
+    // _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_SKIP_PER_EPOC, "%ld,", counter);
 
-    UInt64 total = 0;
+    // UInt64 total = 0;
     
-    for(auto level: perLevelSkipWhileEpoc){
-        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_SKIP_PER_EPOC, "%d,", level.second.getCount());
-        total += level.second.getCount();
-    }
+    // for(auto level: perLevelSkipWhileEpoc){
+    //     _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_SKIP_PER_EPOC, "%d,", level.second.getCount());
+    //     total += level.second.getCount();
+    // }
 
     // // ratio per level skip
     // for(auto level: perLevelSkipWhileEpoc){
@@ -219,11 +228,11 @@ void PCStatHelper::logPerEpocSkiporNotskipWhileEpoc()
     //     _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_PER_LEVEL_SKIP_RATIO, "%f,", ratio);
     // }
 
-    total = 0;
-    for(auto level: perLevelNoSkipWhileEpoc){
-        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_NOSKIP_PER_EPOC, "%d,", level.second.getCount());
-        total += level.second.getCount();
-    }
+    // total = 0;
+    // for(auto level: perLevelNoSkipWhileEpoc){
+    //     _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_NOSKIP_PER_EPOC, "%d,", level.second.getCount());
+    //     total += level.second.getCount();
+    // }
 
     // // ratio per level noskip
     // for(auto level: perLevelNoSkipWhileEpoc){
@@ -231,9 +240,9 @@ void PCStatHelper::logPerEpocSkiporNotskipWhileEpoc()
     //     _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_PER_LEVEL_NSKIP_RATIO, "%f,", ratio);
     // }
     
-    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_NOSKIP_PER_EPOC, "\n");
-    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_SKIP_PER_EPOC, "\n");
-}
+    // _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_NOSKIP_PER_EPOC, "\n");
+    // _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_SKIP_PER_EPOC, "\n");
+// }
 
 void PCStatHelper::logLPPerfPerLevel(){
     for(auto level: perLevelLPperf){
@@ -287,10 +296,47 @@ void PCStatHelper::logLPTotalVsPreciseHitCount(){
         counter, precisionLPHitActualLevel, getTotalLPAccessCount());
 }
 
+void PCStatHelper::logLPTopPCTotalAccessCount(){
+    UInt64 sum=0;
+    for(auto pc: LPHelper::tmpAllLevelLP){//top pc at end of current epoc for current epoc will be used in next epoc
+        UInt64 total = 0;
+        auto findPC = perEpocperPCStat.find(pc.first);
+        if(findPC!=perEpocperPCStat.end())
+            total=findPC->second.getCount();//before level l1
+        sum += total;
+    }
+    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_TOP_PC_ACCESS, "%ld,%ld,%d\n", counter, sum, LPHelper::getTopPCcount());
+    
+}
+
+void PCStatHelper::logLPvsTypeAccess(){
+    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_LP_VS_TYPE_ACCESS, "%ld,%ld,*,",counter,getTotalLPAccessCount());
+
+    for(int level=MemComponent::L1_DCACHE; level<=llc; level++){
+        MemComponent::component_t comp = static_cast<MemComponent::component_t>(level);
+        auto findLevel = accessTypeCount.find(comp);
+        if(findLevel!=accessTypeCount.end()){
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_LP_VS_TYPE_ACCESS, "%ld,%ld,%ld,%ld,*,", 
+            accessTypeCount[comp].getCount(LPPerf::fs),
+            accessTypeCount[comp].getCount(LPPerf::ts),
+            accessTypeCount[comp].getCount(LPPerf::fns),
+            accessTypeCount[comp].getCount(LPPerf::tns)
+          );
+        }
+        else{ _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_LP_VS_TYPE_ACCESS, "0,0,0,0,*,");}
+        
+    }
+    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_LP_VS_TYPE_ACCESS, "\n");
+
+}
+
 void PCStatHelper::logInit(){
       
     LPHelper::clearLPTable();
     if(LPHelper::getLockStatus() !=1){
+        _LOG_CUSTOM_LOGGER(Log::Warnig, Log::LogDst::DEBUG_VER_LP_ACCESS, "epoc,lp,totallp\n");
+        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_LP_VS_TYPE_ACCESS, "epoc,lp,p,fs1,ts1,fns1,tns1,q,fs2,ts2,fns2,tns2,r,fs3,ts3,fns3,tns3,s\n");
+        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_TOP_PC_ACCESS, "epoc,toppcaccess, toppccount\n");
         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LP_SUCCESS_VS_TOTAL_LP_ACCESS,"epoc,match,total,#matched cache level for actual & noskip, total LP access\n");
         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LP_VS_TOTAL_ACCESS, "epoc,total,lp\n");
         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_TOP_VS_TOTAL_PC, "epoc,top,total\n");
@@ -298,7 +344,7 @@ void PCStatHelper::logInit(){
         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_PERF_L2, "epoc,fs,ts,fns,tns\n");
         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_PERF_L3, "epoc,fs,ts,fns,tns\n");
         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_LEVEL_UNI_PC, "epoc,pc1,pc2,pc3,#unique pc count per level\n");
-        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::MEM_GLOBAL_STATUS, "pc,level,miss,total,skip\n");
+        // _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::MEM_GLOBAL_STATUS, "pc,level,miss,total,skip\n");
         // _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PC_STAT, "epoc,pc,level,misses,hits,total,missratio\n");
         // _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_PC_PER_EPOC, "epoc,pc,totalAccess\n");
         // _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_EPOC, "epoc,totalAccess,threshold\n");
@@ -306,8 +352,8 @@ void PCStatHelper::logInit(){
         // _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_PER_LEVEL_SKIP_RATIO,"epoc,");
         // _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_PER_LEVEL_NSKIP_RATIO,"epoc,");
 
-        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_SKIP_PER_EPOC, "epoc,");
-        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_NOSKIP_PER_EPOC, "epoc,");
+        // _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_SKIP_PER_EPOC, "epoc,");
+        // _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_NOSKIP_PER_EPOC, "epoc,");
 
         // _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "epoc,pc,");
         // _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_LEVEL_PER_EPOC, "epoc,");
@@ -326,11 +372,11 @@ void PCStatHelper::logInit(){
             // _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_PC_PER_LEVEL_PER_EPOC, "%s,", 
             //     MemComponent2String(comp).c_str());
             
-            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_SKIP_PER_EPOC, "%s,", 
-                MemComponent2String(comp).c_str());
+            // _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_SKIP_PER_EPOC, "%s,", 
+            //     MemComponent2String(comp).c_str());
             
-            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_NOSKIP_PER_EPOC, "%s,", 
-                MemComponent2String(comp).c_str());
+            // _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_NOSKIP_PER_EPOC, "%s,", 
+            //     MemComponent2String(comp).c_str());
             
             // _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_LEVEL_THRESHOLD,"%s,",
             //     MemComponent2String(comp).c_str());
@@ -351,8 +397,8 @@ void PCStatHelper::logInit(){
         // _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF, "#per epoc per level missmatch ratio\n");
         // _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_LEVEL_PER_EPOC, "#total access per level per epoc\n");
         // _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TOTAL_ACCESS_PER_PC_PER_LEVEL_PER_EPOC, "#total access per pc per level per epoc\n");
-        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_SKIP_PER_EPOC, "#per level skip per epoc\n");
-        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_NOSKIP_PER_EPOC, "#per level noskip per epoc\n");
+        // _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_SKIP_PER_EPOC, "#per level skip per epoc\n");
+        // _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_NOSKIP_PER_EPOC, "#per level noskip per epoc\n");
         // _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_LEVEL_THRESHOLD,"#per level per epoc access threshold\n");
 
         // _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_PER_LEVEL_SKIP_RATIO,"\n");
@@ -360,10 +406,14 @@ void PCStatHelper::logInit(){
         // _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_PER_LEVEL_NSKIP_RATIO,"\n");
     } 
 
-      logPerEpocSkiporNotskipWhileEpoc();
+    //   logPerEpocSkiporNotskipWhileEpoc();
 
       updateLPTable();
 
+      logLPvsTypeAccess();
+
+      // top pc for currrent epoc x and their accesses
+      logLPTopPCTotalAccessCount();
       // updated LP table will give top pc for current epoc
       logTopVsTotalPC();
       

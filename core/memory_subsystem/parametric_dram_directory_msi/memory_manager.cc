@@ -472,18 +472,18 @@ MemoryManager::MemoryManager(Core* core,
 
 MemoryManager::~MemoryManager()
 {
-   for(auto pc: PCStatCollector->globalAllLevelPCStat){
-      std::vector<Helper::Message> allMsg = PCStatCollector->processEpocEndComputation(pc.first, PCStatCollector->globalAllLevelPCStat,0);
-      for(auto msg: allMsg){
-         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::MEM_GLOBAL_STATUS, "%ld,%s,%ld,%ld,%ld\n", 
-            pc.first, 
-            MemComponent2String(msg.getLevel()).c_str(),
-            msg.gettotalMiss(),
-            msg.gettotalAccess(),
-            msg.isLevelSkipable()
-         );
-      } 
-   }
+   // for(auto pc: PCStatCollector->globalAllLevelPCStat){
+   //    std::vector<Helper::Message> allMsg = PCStatCollector->processEpocEndComputation(pc.first, PCStatCollector->globalAllLevelPCStat,0);
+   //    for(auto msg: allMsg){
+   //       _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::MEM_GLOBAL_STATUS, "%ld,%s,%ld,%ld,%ld\n", 
+   //          pc.first, 
+   //          MemComponent2String(msg.getLevel()).c_str(),
+   //          msg.gettotalMiss(),
+   //          msg.gettotalAccess(),
+   //          msg.isLevelSkipable()
+   //       );
+   //    } 
+   // }
    
    UInt32 i;
 
@@ -554,6 +554,9 @@ MemoryManager::coreInitiateMemoryAccess(
       accessTLB(m_itlb, address, true, modeled, eip, path);
    else if (mem_component == MemComponent::L1_DCACHE && m_dtlb)
       accessTLB(m_dtlb, address, false, modeled, eip, path);
+
+   // lookup Prediction before cache hierarchy access
+   PCStatCollector->LPLookup(eip);
 
    HitWhere::where_t hitWhere= m_cache_cntlrs[mem_component]->processMemOpFromCore(
          lock_signal,

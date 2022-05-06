@@ -35,23 +35,26 @@ class Log
       enum LogDst
       {
          AddressAnalyzer=0,
-         MEM_GLOBAL_STATUS,//r
+         // MEM_GLOBAL_STATUS,
          // LP_LOCAL_PER_PC_PER_MEM_LEVEL_PERF,//
          // LP_LOCAL_PC_STAT,
          // DEBUG_PC_PER_EPOC,
          // DEBUG_TOTAL_ACCESS_PER_EPOC,
          // DEBUG_TOTAL_ACCESS_PER_LEVEL_PER_EPOC,
          // DEBUG_TOTAL_ACCESS_PER_PC_PER_LEVEL_PER_EPOC,
-         DEBUG_SKIP_PER_EPOC,
-         DEBUG_NOSKIP_PER_EPOC,
+         // DEBUG_SKIP_PER_EPOC,
+         // DEBUG_NOSKIP_PER_EPOC,
          // DEBUG_LEVEL_THRESHOLD,
-         DEBUG_LEVEL_UNI_PC,
-         LP_PERF_L1,
+         DEBUG_LEVEL_UNI_PC=2,
+         LP_PERF_L1=5,
          LP_PERF_L2,
          LP_PERF_L3,
          LP_TOP_VS_TOTAL_PC,
          LP_LP_VS_TOTAL_ACCESS,
          LP_LP_SUCCESS_VS_TOTAL_LP_ACCESS,
+         LP_TOP_PC_ACCESS,
+         DEBUG_LP_VS_TYPE_ACCESS,
+         DEBUG_VER_LP_ACCESS,
          END,
       };
 
