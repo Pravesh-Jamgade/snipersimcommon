@@ -27,53 +27,47 @@ bool PCStatHelper::interpretMMratio(double ratio){
 }
 
 //at the end of epoc
-void PCStatHelper::processEndPerformanceAnalysis(IntPtr pc){
-    // check if pc has decision from x-1 epoc
-    auto findPC = LPHelper::copyTmpAllLevelLP.find(pc);
-    if(findPC!=LPHelper::copyTmpAllLevelLP.end()){
+void PCStatHelper::processEndPerformanceAnalysis(IntPtr pc, LevelPredictor levelP){
 
-        LevelPredictor levelP = findPC->second;
+    // check if pc has missmatch from x epoc
+    auto findPCx = perPCperLevelperEpocLPPerf.find(pc);
 
-        // check if pc has missmatch from x epoc
-        auto findPCx = perPCperLevelperEpocLPPerf.find(pc);
+    if(findPCx!=perPCperLevelperEpocLPPerf.end()){
+        
+        // get per level missmatch ratio for pc
+        std::vector<EpocPerformanceStat> mmratio = findPCx->second;
 
-        if(findPCx!=perPCperLevelperEpocLPPerf.end()){
-            
-            // get per missmatch ratio for pc
-            std::vector<EpocPerformanceStat> mmratio = findPCx->second;
+        // iterate over each level and accumulate result levelwise
+        for(int i =MemComponent::component_t::L1_DCACHE; i<= llc; i++){
 
-            // iterate over each level and accumulate result levelwise
-            for(int i =MemComponent::component_t::L1_DCACHE; i<= llc; i++){
+            MemComponent::component_t comp = static_cast<MemComponent::component_t>(i);
 
-                MemComponent::component_t comp = static_cast<MemComponent::component_t>(i);
-
-                if(levelP.canSkipLevel(comp)){// skip
-                    if( (mmratio[i-MemComponent::component_t::L1_DCACHE].getMissRatio())){// mm high
-                        perLevelLPperf[comp].inc(LPPerf::State::fs);//hazard
-                    }
-                    else{
-                        perLevelLPperf[comp].inc(LPPerf::ts);//benefit
-                    }
+            if(levelP.canSkipLevel(comp)){// skip
+                if( (mmratio[i-MemComponent::component_t::L1_DCACHE].getMissRatio())){// mm high
+                    perLevelLPperf[comp].inc(LPPerf::State::fs);//hazard
                 }
-                else{// no-skip
-                    if(interpretMMratio(mmratio[i-MemComponent::component_t::L1_DCACHE].getMissRatio())){// mm high
-                        perLevelLPperf[comp].inc(LPPerf::fns);//lost oppo
-                    }else{
-                        perLevelLPperf[comp].inc(LPPerf::tns);//benefit
-                    }
-                }  
+                else{
+                    perLevelLPperf[comp].inc(LPPerf::ts);//benefit
+                }
             }
+            else{// no-skip
+                if(interpretMMratio(mmratio[i-MemComponent::component_t::L1_DCACHE].getMissRatio())){// mm high
+                    perLevelLPperf[comp].inc(LPPerf::fns);//lost oppo
+                }else{
+                    perLevelLPperf[comp].inc(LPPerf::tns);//benefit
+                }
+            }  
         }
-        else return;
     }
-     else return;
+    else return;
 }
 
 // caculate LP table for next epoc
 void PCStatHelper::updateLPTable()
 {
+    // pick top ten pc from current epoc
     std::vector<std::pair<UInt64, IntPtr>> bag;
-    // pick top ten pc;
+    
     for(auto pc: tmpAllLevelPCStat){
         bag.push_back(
             { perEpocperPCStat[pc.first].getCount(), pc.first}
@@ -89,16 +83,17 @@ void PCStatHelper::updateLPTable()
         highpc.push_back(it->second);
     }
 
-    for(auto pc: tmpAllLevelPCStat){
+    // performance analysis is LPT(x-1) vs MMT(x) decision deviation based type access count
+    for(auto pc: LPHelper::copyTmpAllLevelLP){
         if(isLockEnabled()){
-            processEndPerformanceAnalysis(pc.first);
+            processEndPerformanceAnalysis(pc.first, pc.second);
         }
-        // if pc is high pc then on update table
-        auto findPc = std::find(highpc.begin(), highpc.end(), pc.first);
-        if(findPc!=highpc.end()){
-            std::vector<Helper::Message> allMsg=processEpocEndComputation(pc.first, tmpAllLevelPCStat, counter);
-            logPerEpocSkiporNotSkipStatus(allMsg, pc.first);
-        }
+    }
+
+    // using high access pc for LPT update 
+    for(auto high: highpc){
+        processEpocEndComputation(high, tmpAllLevelPCStat, counter);
+        _LOG_CUSTOM_LOGGER(Log::Warning, Log::DEBUG, "%ld,%ld\n", counter, high);
     }
 }
 
@@ -349,6 +344,12 @@ void PCStatHelper::logLPvsTypeAccess(){
     }
     _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_LP_VS_TYPE_ACCESS, "\n");
 
+}
+
+void PCStatHelper::logGlobalPCFreq(){
+    for(auto pc : pcfreq){
+        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_FREQ, "%ld,%ld\n",pc.first, pc.second.getCount());
+    }
 }
 
 void PCStatHelper::logInit(){

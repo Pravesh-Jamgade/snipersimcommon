@@ -142,10 +142,11 @@ namespace PCPredictorSpace
         static int getLockStatus(){return lp_unlock;}
         static void lockenable(){lp_unlock=1;}
         static int isLockEnabled(){return lp_unlock;}
-        static void insert(IntPtr pc, MemComponent::component_t level){
-            if(tmpAllLevelLP.find(pc)!=tmpAllLevelLP.end())
-                tmpAllLevelLP[pc].addSkipLevel(level);
-            else tmpAllLevelLP.insert({pc, LevelPredictor(level)});
+        static void addSkip(IntPtr pc, MemComponent::component_t level){
+            tmpAllLevelLP[pc].addSkipLevel(level);
+        }
+        static void insert(IntPtr pc){
+            tmpAllLevelLP[pc]=LevelPredictor();
         }
         static void clearLPTable(){
             copyTmpAllLevelLP.erase(copyTmpAllLevelLP.begin(), copyTmpAllLevelLP.end());
@@ -195,6 +196,7 @@ namespace PCPredictorSpace
 
         std::map<MemComponent::component_t, Helper::Counter> perLevelSkip, perLevelNoSkip;
         std::map<MemComponent::component_t, Helper::Counter> perLevelSkipWhileEpoc, perLevelNoSkipWhileEpoc;
+        std::map<IntPtr, Helper::Counter> pcfreq;
         
         std::vector<MemComponent::component_t> memLevels;
         // LP x-1, x performance comparison
@@ -307,6 +309,11 @@ namespace PCPredictorSpace
                 perEpocperPCStat[pc].increase();
             }
             else perEpocperPCStat[pc]=Helper::Counter(1);
+
+            if(pcfreq.find(pc)!=pcfreq.end()){
+                pcfreq[pc].increase();
+            }
+            else pcfreq[pc]=Helper::Counter(1);
         }
 
         bool LPPredictionVerifier(IntPtr pc, MemComponent::component_t actual_level, bool cache_hit){
@@ -470,7 +477,7 @@ namespace PCPredictorSpace
 
 
         // comparing decision from x-1 and how effective those at x
-        void processEndPerformanceAnalysis(IntPtr pc);
+        void processEndPerformanceAnalysis(IntPtr pc, LevelPredictor levelPred);
         bool interpretMMratio(double ratio);
         int getTotalPCCount(){return tmpAllLevelPCStat.size();}
         // per level count is non-redundant, return total sum
@@ -508,6 +515,7 @@ namespace PCPredictorSpace
         void logLPTotalVsPreciseHitCount();
         void logLPTopPCTotalAccessCount();
         void logLPvsTypeAccess();
+        void logGlobalPCFreq();
         // init logging
         void logInit();
 
@@ -520,6 +528,7 @@ namespace PCPredictorSpace
             // if( perEpocperPCStat[pc].getCount() < getThreshold())
             //     return allMsg;
             
+            LPHelper::insert(pc);
 
             // insert into LP table per level skip status               
             for(auto uord: mp[pc])
@@ -534,7 +543,7 @@ namespace PCPredictorSpace
                 UInt64 pccount = uord.second.getTotalCount();
                 
                 if(msg.getMissRatio()>0.5111){// && learnFromPrevEpoc(pc,msg.getLevel())
-                    LPHelper::insert(pc, msg.getLevel());
+                    LPHelper::addSkip(pc, msg.getLevel());
                     msg.addLevelSkip();
                     perLevelSkip[msg.getLevel()].increase();
                 }

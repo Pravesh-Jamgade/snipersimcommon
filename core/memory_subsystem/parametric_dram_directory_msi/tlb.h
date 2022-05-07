@@ -44,11 +44,11 @@ namespace ParametricDramDirectoryMSI
          }
          void addRequest(IntPtr eip, IntPtr addr, UInt64 cycleCount, int core, bool accessResult)
          {
-            if((objectNameDebug!="" && objectNameDebug==name) || objectNameDebug=="")
-            {
-               totalAccess++;
-               cacheHelper->addRequest(eip,addr,name, cycleCount, core, true, accessResult);//its a load; tlb lookup() passes LOAD
-            }
+            // if((objectNameDebug!="" && objectNameDebug==name) || objectNameDebug=="")
+            // {
+            //    totalAccess++;
+            //    cacheHelper->addRequest(eip,addr,name, cycleCount, core, true, accessResult);//its a load; tlb lookup() passes LOAD
+            // }
          }
 
          void setCacheHelper(std::shared_ptr<cache_helper::CacheHelper> cacheHelper)

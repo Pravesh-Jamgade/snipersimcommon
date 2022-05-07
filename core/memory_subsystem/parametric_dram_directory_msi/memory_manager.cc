@@ -472,6 +472,7 @@ MemoryManager::MemoryManager(Core* core,
 
 MemoryManager::~MemoryManager()
 {
+   PCStatCollector->logGlobalPCFreq();
    // for(auto pc: PCStatCollector->globalAllLevelPCStat){
    //    std::vector<Helper::Message> allMsg = PCStatCollector->processEpocEndComputation(pc.first, PCStatCollector->globalAllLevelPCStat,0);
    //    for(auto msg: allMsg){

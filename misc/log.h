@@ -55,6 +55,8 @@ class Log
          LP_TOP_PC_ACCESS,
          DEBUG_LP_VS_TYPE_ACCESS,
          DEBUG_VER_LP_ACCESS,
+         DEBUG,
+         DEBUG_FREQ,
          END,
       };
 
