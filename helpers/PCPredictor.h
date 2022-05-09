@@ -388,6 +388,8 @@ namespace PCPredictorSpace
                             accessTypeCount[comp].inc(LPPerf::fns);//lost oppo
                         }
                     } 
+                    if(actSkip==0)
+                        break;
                 }
 
                 // per level check skip-noskip missmatch or match, keep count
