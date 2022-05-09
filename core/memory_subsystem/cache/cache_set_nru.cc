@@ -83,3 +83,7 @@ CacheSetNRU::updateReplacementIndex(UInt32 accessed_index)
       }
    }
 }
+
+bool CacheSetNRU::checkWhereInTheRecencyList(int index){
+
+}

@@ -170,6 +170,7 @@ CacheCntlr::CacheCntlr(MemComponent::component_t mem_component,
 
    if (isMasterCache())
    {
+      _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG,"[MASTER]%s,%d\n", name.c_str(), core_id);
       /* Master cache */
       m_master = new CacheMasterCntlr(name, core_id, cache_params.outstanding_misses);
       m_master->m_cache = new Cache(name,
@@ -200,7 +201,9 @@ CacheCntlr::CacheCntlr(MemComponent::component_t mem_component,
       }
 
       Sim()->getHooksManager()->registerHook(HookType::HOOK_ROI_END, __walkUsageBits, (UInt64)this, HooksManager::ORDER_NOTIFY_PRE);
-   }
+
+      m_master->m_cache->setCBTracker(cbTracker);
+    }
    else
    {
       /* Shared, non-master cache, we're just a proxy */
@@ -2442,28 +2445,28 @@ CacheCntlr::getNetworkThreadSemaphore()
 void 
 CacheCntlr::loggingLevel(IntPtr addr, Core::mem_op_t mem_op_type, bool accessResult, bool isCache)
 {
-   bool typeAccess = cache_helper::Misc::accessTypeInfo(mem_op_type);
-   if(typeAccess)
-      stats.totalLoads++;
-   else stats.totalStores++;
+   // bool typeAccess = cache_helper::Misc::accessTypeInfo(mem_op_type);
+   // if(typeAccess)
+   //    stats.totalLoads++;
+   // else stats.totalStores++;
 
-   stats.totalAccess++;
+   // stats.totalAccess++;
 
 
-   if(accessResult){
-      stats.totalHits++;
-   }
-   else {
-      stats.totalMisses++;
-   }
+   // if(accessResult){
+   //    stats.totalHits++;
+   // }
+   // else {
+   //    stats.totalMisses++;
+   // }
 
-   String name = getName();
-   IntPtr eip = getEIP();
-   if((memLevelDebug!="" && getMemLevelDebug() == name)||memLevelDebug=="")
-   {
-      UInt64 cycleCount=getMemoryManager()->getCore()->getCycleCount();
-      cacheHelper->addRequest(eip, addr, name, cycleCount, getMemoryManager()->getCore()->getId(), typeAccess, accessResult);
-   }
+   // String name = getName();
+   // IntPtr eip = getEIP();
+   // if((memLevelDebug!="" && getMemLevelDebug() == name)||memLevelDebug=="")
+   // {
+   //    UInt64 cycleCount=getMemoryManager()->getCore()->getCycleCount();
+   //    cacheHelper->addRequest(eip, addr, name, cycleCount, getMemoryManager()->getCore()->getId(), typeAccess, accessResult);
+   // }
 }
 
 }

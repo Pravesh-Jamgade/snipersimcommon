@@ -12,6 +12,7 @@ class CacheSetRoundRobin : public CacheSet
 
       UInt32 getReplacementIndex(CacheCntlr *cntlr);
       void updateReplacementIndex(UInt32 accessed_index);
+      virtual bool checkWhereInTheRecencyList(int index);
 
    private:
       UInt32 m_replacement_index;

@@ -44,3 +44,12 @@ void
 CacheSetRandom::updateReplacementIndex(UInt32 accessed_index)
 {
 }
+
+bool CacheSetRandom::checkWhereInTheRecencyList(int index){
+   std::map<int,int> mp;
+   for(int i=0; i< m_associativity; i++){
+      if(m_cache_block_info_array[i]->isValid()){
+         mp[i]=i;
+      }
+   }
+}

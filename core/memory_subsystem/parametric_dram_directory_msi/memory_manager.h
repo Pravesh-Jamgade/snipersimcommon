@@ -13,6 +13,7 @@
 #include "shmem_perf_model.h"
 #include "shared_cache_block_info.h"
 #include "subsecond_time.h"
+#include "DeadBlockAnalysis.h"
 
 #include <map>
 #include <memory>
@@ -130,6 +131,7 @@ namespace ParametricDramDirectoryMSI
          std::shared_ptr<cache_helper::CacheHelper> cacheHelper;
          std::shared_ptr<PCPredictorSpace::PCStatHelper> PCStatCollector;
          std::shared_ptr<Helper::Counter> epocCounter;
+         std::shared_ptr<DeadBlockAnalysisSpace::CacheBlockTracker> CBTacker;
          UInt64 debugEpoc;
    };
 }

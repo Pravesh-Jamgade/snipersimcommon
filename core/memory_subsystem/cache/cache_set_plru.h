@@ -12,7 +12,7 @@ class CacheSetPLRU : public CacheSet
 
       UInt32 getReplacementIndex(CacheCntlr *cntlr);
       void updateReplacementIndex(UInt32 accessed_index);
-
+      virtual bool checkWhereInTheRecencyList(int index);
    private:
       UInt8 b[8];
 };

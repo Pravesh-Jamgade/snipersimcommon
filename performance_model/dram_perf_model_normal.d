@@ -20,6 +20,7 @@
  /mnt/B/sniper/common/helpers/PCPredictor.h \
  /mnt/B/sniper/common/helpers/libpqueue/src/pqueue.h \
  /mnt/B/sniper/common/helpers/helpers.h \
+ /mnt/B/sniper/common/helpers/DeadBlockAnalysis.h \
  /mnt/B/sniper/common/misc/distribution.h \
  /mnt/B/sniper/common/misc/subsecond_time.h \
  /mnt/B/sniper/common/system/simulator.h \

@@ -58,6 +58,7 @@ class CacheSet
 
       virtual UInt32 getReplacementIndex(CacheCntlr *cntlr) = 0;
       virtual void updateReplacementIndex(UInt32) = 0;
+      virtual bool checkWhereInTheRecencyList(int index)=0;
 
       bool isValidReplacement(UInt32 index);
 };

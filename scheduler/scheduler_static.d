@@ -18,6 +18,7 @@
  /mnt/B/sniper/common/helpers/PCPredictor.h \
  /mnt/B/sniper/common/helpers/libpqueue/src/pqueue.h \
  /mnt/B/sniper/common/helpers/helpers.h \
+ /mnt/B/sniper/common/helpers/DeadBlockAnalysis.h \
  /mnt/B/sniper/common/system/core_manager.h \
  /mnt/B/sniper/common/misc/tls.h /mnt/B/sniper/common/system/simulator.h \
  /mnt/B/sniper/common/misc/config.h \

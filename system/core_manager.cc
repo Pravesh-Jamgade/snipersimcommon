@@ -34,10 +34,11 @@ CoreManager::CoreManager()
    cacheHelper=std::make_shared<cache_helper::CacheHelper>();
    PCStatCollector=std::make_shared<PCPredictorSpace::PCStatHelper>();
    epocCounter=std::make_shared<Helper::Counter>();
+   cbTracker=std::make_shared<DeadBlockAnalysisSpace::CacheBlockTracker>(Sim()->getConfig()->getOutputDirectory());
    
    for (UInt32 i = 0; i < Config::getSingleton()->getTotalCores(); i++)
    {
-      Core* core = new Core(i,cacheHelper, PCStatCollector, epocCounter);//[update]
+      Core* core = new Core(i,cacheHelper, PCStatCollector, epocCounter, cbTracker);//[update]
       m_cores.push_back(core);
    }
 
@@ -50,6 +51,7 @@ CoreManager::~CoreManager()
       delete *i;
    }
    cacheHelper.reset();
+   cbTracker.reset();
    delete m_core_tls;
    delete m_thread_type_tls;
 }

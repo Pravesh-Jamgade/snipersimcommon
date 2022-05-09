@@ -12,6 +12,7 @@
 #include "core.h"
 #include "fault_injection.h"
 #include "cache_addon.h"
+#include "DeadBlockAnalysis.h"
 
 
 // Define to enable the set usage histogram
@@ -100,6 +101,11 @@ class Cache : public CacheBase, public CacheAddonSpace::PCHistoryTable
       static bool sendMsgFlag;
       static void resetSendMsgFlag(){
             sendMsgFlag=false;
+      }
+
+      std::shared_ptr<DeadBlockAnalysisSpace::CacheBlockTracker> cbt;
+      void setCBTracker(std::shared_ptr<DeadBlockAnalysisSpace::CacheBlockTracker> cbt){
+            this->cbt=cbt;
       }
 };
 

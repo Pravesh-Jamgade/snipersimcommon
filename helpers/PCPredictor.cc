@@ -93,7 +93,7 @@ void PCStatHelper::updateLPTable()
     // using high access pc for LPT update 
     for(auto high: highpc){
         processEpocEndComputation(high, tmpAllLevelPCStat, counter);
-        _LOG_CUSTOM_LOGGER(Log::Warning, Log::DEBUG, "%ld,%ld\n", counter, high);
+        // _LOG_CUSTOM_LOGGER(Log::Warning, Log::DEBUG, "%ld,%ld\n", counter, high);
     }
 }
 

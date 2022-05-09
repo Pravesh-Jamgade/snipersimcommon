@@ -66,8 +66,12 @@ Lock Core::m_global_core_lock;
 UInt64 Core::g_instructions_hpi_global = 0;
 UInt64 Core::g_instructions_hpi_global_callback = 0;
 
-Core::Core(SInt32 id, std::shared_ptr<cache_helper::CacheHelper> cacheHelper, 
-   std::shared_ptr<PCPredictorSpace::PCStatHelper> pcStatHelper, std::shared_ptr<Helper::Counter> epocCounter)
+Core::Core(SInt32 id, 
+   std::shared_ptr<cache_helper::CacheHelper> cacheHelper, 
+   std::shared_ptr<PCPredictorSpace::PCStatHelper> pcStatHelper, 
+   std::shared_ptr<Helper::Counter> epocCounter,
+   std::shared_ptr<DeadBlockAnalysisSpace::CacheBlockTracker> cbTracker
+   )
    : m_core_id(id)
    , m_dvfs_domain(Sim()->getDvfsManager()->getCoreDomain(id))
    , m_thread(NULL)
@@ -107,6 +111,7 @@ Core::Core(SInt32 id, std::shared_ptr<cache_helper::CacheHelper> cacheHelper,
 
    this->pcStatHelper = pcStatHelper;
    this->epocCounter = epocCounter;
+   this->cbTracker = cbTracker;
    
    LOG_PRINT("instantiated memory manager model");
    m_memory_manager = MemoryManagerBase::createMMU(

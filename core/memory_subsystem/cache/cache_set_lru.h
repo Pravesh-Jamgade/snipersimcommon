@@ -35,6 +35,7 @@ class CacheSetLRU : public CacheSet
 
       virtual UInt32 getReplacementIndex(CacheCntlr *cntlr);
       void updateReplacementIndex(UInt32 accessed_index);
+      virtual bool checkWhereInTheRecencyList(int index);//[update]
 
    protected:
       const UInt8 m_num_attempts;

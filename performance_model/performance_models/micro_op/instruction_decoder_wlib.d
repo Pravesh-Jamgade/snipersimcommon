@@ -29,6 +29,7 @@
  /mnt/B/sniper/common/helpers/PCPredictor.h \
  /mnt/B/sniper/common/helpers/libpqueue/src/pqueue.h \
  /mnt/B/sniper/common/helpers/helpers.h \
+ /mnt/B/sniper/common/helpers/DeadBlockAnalysis.h \
  /mnt/B/sniper/common/system/inst_mode.h \
  /mnt/B/sniper/decoder_lib/x86_decoder.h \
  /mnt/B/sniper/decoder_lib/decoder.h \

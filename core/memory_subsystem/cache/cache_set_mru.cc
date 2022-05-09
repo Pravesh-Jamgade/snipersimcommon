@@ -59,3 +59,19 @@ CacheSetMRU::updateReplacementIndex(UInt32 accessed_index)
    }
    m_lru_bits[accessed_index] = 0;
 }
+
+bool CacheSetMRU::checkWhereInTheRecencyList(int index){
+   std::map<int,int> mp;
+   for(int i=0; i< m_associativity; i++){
+      mp[m_lru_bits[i]]=i+1;
+   }
+
+   int c=1;
+   for(auto recency: mp){
+      if(c<=mp.size()/2 && recency.second==index){
+         return true;// lower half of mru
+      }
+      c++;
+   }
+   return false;// upper half of mru
+}

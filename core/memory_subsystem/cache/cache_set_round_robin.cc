@@ -28,3 +28,7 @@ CacheSetRoundRobin::updateReplacementIndex(UInt32 accessed_index)
 {
    return;
 }
+
+bool CacheSetRoundRobin::checkWhereInTheRecencyList(int index){
+
+}

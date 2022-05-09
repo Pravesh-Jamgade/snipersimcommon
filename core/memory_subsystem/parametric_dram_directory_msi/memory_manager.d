@@ -15,6 +15,7 @@
  /mnt/B/sniper/common/helpers/PCPredictor.h \
  /mnt/B/sniper/common/helpers/libpqueue/src/pqueue.h \
  /mnt/B/sniper/common/helpers/helpers.h \
+ /mnt/B/sniper/common/helpers/DeadBlockAnalysis.h \
  /mnt/B/sniper/common/core/memory_subsystem/parametric_dram_directory_msi/memory_manager.h \
  /mnt/B/sniper/common/core/memory_subsystem/memory_manager_base.h \
  /mnt/B/sniper/common/network/network.h \

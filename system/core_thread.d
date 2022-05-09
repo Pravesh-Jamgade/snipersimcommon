@@ -21,6 +21,7 @@
  /mnt/B/sniper/common/helpers/PCPredictor.h \
  /mnt/B/sniper/common/helpers/libpqueue/src/pqueue.h \
  /mnt/B/sniper/common/helpers/helpers.h \
+ /mnt/B/sniper/common/helpers/DeadBlockAnalysis.h \
  /mnt/B/sniper/common/performance_model/performance_model.h \
  /mnt/B/sniper/common/misc/mt_circular_queue.h \
  /mnt/B/sniper/common/misc/circular_queue.h \

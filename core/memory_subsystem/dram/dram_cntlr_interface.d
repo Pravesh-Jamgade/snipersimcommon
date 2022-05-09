@@ -17,6 +17,7 @@
  /mnt/B/sniper/common/helpers/PCPredictor.h \
  /mnt/B/sniper/common/helpers/libpqueue/src/pqueue.h \
  /mnt/B/sniper/common/helpers/helpers.h \
+ /mnt/B/sniper/common/helpers/DeadBlockAnalysis.h \
  /mnt/B/sniper/common/core/memory_subsystem/fast_nehalem/memory_manager.h \
  /mnt/B/sniper/common/core/memory_subsystem/memory_manager_fast.h \
  /mnt/B/sniper/common/core/memory_subsystem/memory_manager_base.h \

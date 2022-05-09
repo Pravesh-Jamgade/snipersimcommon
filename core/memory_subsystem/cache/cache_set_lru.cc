@@ -123,3 +123,22 @@ CacheSetInfoLRU::~CacheSetInfoLRU()
    if (m_attempts)
       delete [] m_attempts;
 }
+
+bool CacheSetLRU::checkWhereInTheRecencyList(int index){
+   std::map<int,int> mp;
+   // only valid blocks with their receny number
+   for(int i=0; i<m_associativity; i++){
+      mp[m_lru_bits[i]]=i+1;
+   }
+
+   int c=1;
+   for(auto receny: mp){
+      if(receny.second == index){
+         if(c>mp.size()/2){
+            return true; //lower half lru
+         }
+      }
+      c++;
+   }
+   return false;// upper half of lru
+}

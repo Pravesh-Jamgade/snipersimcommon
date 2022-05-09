@@ -16,4 +16,5 @@
  /mnt/B/sniper/common/misc/log.h \
  /mnt/B/sniper/common/helpers/PCPredictor.h \
  /mnt/B/sniper/common/helpers/libpqueue/src/pqueue.h \
- /mnt/B/sniper/common/helpers/helpers.h)
+ /mnt/B/sniper/common/helpers/helpers.h \
+ /mnt/B/sniper/common/helpers/DeadBlockAnalysis.h)

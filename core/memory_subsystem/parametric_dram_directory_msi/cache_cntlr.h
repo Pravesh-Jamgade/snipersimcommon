@@ -23,6 +23,7 @@
 #include "cache_helper.h"
 #include "helpers.h"
 #include "PCPredictor.h"
+#include "DeadBlockAnalysis.h"
 
 class DramCntlrInterface;
 class ATD;
@@ -294,6 +295,7 @@ namespace ParametricDramDirectoryMSI
          bool toDRAM;
 
          std::shared_ptr<cache_helper::CacheHelper> cacheHelper;
+         std::shared_ptr<DeadBlockAnalysisSpace::CacheBlockTracker> cbTracker;
 
          // Core-interfacing stuff
          void accessCache(
@@ -450,6 +452,11 @@ namespace ParametricDramDirectoryMSI
          void setCacheHelper(std::shared_ptr<cache_helper::CacheHelper> cacheHelper)
          {
             this->cacheHelper = cacheHelper;
+         }
+
+         void setCBTracker(std::shared_ptr<DeadBlockAnalysisSpace::CacheBlockTracker> cbTracker)
+         {
+            cbTracker=cbTracker;
          }
 
          String getName()

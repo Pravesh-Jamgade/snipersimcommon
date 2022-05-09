@@ -16,6 +16,7 @@
  /mnt/B/sniper/common/helpers/PCPredictor.h \
  /mnt/B/sniper/common/helpers/libpqueue/src/pqueue.h \
  /mnt/B/sniper/common/helpers/helpers.h \
+ /mnt/B/sniper/common/helpers/DeadBlockAnalysis.h \
  /mnt/B/sniper/common/misc/config.h \
  /mnt/B/sniper/common/system/clock_skew_minimization_object.h \
  /mnt/B/sniper/common/system/cache_efficiency_tracker.h \

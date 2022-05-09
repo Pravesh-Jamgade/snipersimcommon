@@ -14,6 +14,7 @@
 
 #include "cache_helper.h"
 #include "PCPredictor.h"
+#include "DeadBlockAnalysis.h"
 #include<memory>
 
 class Core;
@@ -58,6 +59,7 @@ class CoreManager
       std::shared_ptr<cache_helper::CacheHelper> cacheHelper;
       std::shared_ptr<PCPredictorSpace::PCStatHelper> PCStatCollector;
       std::shared_ptr<Helper::Counter> epocCounter;
+      std::shared_ptr<DeadBlockAnalysisSpace::CacheBlockTracker> cbTracker;
 
       UInt32 *tid_map;
       TLS *m_core_tls;

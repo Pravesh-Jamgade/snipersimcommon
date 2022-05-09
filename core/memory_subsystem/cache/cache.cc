@@ -92,7 +92,6 @@ CacheBlockInfo*
 Cache::accessSingleLine(IntPtr addr, access_t access_type,
       Byte* buff, UInt32 bytes, SubsecondTime now, bool update_replacement, String path, bool count)
 {
-
    IntPtr tag;
    UInt32 set_index;
    UInt32 line_index = -1;
@@ -110,6 +109,8 @@ Cache::accessSingleLine(IntPtr addr, access_t access_type,
    //[update]
    // set cacheblockinfog to hotline
    processPCEntry(getEIP(),addr,cache_block_info,count);
+
+   cbt->doCBUsageTracking(addr, set->checkWhereInTheRecencyList(line_index), m_name);
 
    if (access_type == LOAD)
    {
@@ -137,7 +138,6 @@ Cache::insertSingleLine(IntPtr addr, Byte* fill_buff,
       CacheBlockInfo* evict_block_info, Byte* evict_buff,
       SubsecondTime now, CacheCntlr *cntlr, bool count)
 {
-
    IntPtr tag;
    UInt32 set_index;
    splitAddress(addr, tag, set_index);
@@ -153,6 +153,9 @@ Cache::insertSingleLine(IntPtr addr, Byte* fill_buff,
          eviction, evict_block_info, evict_buff, cntlr);
    *evict_addr = tagToAddress(evict_block_info->getTag());
 
+   if(*eviction)
+      cbt->setFirstTimeEvict(m_name, evict_addr);
+   
    if (m_fault_injector) {
       // NOTE: no callback is generated for read of evicted data
       UInt32 line_index = -1;

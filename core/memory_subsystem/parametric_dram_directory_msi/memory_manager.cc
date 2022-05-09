@@ -51,6 +51,7 @@ MemoryManager::MemoryManager(Core* core,
    this->cacheHelper = core->getCacheHelper();
    this->PCStatCollector = core->getPCStatHelper();
    this->epocCounter = core->getEpocCounter();
+   this->CBTacker = core->getCBTracker();
    if(Sim()->getCfg()->hasKey("debug/epocNumber"))
    {
       debugEpoc=Sim()->getCfg()->getInt("debug/epocNumber");
@@ -343,6 +344,7 @@ MemoryManager::MemoryManager(Core* core,
       );
       
       //[update]
+      cache_cntlr->setCBTracker(CBTacker);
       cache_cntlr->setCacheHelper(cacheHelper);
       cache_cntlr->setEIP(-1);
       cache_cntlr->setName(cache_names[(MemComponent::component_t)i]);

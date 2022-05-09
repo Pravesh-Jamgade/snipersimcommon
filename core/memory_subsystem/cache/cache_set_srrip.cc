@@ -103,3 +103,7 @@ CacheSetSRRIP::updateReplacementIndex(UInt32 accessed_index)
    if (m_rrip_bits[accessed_index] > 0)
       m_rrip_bits[accessed_index]--;
 }
+
+bool CacheSetSRRIP::checkWhereInTheRecencyList(int index){
+
+}

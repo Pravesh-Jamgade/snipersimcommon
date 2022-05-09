@@ -14,7 +14,7 @@ class CacheSetSRRIP : public CacheSet
 
       UInt32 getReplacementIndex(CacheCntlr *cntlr);
       void updateReplacementIndex(UInt32 accessed_index);
-
+      virtual bool checkWhereInTheRecencyList(int index);
    private:
       const UInt8 m_rrip_numbits;
       const UInt8 m_rrip_max;
