@@ -382,10 +382,10 @@ namespace PCPredictorSpace
                         }
                     }
                     else{// prediction was no-skip
-                        if(actSkip){// actual is no-skip
-                            accessTypeCount[comp].inc(LPPerf::tns);//benefit
+                        if(actSkip){// actual is skip
+                            accessTypeCount[comp].inc(LPPerf::fns);//lost opp
                         }else{
-                            accessTypeCount[comp].inc(LPPerf::fns);//lost oppo
+                            accessTypeCount[comp].inc(LPPerf::tns);//benefit
                         }
                     } 
                     if(actSkip==0)
