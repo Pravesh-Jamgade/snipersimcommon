@@ -19,6 +19,7 @@
  /mnt/B/sniper/common/helpers/libpqueue/src/pqueue.h \
  /mnt/B/sniper/common/helpers/helpers.h \
  /mnt/B/sniper/common/helpers/DeadBlockAnalysis.h \
+ /mnt/B/sniper/common/helpers/util.h \
  /mnt/B/sniper/common/system/hooks_manager.h \
  /mnt/B/sniper/common/system/thread_manager.h \
  /mnt/B/sniper/common/system/simulator.h \

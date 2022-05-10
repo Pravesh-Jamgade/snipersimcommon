@@ -17,6 +17,7 @@
  /mnt/B/sniper/common/helpers/libpqueue/src/pqueue.h \
  /mnt/B/sniper/common/helpers/helpers.h \
  /mnt/B/sniper/common/helpers/DeadBlockAnalysis.h \
+ /mnt/B/sniper/common/helpers/util.h \
  /mnt/B/sniper/common/performance_model/performance_models/core_model/core_model.h \
  /mnt/B/sniper/common/misc/allocator.h \
  /mnt/B/sniper/common/misc/FSBAllocator.hh \

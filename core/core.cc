@@ -123,7 +123,6 @@ Core::Core(SInt32 id,
 
 Core::~Core()
 {
-   cacheHelper.reset();
    if (m_cheetah_manager)
       delete m_cheetah_manager;
    delete m_topology_info;

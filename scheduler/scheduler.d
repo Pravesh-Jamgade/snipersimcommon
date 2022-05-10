@@ -18,6 +18,7 @@
  /mnt/B/sniper/common/helpers/libpqueue/src/pqueue.h \
  /mnt/B/sniper/common/helpers/helpers.h \
  /mnt/B/sniper/common/helpers/DeadBlockAnalysis.h \
+ /mnt/B/sniper/common/helpers/util.h \
  /mnt/B/sniper/common/scheduler/scheduler_static.h \
  /mnt/B/sniper/common/scheduler/scheduler_pinned.h \
  /mnt/B/sniper/common/scheduler/scheduler_pinned_base.h \

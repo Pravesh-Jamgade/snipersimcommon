@@ -18,8 +18,8 @@
  /mnt/B/sniper/common/helpers/libpqueue/src/pqueue.h \
  /mnt/B/sniper/common/helpers/helpers.h \
  /mnt/B/sniper/common/helpers/DeadBlockAnalysis.h \
- /mnt/B/sniper/sift/sift_reader.h /mnt/B/sniper/sift/sift.h \
- /mnt/B/sniper/sift/sift_format.h \
+ /mnt/B/sniper/common/helpers/util.h /mnt/B/sniper/sift/sift_reader.h \
+ /mnt/B/sniper/sift/sift.h /mnt/B/sniper/sift/sift_format.h \
  /mnt/B/sniper/common/performance_model/operand.h \
  /mnt/B/sniper/common/misc/semaphore.h \
  /mnt/B/sniper/decoder_lib/decoder.h \

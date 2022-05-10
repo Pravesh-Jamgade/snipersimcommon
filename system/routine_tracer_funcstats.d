@@ -22,6 +22,7 @@
  /mnt/B/sniper/common/helpers/libpqueue/src/pqueue.h \
  /mnt/B/sniper/common/helpers/helpers.h \
  /mnt/B/sniper/common/helpers/DeadBlockAnalysis.h \
+ /mnt/B/sniper/common/helpers/util.h \
  /mnt/B/sniper/common/misc/bottlegraph.h \
  /mnt/B/sniper/common/misc/subsecond_time.h \
  /mnt/B/sniper/common/system/cache_efficiency_tracker.h \

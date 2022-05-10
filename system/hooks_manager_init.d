@@ -18,6 +18,7 @@
  /mnt/B/sniper/common/helpers/libpqueue/src/pqueue.h \
  /mnt/B/sniper/common/helpers/helpers.h \
  /mnt/B/sniper/common/helpers/DeadBlockAnalysis.h \
+ /mnt/B/sniper/common/helpers/util.h \
  /mnt/B/sniper/common/scripting/hooks_py.h \
  /mnt/B/sniper/python_kit/intel64/include/python2.7/Python.h \
  /mnt/B/sniper/python_kit/intel64/include/python2.7/patchlevel.h \

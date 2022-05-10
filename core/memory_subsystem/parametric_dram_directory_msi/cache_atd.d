@@ -22,6 +22,7 @@
  /mnt/B/sniper/common/helpers/libpqueue/src/pqueue.h \
  /mnt/B/sniper/common/helpers/helpers.h \
  /mnt/B/sniper/common/helpers/DeadBlockAnalysis.h \
+ /mnt/B/sniper/common/helpers/util.h \
  /mnt/B/sniper/common/core/memory_subsystem/cache/pr_l1_cache_block_info.h \
  /mnt/B/sniper/common/misc/stats.h \
  /mnt/B/sniper/common/system/simulator.h \

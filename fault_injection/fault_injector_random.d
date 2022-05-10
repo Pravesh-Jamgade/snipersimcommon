@@ -18,4 +18,4 @@
  /mnt/B/sniper/common/helpers/libpqueue/src/pqueue.h \
  /mnt/B/sniper/common/helpers/helpers.h \
  /mnt/B/sniper/common/helpers/DeadBlockAnalysis.h \
- /mnt/B/sniper/common/misc/rng.h)
+ /mnt/B/sniper/common/helpers/util.h /mnt/B/sniper/common/misc/rng.h)

@@ -17,7 +17,7 @@
  /mnt/B/sniper/common/helpers/libpqueue/src/pqueue.h \
  /mnt/B/sniper/common/helpers/helpers.h \
  /mnt/B/sniper/common/helpers/DeadBlockAnalysis.h \
- /mnt/B/sniper/common/misc/_thread.h \
+ /mnt/B/sniper/common/helpers/util.h /mnt/B/sniper/common/misc/_thread.h \
  /mnt/B/sniper/common/trace_frontend/trace_thread.h \
  /mnt/B/sniper/common/core/thread.h /mnt/B/sniper/common/misc/cond.h \
  /mnt/B/sniper/sift/sift_reader.h /mnt/B/sniper/sift/sift.h \

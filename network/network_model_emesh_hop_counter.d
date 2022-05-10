@@ -23,6 +23,7 @@
  /mnt/B/sniper/common/helpers/libpqueue/src/pqueue.h \
  /mnt/B/sniper/common/helpers/helpers.h \
  /mnt/B/sniper/common/helpers/DeadBlockAnalysis.h \
+ /mnt/B/sniper/common/helpers/util.h \
  /mnt/B/sniper/common/system/inst_mode.h \
  /mnt/B/sniper/decoder_lib/decoder.h \
  /mnt/B/sniper/common/network/network_model_emesh_hop_counter.h \

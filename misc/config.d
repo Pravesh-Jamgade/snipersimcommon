@@ -21,6 +21,7 @@
  /mnt/B/sniper/common/helpers/libpqueue/src/pqueue.h \
  /mnt/B/sniper/common/helpers/helpers.h \
  /mnt/B/sniper/common/helpers/DeadBlockAnalysis.h \
+ /mnt/B/sniper/common/helpers/util.h \
  /mnt/B/sniper/common/network/network_model.h \
  /mnt/B/sniper/common/network/packet_type.h \
  /mnt/B/sniper/common/system/simulator.h \
