@@ -223,7 +223,9 @@ namespace PCPredictorSpace
             perLevelNoSkip.erase(perLevelNoSkip.begin(),perLevelNoSkip.end());
             perLevelSkipWhileEpoc.erase(perLevelSkipWhileEpoc.begin(),perLevelSkipWhileEpoc.end());
             perLevelNoSkipWhileEpoc.erase(perLevelNoSkipWhileEpoc.begin(),perLevelNoSkipWhileEpoc.end());
-
+            perLevelLPperf.erase(perLevelLPperf.begin(), perLevelLPperf.end());
+            accessTypeCount.erase(accessTypeCount.begin(), accessTypeCount.end());
+            
             for(auto comp: memLevels){
                 perLevelNoSkip[comp]=Helper::Counter(0);
                 perLevelSkip[comp]=Helper::Counter(0);
@@ -232,8 +234,6 @@ namespace PCPredictorSpace
                 perLevelLPperf[comp]=LPPerf();
                 accessTypeCount[comp]=LPPerf();
             }
-            perLevelLPperf.erase(perLevelLPperf.begin(), perLevelLPperf.end());
-            accessTypeCount.erase(accessTypeCount.begin(), accessTypeCount.end());
             lpaccess.reset();
         }
 
