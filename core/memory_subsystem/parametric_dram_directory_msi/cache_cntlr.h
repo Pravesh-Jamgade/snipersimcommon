@@ -456,7 +456,9 @@ namespace ParametricDramDirectoryMSI
 
          void setCBTracker(std::shared_ptr<DeadBlockAnalysisSpace::CacheBlockTracker> cbTracker)
          {
-            cbTracker=cbTracker;
+            if(isMasterCache()){
+               m_master->m_cache->setCBTracker(cbTracker);
+            }
          }
 
          String getName()

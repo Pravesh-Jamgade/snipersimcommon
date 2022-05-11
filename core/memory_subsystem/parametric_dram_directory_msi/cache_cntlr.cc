@@ -173,7 +173,8 @@ CacheCntlr::CacheCntlr(MemComponent::component_t mem_component,
       _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG,"[MASTER]%s,%d\n", name.c_str(), core_id);
       /* Master cache */
       m_master = new CacheMasterCntlr(name, core_id, cache_params.outstanding_misses);
-      m_master->m_cache = new Cache(name,
+      m_master->m_cache = new Cache(
+            name,
             "perf_model/" + cache_params.configName,
             m_core_id,
             cache_params.num_sets,
@@ -201,8 +202,6 @@ CacheCntlr::CacheCntlr(MemComponent::component_t mem_component,
       }
 
       Sim()->getHooksManager()->registerHook(HookType::HOOK_ROI_END, __walkUsageBits, (UInt64)this, HooksManager::ORDER_NOTIFY_PRE);
-
-      m_master->m_cache->setCBTracker(cbTracker);
     }
    else
    {

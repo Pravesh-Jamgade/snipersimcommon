@@ -38,6 +38,7 @@ Cache::Cache(
       m_sets[i] = CacheSet::createCacheSet(cfgname, core_id, replacement_policy, m_cache_type, m_associativity, m_blocksize, m_set_info);
    }
 
+   cbt = cbt;
    // pcTable = new CacheAddonSpace::PCHistoryTable();
    #ifdef ENABLE_SET_USAGE_HIST
    m_set_usage_hist = new UInt64[m_num_sets];
@@ -110,8 +111,11 @@ Cache::accessSingleLine(IntPtr addr, access_t access_type,
    // set cacheblockinfog to hotline
    processPCEntry(getEIP(),addr,cache_block_info,count);
 
-   cbt->doCBUsageTracking(addr, set->checkWhereInTheRecencyList(line_index), m_name);
-
+   if(cbt!=nullptr){
+      bool status = set->checkWhereInTheRecencyList(line_index);
+      cbt->doCBUsageTracking(addr, status, m_name);
+   }
+   
    if (access_type == LOAD)
    {
       // NOTE: assumes error occurs in memory. If we want to model bus errors, insert the error into buff instead
@@ -153,7 +157,7 @@ Cache::insertSingleLine(IntPtr addr, Byte* fill_buff,
          eviction, evict_block_info, evict_buff, cntlr);
    *evict_addr = tagToAddress(evict_block_info->getTag());
 
-   if(*eviction)
+   if(*eviction && cbt!=nullptr)
       cbt->setFirstTimeEvict(m_name, evict_addr);
    
    if (m_fault_injector) {

@@ -5,6 +5,7 @@
 #include<unordered_map>
 #include"helpers.h"
 #include"util.h"
+#include "log.h"
 
 namespace DeadBlockAnalysisSpace
 {
@@ -28,92 +29,105 @@ namespace DeadBlockAnalysisSpace
 
  class CacheBlockTracker
  {
-    // typedef std::unordered_map<IntPtr, CBUsage> CBTracker;
-    // std::unordered_map<uint64_t, CBTracker>cbTracker;
-    // std::unordered_map<uint64_t, std::string> cbName;
+    typedef std::unordered_map<String, CBUsage> CBTracker;
+    std::unordered_map<String, CBTracker> cbTracker;
 
-    std::unordered_map<std::string, CBUsage> cbTracker;
-
-    std::hash<std::string> hashFunc;
-    
     String output_dir="";
     public:
 
+    CacheBlockTracker(){
+    }
+
     CacheBlockTracker(String output_dir){
         this->output_dir = output_dir;
+        std::cout<<"my output @ "<<output_dir<<'\n';
     }
 
     ~CacheBlockTracker(){
-        // String cbtInfo="cbt_log.out";
+        String cbtInfo="cbt_log.out";
 
-        // // for(auto cacheTracker: cbTracker){
-        //     // String cache=&(getKeyName(cacheTracker.first))[0];
-        //     // cache = '/'+cache+'_'+cbtInfo;
-        //     String path = output_dir+cbtInfo;
-        //     std::fstream cbStream;
-        //     cbStream.open(path.c_str(), std::ofstream::out);
+        for(auto cacheTracker: cbTracker){
+            String cache=cacheTracker.first;
+            cache = '/'+cache+'_'+cbtInfo;
+            String path = output_dir + cache;
+            std::fstream cbStream;
+            cbStream.open(path.c_str(), std::ofstream::out);
 
-        //     for(auto cb: cbTracker){
-        //         IntPtr addr = cb.first;
-        //         UInt64 cbAccess = cb.second.cacheBlockAccess.getCount();
-        //         UInt64 cbReuse = cb.second.cacheBlockReuse.getCount();
-        //         UInt64 cbLHH = cb.second.cacheBlockLowerHalfHits.getCount();
-        //         cbStream<<addr<<','<<cbAccess<<','<<cbReuse<<','<<cbLHH<<'\n';
-        //     }
-        //     cbStream.close();
-        // // }
+            for(auto cb: cacheTracker.second){
+                String addr = cb.first;
+                UInt64 cbAccess = cb.second.cacheBlockAccess.getCount();
+                UInt64 cbReuse = cb.second.cacheBlockReuse.getCount();
+                UInt64 cbLHH = cb.second.cacheBlockLowerHalfHits.getCount();
+                cbStream<<addr<<','<<cbAccess<<','<<cbReuse<<','<<cbLHH<<'\n';
+            }
+            cbStream.close();
+        }
     }
 
-    bool foundAddr(std::string  addr){
-        return cbTracker.find(addr)!=cbTracker.end();
+    void increaseCBA(String name, String  addr){cbTracker[name][addr].increaseCBA();}
+    void increaseCBR(String name, String  addr){cbTracker[name][addr].increaseCBR();}
+    void increaseCBLHH(String name, String  addr){cbTracker[name][addr].increaseCBLHH();}
+    bool IsItkickedAlready(String name, String  addr){ 
+        return cbTracker[name][addr].IsItKickedAlready();
     }
-    void increaseCBA(std::string  addr){cbTracker[addr].increaseCBA();}
-    void increaseCBR(std::string  addr){cbTracker[addr].increaseCBR();}
-    void increaseCBLHH(std::string  addr){cbTracker[addr].increaseCBLHH();}
-    bool IsItkickedAlready(std::string  addr){cbTracker[addr].IsItKickedAlready();}
-    bool setkickedFistTime(std::string  addr){cbTracker[addr].kickedFirstTime();}
-    bool cacheEntryFound(std::string addr){
-        auto findAddr = cbTracker.find(addr);
+    bool setkickedFistTime(String name, String  addr){cbTracker[name][addr].kickedFirstTime();}
+    bool cacheEntryFound(String name){
+        auto findAddr = cbTracker.find(name);
         if(findAddr!=cbTracker.end())
             return true;
         return false;
     }
 
+    bool addrEntryFound(String name, String addr){
+        if(cbTracker[name].find(addr)!=cbTracker[name].end()){
+            return true;
+        }
+        return false;
+    }
+
     void doCBUsageTracking(IntPtr addr, bool recenyPos, String name){
-        std::string s(begin(name), end(name));
+        std::cout<<addr<<" "<<recenyPos<<" "<<name<<std::endl;
 
-        String haddr = Util::Misc::toHex(addr);
-        std::string shaddr(begin(haddr), end(haddr));
-        auto findAddr = cbTracker.find(shaddr);
-        if(findAddr!=cbTracker.end())
-            cbTracker[shaddr]=CBUsage();
+        String haddr = &(std::to_string(addr))[0];
+        // String haddr = Util::Misc::toHex(addr);
 
-        if(IsItkickedAlready(shaddr)){
-            increaseCBR(shaddr);
+        if(!cacheEntryFound(name)){
+            cbTracker[name][haddr]=CBUsage();
+            return;
+        }
+
+        if(!addrEntryFound(name,haddr)){
+            cbTracker[name][haddr]=CBUsage();
+            return;
+        }
+
+        if(IsItkickedAlready(name, haddr)){
+            increaseCBR(name, haddr);
         }
         else{
-            increaseCBA(shaddr);
+            increaseCBA(name, haddr);
             // make count if addr is in the lower half of recency list
             if(recenyPos)
-                increaseCBLHH(shaddr);
+                increaseCBLHH(name, haddr);
         }
     }
 
     void setFirstTimeEvict(String name, IntPtr* paddr){
-        std::string s(begin(name), end(name));
-        uint64_t hashkey = hashFunc(s);
+
         IntPtr addr = *paddr;
         String haddr = Util::Misc::toHex(addr);
-        std::string shaddr(begin(haddr), end(haddr));
-        if(!cacheEntryFound(shaddr))
-            return ;        
+        
+        if(!cacheEntryFound(name)){
+            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG, "[Notfound CacheName]\n");
+            return ;
+        }
 
-        if(foundAddr( shaddr)){
-            setkickedFistTime(shaddr);
+        if(addrEntryFound(name, haddr)){
+            setkickedFistTime(name, haddr);
         }
         else{
-            printf("[DBA]Something Wrong!!\n");
-            exit(0);
+            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG, "[Notfound Address]\n");
+            return ;
         }
     }
  };

@@ -103,10 +103,11 @@ class Cache : public CacheBase, public CacheAddonSpace::PCHistoryTable
             sendMsgFlag=false;
       }
 
-      std::shared_ptr<DeadBlockAnalysisSpace::CacheBlockTracker> cbt;
+      std::shared_ptr<DeadBlockAnalysisSpace::CacheBlockTracker> cbt = nullptr;
       void setCBTracker(std::shared_ptr<DeadBlockAnalysisSpace::CacheBlockTracker> cbt){
+            if(cbt==nullptr)
+                  std::cout<<"cbt is NULL\n";
             this->cbt=cbt;
-            std::cout<<"cbt: cache="<<m_name<<'\n';
       }
 };
 

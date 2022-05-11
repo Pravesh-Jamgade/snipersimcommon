@@ -125,20 +125,19 @@ CacheSetInfoLRU::~CacheSetInfoLRU()
 }
 
 bool CacheSetLRU::checkWhereInTheRecencyList(int index){
-   std::map<int,int> mp;
+   int recency = INT8_MAX;
    // only valid blocks with their receny number
    for(int i=0; i<m_associativity; i++){
-      mp[m_lru_bits[i]]=i+1;
-   }
-
-   int c=1;
-   for(auto receny: mp){
-      if(receny.second == index){
-         if(c>mp.size()/2){
-            return true; //lower half lru
-         }
+      if(index == i){
+         recency=m_lru_bits[i];
+         break;
       }
-      c++;
    }
-   return false;// upper half of lru
+   if(recency==INT8_MAX){
+      printf("not possible receny\n");
+      exit(0);
+   }
+   if(recency<=m_associativity/2)
+      return false;// upper half
+   return true;// lower half
 }
