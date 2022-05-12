@@ -175,8 +175,12 @@ namespace PCPredictorSpace
                 memLevels.push_back(static_cast<MemComponent::component_t>(level));
             }
             memLevels.push_back(MemComponent::component_t::DRAM);
+            l1=l2=l3=Helper::Counter(0);
         }
         
+        // total access
+        Helper::Counter l1,l2,l3;
+
         void setLLC(MemComponent::component_t llc){this->llc=llc;}
         std::unordered_map<IntPtr, Helper::Counter> perEpocperPCStat;
         UInt64 totalAccessPerEpoc, lpEntryFound;

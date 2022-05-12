@@ -916,6 +916,10 @@ SubsecondTime t_issue, bool have_write_lock, String& path, std::shared_ptr<PCPre
       {
          pcStatHelper->insertEntry(m_mem_component, getEIP(), cache_hit);
          pcStatHelper->LPPredictionVerifier(getEIP(), m_mem_component, cache_hit);
+         if(m_mem_component == MemComponent::L2_CACHE)
+            pcStatHelper->l2.increase();
+         if(m_mem_component == MemComponent::L3_CACHE)
+            pcStatHelper->l3.increase();
       }
       
    }
