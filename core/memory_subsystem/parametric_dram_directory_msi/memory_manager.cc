@@ -473,7 +473,7 @@ MemoryManager::MemoryManager(Core* core,
 MemoryManager::~MemoryManager()
 {
    PCStatCollector->logGlobalPCFreq();
-   printf("l1=%ld, l3=%ld,l2=%ld\n", PCStatCollector->l1.getCount(), PCStatCollector->l2.getCount(), PCStatCollector->l3.getCount());
+   printf("l1=%ld, l2=%ld,l3=%ld\n", PCStatCollector->l1.getCount(), PCStatCollector->l2.getCount(), PCStatCollector->l3.getCount());
    // for(auto pc: PCStatCollector->globalAllLevelPCStat){
    //    std::vector<Helper::Message> allMsg = PCStatCollector->processEpocEndComputation(pc.first, PCStatCollector->globalAllLevelPCStat,0);
    //    for(auto msg: allMsg){
@@ -556,10 +556,6 @@ MemoryManager::coreInitiateMemoryAccess(
       accessTLB(m_itlb, address, true, modeled, eip, path);
    else if (mem_component == MemComponent::L1_DCACHE && m_dtlb)
       accessTLB(m_dtlb, address, false, modeled, eip, path);
-
-   // lookup Prediction before cache hierarchy access
-   PCStatCollector->l1.increase();
-   PCStatCollector->LPLookup(eip);
 
    HitWhere::where_t hitWhere= m_cache_cntlrs[mem_component]->processMemOpFromCore(
          lock_signal,
