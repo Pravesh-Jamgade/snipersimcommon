@@ -423,8 +423,7 @@ LOG_ASSERT_ERROR(offset + data_length <= getCacheBlockSize(), "access until %u >
       // if debug level not specified, unlock to log all; or unlock individual level
       this->loggingLevel(ca_address, mem_op_type, cache_hit);
 
-      if(pcStatHelper!=nullptr && m_mem_component == MemComponent::
-      ){ 
+      if(pcStatHelper!=nullptr && m_mem_component == MemComponent::L1_DCACHE){ 
          // lookup Prediction before cache hierarchy access
          pcStatHelper->LPLookup(eip);
          pcStatHelper->l1.increase();
