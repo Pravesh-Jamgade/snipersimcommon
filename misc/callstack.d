@@ -1,2 +1,3 @@
-/mnt/B/sniper/common/misc/callstack.o /mnt/B/sniper/common/misc/callstack.d: $(wildcard /mnt/B/sniper/common/misc/callstack.cc \
- /mnt/B/sniper/common/misc/callstack.h)
+/home/atul/Documents/simulator/sniper/common/misc/callstack.o /home/atul/Documents/simulator/sniper/common/misc/callstack.d: $(wildcard \
+ /home/atul/Documents/simulator/sniper/common/misc/callstack.cc \
+ /home/atul/Documents/simulator/sniper/common/misc/callstack.h)

@@ -15,8 +15,6 @@
 #include "subsecond_time.h"
 
 #include <map>
-#include "cache_helper.h"
-#include <memory>
 
 class DramCache;
 class ShmemPerf;
@@ -62,7 +60,7 @@ namespace ParametricDramDirectoryMSI
          // Global map of all caches on all cores (within this process!)
          static CacheCntlrMap m_all_cache_cntlrs;
 
-         void accessTLB(TLB * tlb, IntPtr address, bool isIfetch, Core::MemModeled modeled, IntPtr eip, String& path);
+         void accessTLB(TLB * tlb, IntPtr address, bool isIfetch, Core::MemModeled modeled);
 
       public:
          MemoryManager(Core* core, Network* network, ShmemPerfModel* shmem_perf_model);
@@ -90,18 +88,13 @@ namespace ParametricDramDirectoryMSI
                Core::mem_op_t mem_op_type,
                IntPtr address, UInt32 offset,
                Byte* data_buf, UInt32 data_length,
-               Core::MemModeled modeled, IntPtr eip);
+               Core::MemModeled modeled);
 
          void handleMsgFromNetwork(NetPacket& packet);
 
-         void sendMsg(PrL1PrL2DramDirectoryMSI::ShmemMsg::msg_t msg_type, MemComponent::component_t sender_mem_component, 
-         MemComponent::component_t receiver_mem_component, core_id_t requester, core_id_t receiver, 
-         IntPtr address, Byte* data_buf = NULL, UInt32 data_length = 0, HitWhere::where_t where = HitWhere::UNKNOWN,
-          ShmemPerf *perf = NULL, ShmemPerfModel::Thread_t thread_num = ShmemPerfModel::NUM_CORE_THREADS, IntPtr eip=-1);
+         void sendMsg(PrL1PrL2DramDirectoryMSI::ShmemMsg::msg_t msg_type, MemComponent::component_t sender_mem_component, MemComponent::component_t receiver_mem_component, core_id_t requester, core_id_t receiver, IntPtr address, Byte* data_buf = NULL, UInt32 data_length = 0, HitWhere::where_t where = HitWhere::UNKNOWN, ShmemPerf *perf = NULL, ShmemPerfModel::Thread_t thread_num = ShmemPerfModel::NUM_CORE_THREADS);
 
-         void broadcastMsg(PrL1PrL2DramDirectoryMSI::ShmemMsg::msg_t msg_type, MemComponent::component_t sender_mem_component,
-          MemComponent::component_t receiver_mem_component, core_id_t requester, IntPtr address, Byte* data_buf = NULL, UInt32 data_length = 0, 
-          ShmemPerf *perf = NULL, ShmemPerfModel::Thread_t thread_num = ShmemPerfModel::NUM_CORE_THREADS, IntPtr eip=-1);
+         void broadcastMsg(PrL1PrL2DramDirectoryMSI::ShmemMsg::msg_t msg_type, MemComponent::component_t sender_mem_component, MemComponent::component_t receiver_mem_component, core_id_t requester, IntPtr address, Byte* data_buf = NULL, UInt32 data_length = 0, ShmemPerf *perf = NULL, ShmemPerfModel::Thread_t thread_num = ShmemPerfModel::NUM_CORE_THREADS);
 
          SubsecondTime getL1HitLatency(void) { return m_cache_perf_models[MemComponent::L1_ICACHE]->getLatency(CachePerfModel::ACCESS_CACHE_DATA_AND_TAGS); }
          void addL1Hits(bool icache, Core::mem_op_t mem_op_type, UInt64 hits) {
@@ -120,9 +113,5 @@ namespace ParametricDramDirectoryMSI
          SubsecondTime getCost(MemComponent::component_t mem_component, CachePerfModel::CacheAccess_t access_type);
          void incrElapsedTime(SubsecondTime latency, ShmemPerfModel::Thread_t thread_num = ShmemPerfModel::NUM_CORE_THREADS);
          void incrElapsedTime(MemComponent::component_t mem_component, CachePerfModel::CacheAccess_t access_type, ShmemPerfModel::Thread_t thread_num = ShmemPerfModel::NUM_CORE_THREADS);
-
-         //[update]
-         std::vector<String> confName, objName;
-         cache_helper::CacheHelper cacheHelper;
    };
 }

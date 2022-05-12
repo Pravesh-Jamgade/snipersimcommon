@@ -24,7 +24,7 @@ namespace PrL1PrL2DramDirectoryMSI
          IntPtr address,
          Byte* data_buf,
          UInt32 data_length,
-         ShmemPerf* perf, IntPtr eip) :
+         ShmemPerf* perf) :
       m_msg_type(msg_type),
       m_sender_mem_component(sender_mem_component),
       m_receiver_mem_component(receiver_mem_component),
@@ -33,7 +33,7 @@ namespace PrL1PrL2DramDirectoryMSI
       m_address(address),
       m_data_buf(data_buf),
       m_data_length(data_length),
-      m_perf(perf), eip(eip) // [UPDATE]
+      m_perf(perf)
    {}
 
    ShmemMsg::ShmemMsg(ShmemMsg* shmem_msg) :

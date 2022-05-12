@@ -1,2 +1,2 @@
-/mnt/B/sniper/common/misc/memguard.o /mnt/B/sniper/common/misc/memguard.d: $(wildcard /mnt/B/sniper/common/misc/memguard.cc \
- /mnt/B/sniper/common/misc/memguard.h)
+/home/atul/Documents/simulator/sniper/common/misc/memguard.o /home/atul/Documents/simulator/sniper/common/misc/memguard.d: $(wildcard /home/atul/Documents/simulator/sniper/common/misc/memguard.cc \
+ /home/atul/Documents/simulator/sniper/common/misc/memguard.h)

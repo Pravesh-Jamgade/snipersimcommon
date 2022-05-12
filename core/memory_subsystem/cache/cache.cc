@@ -1,7 +1,6 @@
 #include "simulator.h"
 #include "cache.h"
 #include "log.h"
-#include "cache_helper.h"
 
 // Cache class
 // constructors/destructors
@@ -17,7 +16,7 @@ Cache::Cache(
    hash_t hash,
    FaultInjector *fault_injector,
    AddressHomeLookup *ahl)
-:  //[ORIGINAL] // cache_helper::CacheHelper(name, num_sets, associativity, cache_block_size, hash, ahl),
+:
    CacheBase(name, num_sets, associativity, cache_block_size, hash, ahl),
    m_enabled(false),
    m_num_accesses(0),
@@ -83,8 +82,10 @@ Cache::invalidateSingleLine(IntPtr addr)
 
 CacheBlockInfo*
 Cache::accessSingleLine(IntPtr addr, access_t access_type,
-      Byte* buff, UInt32 bytes, SubsecondTime now, bool update_replacement, IntPtr eip, String path)
+      Byte* buff, UInt32 bytes, SubsecondTime now, bool update_replacement)
 {
+   //assert((buff == NULL) == (bytes == 0));
+
    IntPtr tag;
    UInt32 set_index;
    UInt32 line_index = -1;
@@ -95,10 +96,9 @@ Cache::accessSingleLine(IntPtr addr, access_t access_type,
    CacheSet* set = m_sets[set_index];
    CacheBlockInfo* cache_block_info = set->find(tag, &line_index);
 
-   if (cache_block_info == NULL){
+   if (cache_block_info == NULL)
       return NULL;
-   }
-     
+
    if (access_type == LOAD)
    {
       // NOTE: assumes error occurs in memory. If we want to model bus errors, insert the error into buff instead
@@ -123,7 +123,7 @@ void
 Cache::insertSingleLine(IntPtr addr, Byte* fill_buff,
       bool* eviction, IntPtr* evict_addr,
       CacheBlockInfo* evict_block_info, Byte* evict_buff,
-      SubsecondTime now, CacheCntlr *cntlr, IntPtr eip)
+      SubsecondTime now, CacheCntlr *cntlr)
 {
    IntPtr tag;
    UInt32 set_index;

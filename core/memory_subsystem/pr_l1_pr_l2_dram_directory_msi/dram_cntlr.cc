@@ -39,11 +39,6 @@ DramCntlr::DramCntlr(MemoryManagerBase* memory_manager,
    m_dram_access_count = new AccessCountMap[DramCntlrInterface::NUM_ACCESS_TYPES];
    registerStatsMetric("dram", memory_manager->getCore()->getId(), "reads", &m_reads);
    registerStatsMetric("dram", memory_manager->getCore()->getId(), "writes", &m_writes);
-
-   //[update]
-   registerStatsMetric("dram", memory_manager->getCore()->getId(), "totalAccess", &totalAccess);
-   registerStatsMetric("dram", memory_manager->getCore()->getId(), "totalLoads", &totalLoads);
-   registerStatsMetric("dram", memory_manager->getCore()->getId(), "totalStores", &totalStores);
 }
 
 DramCntlr::~DramCntlr()
@@ -55,7 +50,7 @@ DramCntlr::~DramCntlr()
 }
 
 boost::tuple<SubsecondTime, HitWhere::where_t>
-DramCntlr::getDataFromDram(IntPtr address, core_id_t requester, Byte* data_buf, SubsecondTime now, ShmemPerf *perf, IntPtr eip)
+DramCntlr::getDataFromDram(IntPtr address, core_id_t requester, Byte* data_buf, SubsecondTime now, ShmemPerf *perf)
 {
    if (Sim()->getFaultinjectionManager())
    {
@@ -74,9 +69,6 @@ DramCntlr::getDataFromDram(IntPtr address, core_id_t requester, Byte* data_buf, 
 
    SubsecondTime dram_access_latency = runDramPerfModel(requester, now, address, READ, perf);
 
-   //[update]
-   loggingDRAM(address, Core::READ, true);
-
    ++m_reads;
    #ifdef ENABLE_DRAM_ACCESS_COUNT
    addToDramAccessCount(address, READ);
@@ -87,7 +79,7 @@ DramCntlr::getDataFromDram(IntPtr address, core_id_t requester, Byte* data_buf, 
 }
 
 boost::tuple<SubsecondTime, HitWhere::where_t>
-DramCntlr::putDataToDram(IntPtr address, core_id_t requester, Byte* data_buf, SubsecondTime now, IntPtr eip)
+DramCntlr::putDataToDram(IntPtr address, core_id_t requester, Byte* data_buf, SubsecondTime now)
 {
    if (Sim()->getFaultinjectionManager())
    {
@@ -103,9 +95,6 @@ DramCntlr::putDataToDram(IntPtr address, core_id_t requester, Byte* data_buf, Su
    }
 
    SubsecondTime dram_access_latency = runDramPerfModel(requester, now, address, WRITE, &m_dummy_shmem_perf);
-
-   //[update]
-   loggingDRAM(address, Core::WRITE, true);
 
    ++m_writes;
    #ifdef ENABLE_DRAM_ACCESS_COUNT

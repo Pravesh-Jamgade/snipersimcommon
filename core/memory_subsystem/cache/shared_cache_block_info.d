@@ -1,10 +1,12 @@
-/mnt/B/sniper/common/core/memory_subsystem/cache/shared_cache_block_info.o /mnt/B/sniper/common/core/memory_subsystem/cache/shared_cache_block_info.d: $(wildcard \
- /mnt/B/sniper/common/core/memory_subsystem/cache/shared_cache_block_info.cc \
- /mnt/B/sniper/common/core/memory_subsystem/cache/shared_cache_block_info.h \
- /mnt/B/sniper/common/core/memory_subsystem/cache/cache_state.h \
- /mnt/B/sniper/common/misc/fixed_types.h \
- /mnt/B/sniper/common/core/memory_subsystem/cache/cache_block_info.h \
- /mnt/B/sniper/common/core/memory_subsystem/cache/cache_base.h \
- /mnt/B/sniper/common/core/memory_subsystem/mem_component.h \
- /mnt/B/sniper/common/misc/log.h /mnt/B/sniper/common/misc/fixed_types.h \
- /mnt/B/sniper/common/misc/lock.h /mnt/B/sniper/common/misc/itostr.h)
+/home/atul/Documents/simulator/sniper/common/core/memory_subsystem/cache/shared_cache_block_info.o /home/atul/Documents/simulator/sniper/common/core/memory_subsystem/cache/shared_cache_block_info.d: $(wildcard \
+ /home/atul/Documents/simulator/sniper/common/core/memory_subsystem/cache/shared_cache_block_info.cc \
+ /home/atul/Documents/simulator/sniper/common/core/memory_subsystem/cache/shared_cache_block_info.h \
+ /home/atul/Documents/simulator/sniper/common/core/memory_subsystem/cache/cache_state.h \
+ /home/atul/Documents/simulator/sniper/common/misc/fixed_types.h \
+ /home/atul/Documents/simulator/sniper/common/core/memory_subsystem/cache/cache_block_info.h \
+ /home/atul/Documents/simulator/sniper/common/core/memory_subsystem/cache/cache_base.h \
+ /home/atul/Documents/simulator/sniper/common/core/memory_subsystem/mem_component.h \
+ /home/atul/Documents/simulator/sniper/common/misc/log.h \
+ /home/atul/Documents/simulator/sniper/common/misc/fixed_types.h \
+ /home/atul/Documents/simulator/sniper/common/misc/lock.h \
+ /home/atul/Documents/simulator/sniper/common/misc/itostr.h)

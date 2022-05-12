@@ -1,3 +1,3 @@
-/mnt/B/sniper/common/config/key.o /mnt/B/sniper/common/config/key.d: $(wildcard /mnt/B/sniper/common/config/key.cpp \
- /mnt/B/sniper/common/config/key.hpp \
- /mnt/B/sniper/common/misc/fixed_types.h)
+/home/atul/Documents/simulator/sniper/common/config/key.o /home/atul/Documents/simulator/sniper/common/config/key.d: $(wildcard /home/atul/Documents/simulator/sniper/common/config/key.cpp \
+ /home/atul/Documents/simulator/sniper/common/config/key.hpp \
+ /home/atul/Documents/simulator/sniper/common/misc/fixed_types.h)

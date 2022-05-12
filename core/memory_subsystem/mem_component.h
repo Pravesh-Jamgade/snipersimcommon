@@ -1,8 +1,6 @@
 #ifndef __MEM_COMPONENT_H__
 #define __MEM_COMPONENT_H__
 
-#include <fixed_types.h>
-
 class MemComponent
 {
    public:
@@ -31,6 +29,5 @@ class MemComponent
 };
 
 const char * MemComponentString(MemComponent::component_t mem_component);
-String MemComponent2String(MemComponent::component_t mem_component);
-String MemObjectNameFromConfigName(String configName, MemComponent::component_t mem_component);
+
 #endif /* __MEM_COMPONENT_H__ */

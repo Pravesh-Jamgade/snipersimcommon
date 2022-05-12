@@ -77,11 +77,6 @@ class CacheBase
       UInt32 m_log_blocksize;
       UInt32 m_log_num_sets;
 
-      //[UPDATE]
-      UInt32 m_log_num_blocks;
-      IntPtr block_mask;
-      IntPtr set_mask;
-
    public:
       // constructors/destructors
       CacheBase(String name, UInt32 num_sets, UInt32 associativity, UInt32 cache_block_size, CacheBase::hash_t hash, AddressHomeLookup *ahl = NULL);
@@ -91,17 +86,12 @@ class CacheBase
       void splitAddress(const IntPtr addr, IntPtr& tag, UInt32& set_index) const;
       void splitAddress(const IntPtr addr, IntPtr& tag, UInt32& set_index, UInt32& block_offset) const;
       IntPtr tagToAddress(const IntPtr tag);
-      String getName(void) { return m_name; }// cache objectName
+      String getName(void) { return m_name; }
 
       UInt32 getNumSets() const { return m_num_sets; }
       UInt32 getAssociativity() const { return m_associativity; }
 
       static hash_t parseAddressHash(String hash_name);
-
-      //[update]
-      UInt32 getLogBlockSize(){return this->m_log_blocksize;}
-      IntPtr getBlockMask(){return this->block_mask;}
-      IntPtr getSetMask(){return this->set_mask;}
 };
 
 #endif /* __CACHE_BASE_H__ */

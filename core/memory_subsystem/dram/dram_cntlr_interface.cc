@@ -19,7 +19,7 @@ void DramCntlrInterface::handleMsgFromTagDirectory(core_id_t sender, PrL1PrL2Dra
          SubsecondTime dram_latency;
          HitWhere::where_t hit_where;
 
-         boost::tie(dram_latency, hit_where) = getDataFromDram(address, shmem_msg->getRequester(), data_buf, msg_time, shmem_msg->getPerf(), shmem_msg->eip);
+         boost::tie(dram_latency, hit_where) = getDataFromDram(address, shmem_msg->getRequester(), data_buf, msg_time, shmem_msg->getPerf());
 
          getShmemPerfModel()->incrElapsedTime(dram_latency, ShmemPerfModel::_SIM_THREAD);
 
@@ -32,13 +32,13 @@ void DramCntlrInterface::handleMsgFromTagDirectory(core_id_t sender, PrL1PrL2Dra
                sender /* receiver */,
                address,
                data_buf, getCacheBlockSize(),
-               hit_where, shmem_msg->getPerf(), ShmemPerfModel::_SIM_THREAD, shmem_msg->eip);
+               hit_where, shmem_msg->getPerf(), ShmemPerfModel::_SIM_THREAD);
          break;
       }
 
       case PrL1PrL2DramDirectoryMSI::ShmemMsg::DRAM_WRITE_REQ:
       {
-         putDataToDram(shmem_msg->getAddress(), shmem_msg->getRequester(), shmem_msg->getDataBuf(), msg_time, shmem_msg->eip);
+         putDataToDram(shmem_msg->getAddress(), shmem_msg->getRequester(), shmem_msg->getDataBuf(), msg_time);
 
          // DRAM latency is ignored on write
 
@@ -48,22 +48,5 @@ void DramCntlrInterface::handleMsgFromTagDirectory(core_id_t sender, PrL1PrL2Dra
       default:
          LOG_PRINT_ERROR("Unrecognized Shmem Msg Type: %u", shmem_msg_type);
          break;
-   }
-}
-
-
-void  DramCntlrInterface::loggingDRAM(IntPtr addr, Core::mem_op_t mem_op, bool accessResult)
-{
-   UInt64 cycleCount = getMemoryManager()->getCore()->getCycleCount();
-   if((getMemLevelDebug()!="" && getMemLevelDebug()==getName() ) || getMemLevelDebug()=="")
-   {
-      bool typeAccess = cache_helper::Misc::accessTypeInfo(mem_op);
-
-      if(typeAccess)
-         totalLoads++;
-      else totalStores++;
-
-      totalAccess++;
-      getCacheHelper()->addRequest(eip, addr, getName(), NULL, cycleCount, typeAccess, accessResult);
    }
 }

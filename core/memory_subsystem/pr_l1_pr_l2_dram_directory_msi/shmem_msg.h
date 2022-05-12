@@ -40,9 +40,6 @@ namespace PrL1PrL2DramDirectoryMSI
             NUM_MSG_TYPES = MAX_MSG_TYPE - MIN_MSG_TYPE + 1
          };
 
-      //[UPDATE]
-      IntPtr eip;
-
       private:
          msg_t m_msg_type;
          MemComponent::component_t m_sender_mem_component;
@@ -53,7 +50,7 @@ namespace PrL1PrL2DramDirectoryMSI
          Byte* m_data_buf;
          UInt32 m_data_length;
          ShmemPerf* m_perf;
-         
+
       public:
          ShmemMsg() = delete;
          ShmemMsg(ShmemPerf* perf);
@@ -64,7 +61,7 @@ namespace PrL1PrL2DramDirectoryMSI
                IntPtr address,
                Byte* data_buf,
                UInt32 data_length,
-               ShmemPerf* perf, IntPtr eip=-1);
+               ShmemPerf* perf);
          ShmemMsg(ShmemMsg* shmem_msg);
 
          ~ShmemMsg();

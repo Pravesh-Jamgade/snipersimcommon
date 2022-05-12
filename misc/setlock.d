@@ -1,5 +1,6 @@
-/mnt/B/sniper/common/misc/setlock.o /mnt/B/sniper/common/misc/setlock.d: $(wildcard /mnt/B/sniper/common/misc/setlock.cc \
- /mnt/B/sniper/common/misc/setlock.h /mnt/B/sniper/common/misc/lock.h \
- /mnt/B/sniper/common/misc/itostr.h \
- /mnt/B/sniper/common/misc/fixed_types.h \
- /mnt/B/sniper/common/misc/selock.h)
+/home/atul/Documents/simulator/sniper/common/misc/setlock.o /home/atul/Documents/simulator/sniper/common/misc/setlock.d: $(wildcard /home/atul/Documents/simulator/sniper/common/misc/setlock.cc \
+ /home/atul/Documents/simulator/sniper/common/misc/setlock.h \
+ /home/atul/Documents/simulator/sniper/common/misc/lock.h \
+ /home/atul/Documents/simulator/sniper/common/misc/itostr.h \
+ /home/atul/Documents/simulator/sniper/common/misc/fixed_types.h \
+ /home/atul/Documents/simulator/sniper/common/misc/selock.h)

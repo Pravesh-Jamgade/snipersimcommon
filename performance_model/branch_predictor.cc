@@ -1,14 +1,10 @@
 #include "simulator.h"
 #include "branch_predictor.h"
 #include "one_bit_branch_predictor.h"
-#include "n_bit_branch_predictor.h"  //saurabh
 #include "pentium_m_branch_predictor.h"
-#include "bimodal-helper.h" // pravesh
-#include "TPredictorHelper.h" // pravesh
+#include "a53branchpredictor.h"
 #include "config.hpp"
 #include "stats.h"
-#include "1bit_predictor.h"
-#include "2bit_predictor.h"
 
 BranchPredictor::BranchPredictor()
    : m_correct_predictions(0)
@@ -48,40 +44,12 @@ BranchPredictor* BranchPredictor::create(core_id_t core_id)
          UInt32 size = cfg->getIntArray("perf_model/branch_predictor/size", core_id);
          return new OneBitBranchPredictor("branch_predictor", core_id, size);
       }
-      else if (type == "n_bit")   //saurabh
-      {
-         printf("[XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX] inside n-bit\n");
-         UInt32 size = cfg->getIntArray("perf_model/branch_predictor/size", core_id); //saurabh
-         UInt32 history_length = cfg->getIntArray("perf_model/branch_predictor/history_length", core_id); //saurabh
-         return new NBitBranchPredictor("branch_predictor", core_id, size, history_length);  //saurabh
-      }
       else if (type == "pentium_m")
       {
-         BranchPredictor *ret = new PentiumMBranchPredictor("branch_predictor", core_id);
-         printf("correct=%d\t incorrect=%d\t penalty=%d\n", ret->m_correct_predictions, ret->m_incorrect_predictions, BranchPredictor::m_mispredict_penalty);
-         return ret;
+         return new PentiumMBranchPredictor("branch_predictor", core_id);
       }
-      else if (type == "bimodal")
-      {
-         return new BimodalPredictor("branch_predictor", core_id);//pravesh
-      }
-      else if (type == "tournament")
-      {
-         // printf("[ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ] inside tournament pred\n");
-         BranchPredictor *ret = new TPredictorHelper("branch_predictor", core_id);//pravesh
-         printf("correct=%d\t incorrect=%d\t penalty=%d\n", ret->m_correct_predictions, ret->m_incorrect_predictions, BranchPredictor::m_mispredict_penalty);
-         return ret;
-      }
-      else if (type == "1bittest")
-      {
-         UInt32 size = cfg->getIntArray("perf_model/branch_predictor/size", core_id);
-         return new OneBitPredictor("branch_predictor", core_id, size);//pravesh
-      }
-      else if (type == "2bittest")
-      {
-         UInt32 size = cfg->getIntArray("perf_model/branch_predictor/size", core_id);
-         UInt32 counter_bits = cfg->getIntArray("perf_model/branch_predictor/bits", core_id);
-         return new TwobitSpace::TwoBitPredictor("branch_predictor", core_id, size, counter_bits);//pravesh
+      else if (type == "a53") {
+          return new A53BranchPredictor("branch_predictor", core_id);
       }
       else
       {

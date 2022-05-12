@@ -81,8 +81,6 @@ Core::Core(SInt32 id)
    , m_instructions_hpi_callback(0)
    , m_instructions_hpi_last(0)
 {
-   subSecTimeCycleConv = new SubsecondTimeCycleConverter(m_dvfs_domain);
-
    LOG_PRINT("Core ctor for: %d", id);
 
    registerStatsMetric("core", id, "instructions", &m_instructions);
@@ -283,7 +281,6 @@ Core::initiateMemoryAccess(MemComponent::component_t mem_component,
       IntPtr eip,
       SubsecondTime now)
 {
-
    MYLOG("access %lx+%u %c%c modeled(%s)", address, data_size, mem_op_type == Core::WRITE ? 'W' : 'R', mem_op_type == Core::READ_EX ? 'X' : ' ', ModeledString(modeled));
 
    if (data_size <= 0)
@@ -365,15 +362,13 @@ Core::initiateMemoryAccess(MemComponent::component_t mem_component,
       if (m_cheetah_manager)
          m_cheetah_manager->access(mem_op_type, curr_addr_aligned);
 
-     
       HitWhere::where_t this_hit_where = getMemoryManager()->coreInitiateMemoryAccess(
                mem_component,
                lock_signal,
                mem_op_type,
                curr_addr_aligned, curr_offset,
                data_buf ? curr_data_buffer_head : NULL, curr_size,
-               modeled,
-               eip);
+               modeled);
 
       if (hit_where != (HitWhere::where_t)mem_component)
       {
@@ -584,6 +579,3 @@ Core::emulateCpuid(UInt32 eax, UInt32 ecx, cpuid_result_t &res) const
    printf("%08x %08x %08x %08x\n", res.eax, res.ebx, res.ecx, res.edx);
    #endif
 }
-
-UInt64 Core::getCycleCount() { return getPerformanceModel()->getCycleCount();}
-// UInt64 Core::getCycleCountDvfs() { return subSecTimeCycleConv->subsecondTimeToCycles(getElaspedTime()); }

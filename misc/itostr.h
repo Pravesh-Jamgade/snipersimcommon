@@ -14,7 +14,6 @@ String itostr(T val)
 {
    std::stringstream s;
    s << val;
-   s.clear();
    return String(s.str().c_str());
 }
 

@@ -19,8 +19,6 @@
 #include "shmem_perf.h"
 
 #include "boost/tuple/tuple.hpp"
-//[update]
-#include "cache_helper.h"
 
 class DramCntlrInterface;
 class ATD;
@@ -220,10 +218,6 @@ namespace ParametricDramDirectoryMSI
          bool m_l1_mshr;
 
          struct {
-            UInt64 totalAccess;
-            UInt64 totalLoads;
-            UInt64 totalStores;
-            
            UInt64 loads, stores;
            UInt64 load_misses, store_misses;
            UInt64 load_overlapping_misses, store_overlapping_misses;
@@ -283,19 +277,11 @@ namespace ParametricDramDirectoryMSI
 
          ShmemPerfModel* m_shmem_perf_model;
 
-         //[UPDATE]
-         IntPtr eip;
-         String name;
-         String memLevelDebug;
-         bool toDRAM;
-
-         cache_helper::CacheHelper *cacheHelper;
-
          // Core-interfacing stuff
          void accessCache(
                Core::mem_op_t mem_op_type,
                IntPtr ca_address, UInt32 offset,
-               Byte* data_buf, UInt32 data_length, bool update_replacement, String path);
+               Byte* data_buf, UInt32 data_length, bool update_replacement);
          bool operationPermissibleinCache(
                IntPtr address, Core::mem_op_t mem_op_type, CacheBlockInfo **cache_block_info = NULL);
 
@@ -312,8 +298,7 @@ namespace ParametricDramDirectoryMSI
 
          // Cache data operations
          void invalidateCacheBlock(IntPtr address);
-         void retrieveCacheBlock(IntPtr address, Byte* data_buf, ShmemPerfModel::Thread_t thread_num, 
-         bool update_replacement, String path="");
+         void retrieveCacheBlock(IntPtr address, Byte* data_buf, ShmemPerfModel::Thread_t thread_num, bool update_replacement);
 
 
          SharedCacheBlockInfo* insertCacheBlock(IntPtr address, CacheState::cstate_t cstate, Byte* data_buf, core_id_t requester, ShmemPerfModel::Thread_t thread_num);
@@ -321,9 +306,7 @@ namespace ParametricDramDirectoryMSI
          void writeCacheBlock(IntPtr address, UInt32 offset, Byte* data_buf, UInt32 data_length, ShmemPerfModel::Thread_t thread_num);
 
          // Handle Request from previous level cache
-         HitWhere::where_t processShmemReqFromPrevCache(CacheCntlr* requester, Core::mem_op_t mem_op_type, 
-         IntPtr address, bool modeled, bool count, Prefetch::prefetch_type_t isPrefetch,
-         SubsecondTime t_issue, bool have_write_lock, String& path);
+         HitWhere::where_t processShmemReqFromPrevCache(CacheCntlr* requester, Core::mem_op_t mem_op_type, IntPtr address, bool modeled, bool count, Prefetch::prefetch_type_t isPrefetch, SubsecondTime t_issue, bool have_write_lock);
 
          // Process Request from L1 Cache
          boost::tuple<HitWhere::where_t, SubsecondTime> accessDRAM(Core::mem_op_t mem_op_type, IntPtr address, bool isPrefetch, Byte* data_buf);
@@ -397,7 +380,7 @@ namespace ParametricDramDirectoryMSI
                IntPtr ca_address, UInt32 offset,
                Byte* data_buf, UInt32 data_length,
                bool modeled,
-               bool count, IntPtr eip, String& path);
+               bool count);
          void updateHits(Core::mem_op_t mem_op_type, UInt64 hits);
 
          // Notify next level cache of so it can update its sharing set
@@ -425,44 +408,6 @@ namespace ParametricDramDirectoryMSI
 
          friend class CacheCntlrList;
          friend class MemoryManager;
-
-         //
-         void setEIP(IntPtr eip)
-         {
-            this->eip = eip;
-         }
-
-         void setName(String name)
-         {
-            this->name = name;
-         }
-
-         void setMemLevelDebug(String memLevelDebug)
-         {
-            this->memLevelDebug = memLevelDebug;
-         }
-         
-         void setCacheHelper(cache_helper::CacheHelper* cacheHelper)
-         {
-            this->cacheHelper = cacheHelper;
-         }
-
-         String getName()
-         {
-            return this->name;
-         }
-
-         String getMemLevelDebug()
-         {
-            return this->memLevelDebug;
-         }
-
-         IntPtr getEIP()
-         {
-            return this->eip;
-         }
-         
-         void loggingLevel(IntPtr addr, Core::mem_op_t mem_op_type, bool accessResult, bool isCache=true);
    };
 
 }

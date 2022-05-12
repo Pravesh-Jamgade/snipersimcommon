@@ -154,9 +154,6 @@ CacheCntlr::CacheCntlr(MemComponent::component_t mem_component,
    m_shmem_perf_global(NULL),
    m_shmem_perf_model(shmem_perf_model)
 {
-   // [UPDATE]
-   name = name;
-
    m_core_id_master = m_core_id - m_core_id % m_shared_cores;
    Sim()->getStatsManager()->logTopology(name, core_id, m_core_id_master);
 
@@ -219,10 +216,6 @@ CacheCntlr::CacheCntlr(MemComponent::component_t mem_component,
    }
 
    bzero(&stats, sizeof(stats));
-
-   registerStatsMetric(name, core_id, "totalAccess", &stats.totalAccess);
-   registerStatsMetric(name, core_id, "totalLoads", &stats.totalLoads);
-   registerStatsMetric(name, core_id, "totalStores", &stats.totalStores);
 
    registerStatsMetric(name, core_id, "loads", &stats.loads);
    registerStatsMetric(name, core_id, "stores", &stats.stores);
@@ -337,21 +330,8 @@ CacheCntlr::processMemOpFromCore(
       IntPtr ca_address, UInt32 offset,
       Byte* data_buf, UInt32 data_length,
       bool modeled,
-      bool count,
-      IntPtr eip, String& path)
+      bool count)
 {
-
-   // [UPDATE]
-   if(this->eip != eip){
-      printf("EIP: set=%ld, passed=%ld\n", this->eip, eip);
-      exit(0);
-   }
-   
-   String tmp1 = "";
-   String tmp2 = "";
-   bool second_call = false;
-   bool first_call = false;
-
    HitWhere::where_t hit_where = HitWhere::MISS;
 
    // Protect against concurrent access from sibling SMT threads
@@ -389,9 +369,6 @@ LOG_ASSERT_ERROR(offset + data_length <= getCacheBlockSize(), "access until %u >
    CacheBlockInfo *cache_block_info;
    bool cache_hit = operationPermissibleinCache(ca_address, mem_op_type, &cache_block_info), prefetch_hit = false;
 
-    // if debug level not specified, unlock to log all; or unlock individual level
-   this->loggingLevel(ca_address, mem_op_type, cache_hit);
-
    if (!cache_hit && m_perfect)
    {
       cache_hit = true;
@@ -421,7 +398,6 @@ LOG_ASSERT_ERROR(offset + data_length <= getCacheBlockSize(), "access until %u >
 
    if (cache_hit)
    {
-      cache_helper::Misc::pathAdd(cache_hit, m_mem_component, "A", path);
 MYLOG("L1 hit");
       getMemoryManager()->incrElapsedTime(m_mem_component, CachePerfModel::ACCESS_CACHE_DATA_AND_TAGS, ShmemPerfModel::_USER_THREAD);
       hit_where = (HitWhere::where_t)m_mem_component;
@@ -471,12 +447,6 @@ MYLOG("L1 hit");
       }
 
    } else {
-      //[UPDATE]
-      // path+=MemComponent2String(m_mem_component);
-      // cache_helper::Misc::stateAppend(0,path);
-      cache_helper::Misc::pathAdd(cache_hit, m_mem_component, "B1", tmp1);
-
-
       /* cache miss: either wrong coherency state or not present in the cache */
 MYLOG("L1 miss");
       if (!m_passthrough)
@@ -511,23 +481,16 @@ MYLOG("L1 miss");
          invalidateCacheBlock(ca_address);
       }
 
-      // //[update]
-      // m_next_cache_cntlr->eip=eip;
-
 MYLOG("processMemOpFromCore l%d before next", m_mem_component);
-      hit_where = m_next_cache_cntlr->processShmemReqFromPrevCache(this, mem_op_type, ca_address, modeled, count, 
-      Prefetch::NONE, t_start, false, tmp1);
+      hit_where = m_next_cache_cntlr->processShmemReqFromPrevCache(this, mem_op_type, ca_address, modeled, count, Prefetch::NONE, t_start, false);
       bool next_cache_hit = hit_where != HitWhere::MISS;
 MYLOG("processMemOpFromCore l%d next hit = %d", m_mem_component, next_cache_hit);
 
       if (next_cache_hit) {
-         first_call = true;
-      } else {
-         //[update]
-         second_call = true;
-         cache_helper::Misc::pathAdd(cache_hit, m_mem_component, "B2", tmp2);
 
+      } else {
          /* last level miss, a message has been sent. */
+
 MYLOG("processMemOpFromCore l%d waiting for sent message", m_mem_component);
          #ifdef PRIVATE_L2_OPTIMIZATION
          releaseLock(ca_address);
@@ -546,8 +509,7 @@ MYLOG("processMemOpFromCore l%d got message reply", m_mem_component);
 
          /* have the next cache levels fill themselves with the new data */
 MYLOG("processMemOpFromCore l%d before next fill", m_mem_component);
-         hit_where = m_next_cache_cntlr->processShmemReqFromPrevCache(this, mem_op_type, ca_address, false, false,
-          Prefetch::NONE, t_start, true, tmp2);
+         hit_where = m_next_cache_cntlr->processShmemReqFromPrevCache(this, mem_op_type, ca_address, false, false, Prefetch::NONE, t_start, true);
 MYLOG("processMemOpFromCore l%d after next fill", m_mem_component);
          LOG_ASSERT_ERROR(hit_where != HitWhere::MISS,
             "Tried to read in next-level cache, but data is already gone");
@@ -582,6 +544,7 @@ MYLOG("processMemOpFromCore l%d after next fill", m_mem_component);
       }
    }
 
+
    if (modeled && m_next_cache_cntlr && !m_perfect && Sim()->getConfig()->hasCacheEfficiencyCallbacks())
    {
       bool new_bits = cache_block_info->updateUsage(offset, data_length);
@@ -591,26 +554,7 @@ MYLOG("processMemOpFromCore l%d after next fill", m_mem_component);
       }
    }
 
-   
-   //[update]
-   if(first_call)
-   {
-      path += tmp1;
-   }
-
-   if(second_call)
-   {
-      tmp1 = path+tmp1;// from first processShmemFromPrevCache
-      tmp2 = path+tmp2;// from second processShmemFromPrevCache
-      path=cache_helper::Misc::collectPaths(tmp1,tmp2);
-   }
-   
-   // path += MemComponent2String(m_mem_component);
-   // cache_helper::Misc::stateAppend(1,path);
-
-   accessCache(mem_op_type, ca_address, offset, data_buf, data_length, 
-   hit_where == HitWhere::where_t(m_mem_component) && count, path);
-
+   accessCache(mem_op_type, ca_address, offset, data_buf, data_length, hit_where == HitWhere::where_t(m_mem_component) && count);
 MYLOG("access done");
 
    SubsecondTime t_now = getShmemPerfModel()->getElapsedTime(ShmemPerfModel::_USER_THREAD);
@@ -661,9 +605,6 @@ MYLOG("access done");
 
    if (Sim()->getConfig()->getCacheEfficiencyCallbacks().notify_access_func)
       Sim()->getConfig()->getCacheEfficiencyCallbacks().call_notify_access(cache_block_info->getOwner(), mem_op_type, hit_where);
-
-   //[update]
-   cacheHelper->strideTableUpdate();
 
    MYLOG("returning %s, latency %lu ns", HitWhereString(hit_where), total_latency.getNS());
    return hit_where;
@@ -792,32 +733,24 @@ CacheCntlr::Prefetch(SubsecondTime t_now)
       /*for (int i = 0; i < count; ++i) {
          doPrefetch(addresses_to_prefetch[i], m_master->m_prefetch_next);
       }*/
-      doPrefetch(address_to_prefetch, m_master->m_prefetch_next);//[UPDATE]
+      doPrefetch(address_to_prefetch, m_master->m_prefetch_next);
       atomic_add_subsecondtime(m_master->m_prefetch_next, PREFETCH_INTERVAL);
    }
 
    // In case the next-level cache has a prefetcher, run it
-   if (m_next_cache_cntlr){
-      //[UPDATE]
-      m_next_cache_cntlr->eip = eip;
-      m_next_cache_cntlr->Prefetch(t_now);// i wont need to pass eip, if i am setting it for cntrl :TODO
-   }
-      
+   if (m_next_cache_cntlr)
+      m_next_cache_cntlr->Prefetch(t_now);
 }
 
 void
 CacheCntlr::doPrefetch(IntPtr prefetch_address, SubsecondTime t_start)
 {
-   //not using 
-   String path="";
-
    ++stats.prefetches;
    acquireStackLock(prefetch_address);
    MYLOG("prefetching %lx", prefetch_address);
    SubsecondTime t_before = getShmemPerfModel()->getElapsedTime(ShmemPerfModel::_USER_THREAD);
    getShmemPerfModel()->setElapsedTime(ShmemPerfModel::_USER_THREAD, t_start); // Start the prefetch at the same time as the original miss
-   HitWhere::where_t hit_where = processShmemReqFromPrevCache(this, Core::READ, prefetch_address, true, true,
-    Prefetch::OWN, t_start, false, path);
+   HitWhere::where_t hit_where = processShmemReqFromPrevCache(this, Core::READ, prefetch_address, true, true, Prefetch::OWN, t_start, false);
 
    if (hit_where == HitWhere::MISS)
    {
@@ -827,8 +760,7 @@ CacheCntlr::doPrefetch(IntPtr prefetch_address, SubsecondTime t_start)
       waitForNetworkThread();
       wakeUpNetworkThread();
 
-      hit_where = processShmemReqFromPrevCache(this, Core::READ, prefetch_address, false, false, 
-      Prefetch::OWN, t_start, false, path);
+      hit_where = processShmemReqFromPrevCache(this, Core::READ, prefetch_address, false, false, Prefetch::OWN, t_start, false);
 
       LOG_ASSERT_ERROR(hit_where != HitWhere::MISS, "Line was not there after prefetch");
    }
@@ -843,11 +775,8 @@ CacheCntlr::doPrefetch(IntPtr prefetch_address, SubsecondTime t_start)
  *****************************************************************************/
 
 HitWhere::where_t
-CacheCntlr::processShmemReqFromPrevCache(CacheCntlr* requester, Core::mem_op_t mem_op_type, IntPtr address, 
-bool modeled, bool count, Prefetch::prefetch_type_t isPrefetch, 
-SubsecondTime t_issue, bool have_write_lock, String& path)
+CacheCntlr::processShmemReqFromPrevCache(CacheCntlr* requester, Core::mem_op_t mem_op_type, IntPtr address, bool modeled, bool count, Prefetch::prefetch_type_t isPrefetch, SubsecondTime t_issue, bool have_write_lock)
 {
-
    #ifdef PRIVATE_L2_OPTIMIZATION
    bool have_write_lock_internal = have_write_lock;
    if (! have_write_lock && m_shared_cores > 1)
@@ -863,10 +792,6 @@ SubsecondTime t_issue, bool have_write_lock, String& path)
    bool first_hit = cache_hit;
    HitWhere::where_t hit_where = HitWhere::MISS;
    SharedCacheBlockInfo* cache_block_info = getCacheBlockInfo(address);
-
-   //[update]
-   if(modeled==count && modeled!=false )
-      this->loggingLevel(address, mem_op_type, cache_hit);
 
    if (!cache_hit && m_perfect)
    {
@@ -896,8 +821,6 @@ SubsecondTime t_issue, bool have_write_lock, String& path)
 
    if (cache_hit)
    {
-      cache_helper::Misc::pathAdd(cache_hit, m_mem_component, "C", path);
-      
       if (isPrefetch == Prefetch::NONE && cache_block_info->hasOption(CacheBlockInfo::PREFETCH))
       {
          // This line was fetched by the prefetcher and has proven useful
@@ -1000,12 +923,6 @@ SubsecondTime t_issue, bool have_write_lock, String& path)
    }
    else // !cache_hit: either data is not here, or operation on data is not permitted
    {
-      // //[UPDATE]
-      // path+=MemComponent2String(m_mem_component);
-      // cache_helper::Misc::stateAppend(0,path);
-      cache_helper::Misc::pathAdd(cache_hit, m_mem_component, "D", path);
-
-
       // Increment shared mem perf model cycle counts
       if (modeled)
          getMemoryManager()->incrElapsedTime(m_mem_component, CachePerfModel::ACCESS_CACHE_TAGS, ShmemPerfModel::_USER_THREAD);
@@ -1030,15 +947,7 @@ SubsecondTime t_issue, bool have_write_lock, String& path)
             invalidateCacheBlock(address);
 
          // let the next cache level handle it.
-
-         // //[update]
-         // m_next_cache_cntlr->eip = eip;
-         // printf("this=%d, set=%d, verify=%ld\n", eip, this->eip, m_next_cache_cntlr->eip);
-         cache_helper::Misc::pathAdd(cache_hit, m_mem_component, "D1", path);
-
-         hit_where = m_next_cache_cntlr->processShmemReqFromPrevCache(this, mem_op_type, address, modeled, count, 
-         isPrefetch == Prefetch::NONE ? Prefetch::NONE : Prefetch::OTHER, t_issue, have_write_lock_internal, path);
-         
+         hit_where = m_next_cache_cntlr->processShmemReqFromPrevCache(this, mem_op_type, address, modeled, count, isPrefetch == Prefetch::NONE ? Prefetch::NONE : Prefetch::OTHER, t_issue, have_write_lock_internal);
          if (hit_where != HitWhere::MISS)
          {
             cache_hit = true;
@@ -1048,15 +957,11 @@ SubsecondTime t_issue, bool have_write_lock, String& path)
             if (isPrefetch != Prefetch::NONE)
                getCacheBlockInfo(address)->setOption(CacheBlockInfo::PREFETCH);
          }
-
       }
       else // last-level cache
       {
-
          if (cache_block_info && cache_block_info->getCState() == CacheState::EXCLUSIVE)
          {
-            cache_helper::Misc::pathAdd(cache_hit, m_mem_component, "D2-1", path);
-
             // Data is present, but still no cache_hit => this is a write on a SHARED block. Do Upgrade
             SubsecondTime latency = SubsecondTime::Zero();
             for(CacheCntlrList::iterator it = m_master->m_prev_cache_cntlrs.begin(); it != m_master->m_prev_cache_cntlrs.end(); it++)
@@ -1079,8 +984,6 @@ SubsecondTime t_issue, bool have_write_lock, String& path)
             cache_hit = true;
             if (cache_block_info)
             {
-               cache_helper::Misc::pathAdd(cache_hit, m_mem_component, "D2-2-1", path);
-
                // We already have the line: it must have been SHARED and this is a write (else there wouldn't have been a miss)
                // Upgrade silently
                cache_block_info->setCState(CacheState::MODIFIED);
@@ -1088,16 +991,13 @@ SubsecondTime t_issue, bool have_write_lock, String& path)
             }
             else
             {
-               cache_helper::Misc::pathAdd(cache_hit, m_mem_component, "D2-2-2", path);
                m_shmem_perf->reset(getShmemPerfModel()->getElapsedTime(ShmemPerfModel::_USER_THREAD), m_core_id);
 
                Byte data_buf[getCacheBlockSize()];
                SubsecondTime latency;
 
                // Do the DRAM access and increment local time
-               boost::tie<HitWhere::where_t, SubsecondTime>(hit_where, latency) = accessDRAM(Core::READ, address, 
-               isPrefetch != Prefetch::NONE, data_buf);
-
+               boost::tie<HitWhere::where_t, SubsecondTime>(hit_where, latency) = accessDRAM(Core::READ, address, isPrefetch != Prefetch::NONE, data_buf);
                getMemoryManager()->incrElapsedTime(latency, ShmemPerfModel::_USER_THREAD);
 
                // Insert the line. Be sure to use SHARED/MODIFIED as appropriate (upgrades are free anyway), we don't want to have to write back clean lines
@@ -1110,7 +1010,6 @@ SubsecondTime t_issue, bool have_write_lock, String& path)
          }
          else
          {
-            cache_helper::Misc::pathAdd(cache_hit, m_mem_component, "D2-3", path);
             initiateDirectoryAccess(mem_op_type, address, isPrefetch != Prefetch::NONE, t_issue);
          }
       }
@@ -1120,7 +1019,7 @@ SubsecondTime t_issue, bool have_write_lock, String& path)
    {
       MYLOG("Yay, hit!!");
       Byte data_buf[getCacheBlockSize()];
-      retrieveCacheBlock(address, data_buf, ShmemPerfModel::_USER_THREAD, first_hit && count, path);
+      retrieveCacheBlock(address, data_buf, ShmemPerfModel::_USER_THREAD, first_hit && count);
       /* Store completion time so we can detect overlapping accesses */
       if (modeled && !first_hit && !m_passthrough)
       {
@@ -1142,7 +1041,7 @@ SubsecondTime t_issue, bool have_write_lock, String& path)
    }
    #else
    #endif
-   
+
    MYLOG("returning %s", HitWhereString(hit_where));
    return hit_where;
 }
@@ -1212,7 +1111,6 @@ CacheCntlr::walkUsageBits()
 boost::tuple<HitWhere::where_t, SubsecondTime>
 CacheCntlr::accessDRAM(Core::mem_op_t mem_op_type, IntPtr address, bool isPrefetch, Byte* data_buf)
 {
-
    ScopedLock sl(getLock()); // DRAM is shared and owned by m_master
 
    SubsecondTime t_issue = getShmemPerfModel()->getElapsedTime(ShmemPerfModel::_USER_THREAD);
@@ -1222,18 +1120,18 @@ CacheCntlr::accessDRAM(Core::mem_op_t mem_op_type, IntPtr address, bool isPrefet
    switch (mem_op_type)
    {
       case Core::READ:
-         boost::tie(dram_latency, hit_where) = m_master->m_dram_cntlr->getDataFromDram(address, m_core_id_master, data_buf, t_issue, m_shmem_perf, eip);
+         boost::tie(dram_latency, hit_where) = m_master->m_dram_cntlr->getDataFromDram(address, m_core_id_master, data_buf, t_issue, m_shmem_perf);
          break;
 
       case Core::READ_EX:
       case Core::WRITE:
-         boost::tie(dram_latency, hit_where) = m_master->m_dram_cntlr->putDataToDram(address, m_core_id_master, data_buf, t_issue, eip);
+         boost::tie(dram_latency, hit_where) = m_master->m_dram_cntlr->putDataToDram(address, m_core_id_master, data_buf, t_issue);
          break;
 
       default:
          LOG_PRINT_ERROR("Unsupported Mem Op Type(%u)", mem_op_type);
    }
-   
+
    return boost::tuple<HitWhere::where_t, SubsecondTime>(hit_where, dram_latency);
 }
 
@@ -1312,7 +1210,7 @@ CacheCntlr::processExReqToDirectory(IntPtr address)
          getHome(address) /* receiver */,
          address,
          NULL, 0,
-         HitWhere::UNKNOWN, m_shmem_perf, ShmemPerfModel::_USER_THREAD, eip);
+         HitWhere::UNKNOWN, m_shmem_perf, ShmemPerfModel::_USER_THREAD);
 }
 
 void
@@ -1331,7 +1229,7 @@ CacheCntlr::processUpgradeReqToDirectory(IntPtr address, ShmemPerf *perf, ShmemP
          getHome(address) /* receiver */,
          address,
          NULL, 0,
-         HitWhere::UNKNOWN, perf, thread_num, eip);
+         HitWhere::UNKNOWN, perf, thread_num);
 }
 
 void
@@ -1344,7 +1242,7 @@ MYLOG("SH REQ @ %lx", address);
          getHome(address) /* receiver */,
          address,
          NULL, 0,
-         HitWhere::UNKNOWN, m_shmem_perf, ShmemPerfModel::_USER_THREAD, eip);
+         HitWhere::UNKNOWN, m_shmem_perf, ShmemPerfModel::_USER_THREAD);
 }
 
 
@@ -1391,22 +1289,19 @@ CacheCntlr::operationPermissibleinCache(
 void
 CacheCntlr::accessCache(
       Core::mem_op_t mem_op_type, IntPtr ca_address, UInt32 offset,
-      Byte* data_buf, UInt32 data_length, bool update_replacement, String path)
+      Byte* data_buf, UInt32 data_length, bool update_replacement)
 {
-   // loggingLevel(ca_address,mem_op_type);
    switch (mem_op_type)
    {
       case Core::READ:
       case Core::READ_EX:
          m_master->m_cache->accessSingleLine(ca_address + offset, Cache::LOAD, data_buf, data_length,
-                                             getShmemPerfModel()->getElapsedTime(ShmemPerfModel::_USER_THREAD), 
-                                             update_replacement, eip, path);
+                                             getShmemPerfModel()->getElapsedTime(ShmemPerfModel::_USER_THREAD), update_replacement);
          break;
 
       case Core::WRITE:
          m_master->m_cache->accessSingleLine(ca_address + offset, Cache::STORE, data_buf, data_length,
-                                             getShmemPerfModel()->getElapsedTime(ShmemPerfModel::_USER_THREAD),
-                                             update_replacement, eip, path);
+                                             getShmemPerfModel()->getElapsedTime(ShmemPerfModel::_USER_THREAD), update_replacement);
          // Write-through cache - Write the next level cache also
          if (m_cache_writethrough) {
             LOG_ASSERT_ERROR(m_next_cache_cntlr, "Writethrough enabled on last-level cache !?");
@@ -1472,12 +1367,10 @@ CacheCntlr::invalidateCacheBlock(IntPtr address)
 }
 
 void
-CacheCntlr::retrieveCacheBlock(IntPtr address, Byte* data_buf, ShmemPerfModel::Thread_t thread_num, 
-bool update_replacement, String path)
+CacheCntlr::retrieveCacheBlock(IntPtr address, Byte* data_buf, ShmemPerfModel::Thread_t thread_num, bool update_replacement)
 {
    __attribute__((unused)) SharedCacheBlockInfo* cache_block_info = (SharedCacheBlockInfo*) m_master->m_cache->accessSingleLine(
-      address, Cache::LOAD, data_buf, getCacheBlockSize(), getShmemPerfModel()->getElapsedTime(thread_num), 
-      update_replacement, eip, path);
+      address, Cache::LOAD, data_buf, getCacheBlockSize(), getShmemPerfModel()->getElapsedTime(thread_num), update_replacement);
    LOG_ASSERT_ERROR(cache_block_info != NULL, "Expected block to be there but it wasn't");
 }
 
@@ -1499,7 +1392,7 @@ MYLOG("insertCacheBlock l%d @ %lx as %c (now %c)", m_mem_component, address, CSt
 
    m_master->m_cache->insertSingleLine(address, data_buf,
          &eviction, &evict_address, &evict_block_info, evict_buf,
-         getShmemPerfModel()->getElapsedTime(thread_num), this, eip);
+         getShmemPerfModel()->getElapsedTime(thread_num), this);
    SharedCacheBlockInfo* cache_block_info = setCacheState(address, cstate);
 
    if (Sim()->getInstrumentationMode() == InstMode::CACHE_ONLY)
@@ -1591,7 +1484,6 @@ MYLOG("evicting @%lx", evict_address);
       }
       else if (m_master->m_dram_cntlr)
       {
-         
          if (evict_block_info.getCState() == CacheState::MODIFIED)
          {
             SubsecondTime t_now = getShmemPerfModel()->getElapsedTime(ShmemPerfModel::_USER_THREAD);
@@ -1837,7 +1729,7 @@ assert(data_length==getCacheBlockSize());
          memcpy(m_master->m_evicting_buf + offset, data_buf, data_length);
    } else {
       __attribute__((unused)) SharedCacheBlockInfo* cache_block_info = (SharedCacheBlockInfo*) m_master->m_cache->accessSingleLine(
-         address + offset, Cache::STORE, data_buf, data_length, getShmemPerfModel()->getElapsedTime(thread_num), false, eip);
+         address + offset, Cache::STORE, data_buf, data_length, getShmemPerfModel()->getElapsedTime(thread_num), false);
       LOG_ASSERT_ERROR(cache_block_info, "writethrough expected a hit at next-level cache but got miss");
       LOG_ASSERT_ERROR(cache_block_info->getCState() == CacheState::MODIFIED, "Got writeback for non-MODIFIED line");
    }
@@ -2410,27 +2302,5 @@ CacheCntlr::getNetworkThreadSemaphore()
 {
    return m_network_thread_sem;
 }
-
-void 
-CacheCntlr::loggingLevel(IntPtr addr, Core::mem_op_t mem_op_type, bool accessResult, bool isCache)
-{
-   String name = getName();
-   IntPtr eip = getEIP();
-   Cache* cache=NULL;
-   if(isCache)
-      cache=getCache();
-   if((memLevelDebug!="" && getMemLevelDebug() == name)||memLevelDebug=="")
-   {
-      UInt64 cycleCount=getMemoryManager()->getCore()->getCycleCount();
-      bool typeAccess = cache_helper::Misc::accessTypeInfo(mem_op_type);
-      if(typeAccess)
-         stats.totalLoads++;
-      else stats.totalStores++;
-      
-      stats.totalAccess++;
-      cacheHelper->addRequest(eip, addr, name, cache, cycleCount, typeAccess, accessResult);
-   }
-}
-
 
 }

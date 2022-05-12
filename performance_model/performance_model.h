@@ -24,7 +24,6 @@ class Allocator;
 class PerformanceModel
 {
 public:
-  
    PerformanceModel(Core* core);
    virtual ~PerformanceModel();
 
@@ -83,10 +82,7 @@ public:
       else
          disableDetailedModel();
    }
-   
-   //[update]
-   UInt64 getCycleCount() { return m_elapsed_time.getCycleCount();}
-   
+
 protected:
    friend class SpawnInstruction;
    friend class FastforwardPerformanceModel;
