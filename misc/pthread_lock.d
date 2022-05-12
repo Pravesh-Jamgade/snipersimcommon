@@ -1,6 +1,4 @@
-/home/atul/Documents/simulator/sniper/common/misc/pthread_lock.o /home/atul/Documents/simulator/sniper/common/misc/pthread_lock.d: $(wildcard \
- /home/atul/Documents/simulator/sniper/common/misc/pthread_lock.cc \
- /home/atul/Documents/simulator/sniper/common/misc/pthread_lock.h \
- /home/atul/Documents/simulator/sniper/common/misc/lock.h \
- /home/atul/Documents/simulator/sniper/common/misc/itostr.h \
- /home/atul/Documents/simulator/sniper/common/misc/fixed_types.h)
+/mnt/B/sniper/common/misc/pthread_lock.o /mnt/B/sniper/common/misc/pthread_lock.d: $(wildcard /mnt/B/sniper/common/misc/pthread_lock.cc \
+ /mnt/B/sniper/common/misc/pthread_lock.h \
+ /mnt/B/sniper/common/misc/lock.h /mnt/B/sniper/common/misc/itostr.h \
+ /mnt/B/sniper/common/misc/fixed_types.h)

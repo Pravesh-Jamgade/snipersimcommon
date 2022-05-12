@@ -1,8 +1,5 @@
-/home/atul/Documents/simulator/sniper/common/system/inst_mode.o /home/atul/Documents/simulator/sniper/common/system/inst_mode.d: $(wildcard \
- /home/atul/Documents/simulator/sniper/common/system/inst_mode.cc \
- /home/atul/Documents/simulator/sniper/common/misc/log.h \
- /home/atul/Documents/simulator/sniper/common/misc/fixed_types.h \
- /home/atul/Documents/simulator/sniper/common/misc/lock.h \
- /home/atul/Documents/simulator/sniper/common/misc/itostr.h \
- /home/atul/Documents/simulator/sniper/common/system/inst_mode.h \
- /home/atul/Documents/simulator/sniper/common/misc/fixed_types.h)
+/mnt/B/sniper/common/system/inst_mode.o /mnt/B/sniper/common/system/inst_mode.d: $(wildcard /mnt/B/sniper/common/system/inst_mode.cc \
+ /mnt/B/sniper/common/misc/log.h /mnt/B/sniper/common/misc/fixed_types.h \
+ /mnt/B/sniper/common/misc/lock.h /mnt/B/sniper/common/misc/itostr.h \
+ /mnt/B/sniper/common/system/inst_mode.h \
+ /mnt/B/sniper/common/misc/fixed_types.h)

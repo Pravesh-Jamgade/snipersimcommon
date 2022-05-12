@@ -1,6 +1,4 @@
-/home/atul/Documents/simulator/sniper/common/misc/cond.o /home/atul/Documents/simulator/sniper/common/misc/cond.d: $(wildcard /home/atul/Documents/simulator/sniper/common/misc/cond.cc \
- /home/atul/Documents/simulator/sniper/common/misc/cond.h \
- /home/atul/Documents/simulator/sniper/common/misc/fixed_types.h \
- /home/atul/Documents/simulator/sniper/common/misc/lock.h \
- /home/atul/Documents/simulator/sniper/common/misc/itostr.h \
- /home/atul/Documents/simulator/sniper/common/misc/os_compat.h)
+/mnt/B/sniper/common/misc/cond.o /mnt/B/sniper/common/misc/cond.d: $(wildcard /mnt/B/sniper/common/misc/cond.cc \
+ /mnt/B/sniper/common/misc/cond.h /mnt/B/sniper/common/misc/fixed_types.h \
+ /mnt/B/sniper/common/misc/lock.h /mnt/B/sniper/common/misc/itostr.h \
+ /mnt/B/sniper/common/misc/os_compat.h)

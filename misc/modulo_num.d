@@ -1,4 +1,3 @@
-/home/atul/Documents/simulator/sniper/common/misc/modulo_num.o /home/atul/Documents/simulator/sniper/common/misc/modulo_num.d: $(wildcard \
- /home/atul/Documents/simulator/sniper/common/misc/modulo_num.cc \
- /home/atul/Documents/simulator/sniper/common/misc/modulo_num.h \
- /home/atul/Documents/simulator/sniper/common/misc/fixed_types.h)
+/mnt/B/sniper/common/misc/modulo_num.o /mnt/B/sniper/common/misc/modulo_num.d: $(wildcard /mnt/B/sniper/common/misc/modulo_num.cc \
+ /mnt/B/sniper/common/misc/modulo_num.h \
+ /mnt/B/sniper/common/misc/fixed_types.h)

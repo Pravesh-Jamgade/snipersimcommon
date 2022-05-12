@@ -1,13 +1,12 @@
-/home/atul/Documents/simulator/sniper/common/core/memory_subsystem/pr_l1_pr_l2_dram_directory_msi/shmem_msg.o /home/atul/Documents/simulator/sniper/common/core/memory_subsystem/pr_l1_pr_l2_dram_directory_msi/shmem_msg.d: $(wildcard \
- /home/atul/Documents/simulator/sniper/common/core/memory_subsystem/pr_l1_pr_l2_dram_directory_msi/shmem_msg.cc \
- /home/atul/Documents/simulator/sniper/common/core/memory_subsystem/pr_l1_pr_l2_dram_directory_msi/shmem_msg.h \
- /home/atul/Documents/simulator/sniper/common/core/memory_subsystem/mem_component.h \
- /home/atul/Documents/simulator/sniper/common/misc/fixed_types.h \
- /home/atul/Documents/simulator/sniper/common/performance_model/hit_where.h \
- /home/atul/Documents/simulator/sniper/common/core/memory_subsystem/pr_l1_pr_l2_dram_directory_msi/shmem_perf.h \
- /home/atul/Documents/simulator/sniper/common/misc/subsecond_time.h \
- /home/atul/Documents/simulator/sniper/common/misc/fixed_types.h \
- /home/atul/Documents/simulator/sniper/common/misc/lock.h \
- /home/atul/Documents/simulator/sniper/common/misc/itostr.h \
- /home/atul/Documents/simulator/sniper/common/misc/subsecond_time_c.h \
- /home/atul/Documents/simulator/sniper/common/misc/log.h)
+/mnt/B/sniper/common/core/memory_subsystem/pr_l1_pr_l2_dram_directory_msi/shmem_msg.o /mnt/B/sniper/common/core/memory_subsystem/pr_l1_pr_l2_dram_directory_msi/shmem_msg.d: $(wildcard \
+ /mnt/B/sniper/common/core/memory_subsystem/pr_l1_pr_l2_dram_directory_msi/shmem_msg.cc \
+ /mnt/B/sniper/common/core/memory_subsystem/pr_l1_pr_l2_dram_directory_msi/shmem_msg.h \
+ /mnt/B/sniper/common/core/memory_subsystem/mem_component.h \
+ /mnt/B/sniper/common/misc/fixed_types.h \
+ /mnt/B/sniper/common/performance_model/hit_where.h \
+ /mnt/B/sniper/common/core/memory_subsystem/pr_l1_pr_l2_dram_directory_msi/shmem_perf.h \
+ /mnt/B/sniper/common/misc/subsecond_time.h \
+ /mnt/B/sniper/common/misc/fixed_types.h /mnt/B/sniper/common/misc/lock.h \
+ /mnt/B/sniper/common/misc/itostr.h \
+ /mnt/B/sniper/common/misc/subsecond_time_c.h \
+ /mnt/B/sniper/common/misc/log.h)

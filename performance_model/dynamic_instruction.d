@@ -1,28 +1,25 @@
-/home/atul/Documents/simulator/sniper/common/performance_model/dynamic_instruction.o /home/atul/Documents/simulator/sniper/common/performance_model/dynamic_instruction.d: $(wildcard \
- /home/atul/Documents/simulator/sniper/common/performance_model/dynamic_instruction.cc \
- /home/atul/Documents/simulator/sniper/common/performance_model/dynamic_instruction.h \
- /home/atul/Documents/simulator/sniper/common/performance_model/operand.h \
- /home/atul/Documents/simulator/sniper/common/misc/fixed_types.h \
- /home/atul/Documents/simulator/sniper/common/misc/subsecond_time.h \
- /home/atul/Documents/simulator/sniper/common/misc/fixed_types.h \
- /home/atul/Documents/simulator/sniper/common/misc/lock.h \
- /home/atul/Documents/simulator/sniper/common/misc/itostr.h \
- /home/atul/Documents/simulator/sniper/common/misc/subsecond_time_c.h \
- /home/atul/Documents/simulator/sniper/common/performance_model/hit_where.h \
- /home/atul/Documents/simulator/sniper/common/core/memory_subsystem/mem_component.h \
- /home/atul/Documents/simulator/sniper/common/misc/allocator.h \
- /home/atul/Documents/simulator/sniper/common/misc/FSBAllocator.hh \
- /home/atul/Documents/simulator/sniper/common/misc/log.h \
- /home/atul/Documents/simulator/sniper/common/performance_model/instruction.h \
- /home/atul/Documents/simulator/sniper/common/core/core.h \
- /home/atul/Documents/simulator/sniper/common/misc/lock.h \
- /home/atul/Documents/simulator/sniper/common/network/packet_type.h \
- /home/atul/Documents/simulator/sniper/common/core/bbv_count.h \
- /home/atul/Documents/simulator/sniper/common/misc/cpuid.h \
- /home/atul/Documents/simulator/sniper/common/performance_model/hit_where.h \
- /home/atul/Documents/simulator/sniper/common/performance_model/branch_predictor.h \
- /home/atul/Documents/simulator/sniper/common/performance_model/performance_model.h \
- /home/atul/Documents/simulator/sniper/common/misc/mt_circular_queue.h \
- /home/atul/Documents/simulator/sniper/common/misc/circular_queue.h \
- /home/atul/Documents/simulator/sniper/common/misc/cond.h \
- /home/atul/Documents/simulator/sniper/common/performance_model/instruction_tracers/instruction_tracer.h)
+/mnt/B/sniper/common/performance_model/dynamic_instruction.o /mnt/B/sniper/common/performance_model/dynamic_instruction.d: $(wildcard \
+ /mnt/B/sniper/common/performance_model/dynamic_instruction.cc \
+ /mnt/B/sniper/common/performance_model/dynamic_instruction.h \
+ /mnt/B/sniper/common/performance_model/operand.h \
+ /mnt/B/sniper/common/misc/fixed_types.h \
+ /mnt/B/sniper/common/misc/subsecond_time.h \
+ /mnt/B/sniper/common/misc/fixed_types.h /mnt/B/sniper/common/misc/lock.h \
+ /mnt/B/sniper/common/misc/itostr.h \
+ /mnt/B/sniper/common/misc/subsecond_time_c.h \
+ /mnt/B/sniper/common/performance_model/hit_where.h \
+ /mnt/B/sniper/common/core/memory_subsystem/mem_component.h \
+ /mnt/B/sniper/common/misc/allocator.h \
+ /mnt/B/sniper/common/misc/FSBAllocator.hh \
+ /mnt/B/sniper/common/misc/log.h \
+ /mnt/B/sniper/common/performance_model/instruction.h \
+ /mnt/B/sniper/common/core/core.h /mnt/B/sniper/common/misc/lock.h \
+ /mnt/B/sniper/common/network/packet_type.h \
+ /mnt/B/sniper/common/core/bbv_count.h /mnt/B/sniper/common/misc/cpuid.h \
+ /mnt/B/sniper/common/performance_model/hit_where.h \
+ /mnt/B/sniper/common/performance_model/branch_predictor.h \
+ /mnt/B/sniper/common/performance_model/performance_model.h \
+ /mnt/B/sniper/common/misc/mt_circular_queue.h \
+ /mnt/B/sniper/common/misc/circular_queue.h \
+ /mnt/B/sniper/common/misc/cond.h \
+ /mnt/B/sniper/common/performance_model/instruction_tracers/instruction_tracer.h)

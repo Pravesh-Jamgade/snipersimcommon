@@ -1,2 +1,1 @@
-/home/atul/Documents/simulator/sniper/common/network/packet_type.o /home/atul/Documents/simulator/sniper/common/network/packet_type.d: $(wildcard \
- /home/atul/Documents/simulator/sniper/common/network/packet_type.cc)
+/mnt/B/sniper/common/network/packet_type.o /mnt/B/sniper/common/network/packet_type.d: $(wildcard /mnt/B/sniper/common/network/packet_type.cc)

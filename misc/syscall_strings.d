@@ -1,3 +1,2 @@
-/home/atul/Documents/simulator/sniper/common/misc/syscall_strings.o /home/atul/Documents/simulator/sniper/common/misc/syscall_strings.d: $(wildcard \
- /home/atul/Documents/simulator/sniper/common/misc/syscall_strings.cc \
- /home/atul/Documents/simulator/sniper/common/misc/syscall_strings.h)
+/mnt/B/sniper/common/misc/syscall_strings.o /mnt/B/sniper/common/misc/syscall_strings.d: $(wildcard /mnt/B/sniper/common/misc/syscall_strings.cc \
+ /mnt/B/sniper/common/misc/syscall_strings.h)
