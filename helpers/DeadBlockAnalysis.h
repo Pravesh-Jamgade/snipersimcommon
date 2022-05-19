@@ -126,7 +126,7 @@ namespace DeadBlockAnalysisSpace
             setkickedFistTime(name, haddr);
         }
         else{
-            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG, "[Notfound Address]\n");
+            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG, "[Notfound Address]%s\n", haddr.c_str());
             return ;
         }
     }
