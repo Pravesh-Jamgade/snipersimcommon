@@ -12,6 +12,11 @@ CacheSetRoundRobin::~CacheSetRoundRobin()
 {}
 
 UInt32
+CacheSetRoundRobin::getReplacementIndex(CacheCntlr *cntlr, int& pos)
+{
+}
+
+UInt32
 CacheSetRoundRobin::getReplacementIndex(CacheCntlr *cntlr)
 {
    UInt32 curr_replacement_index = m_replacement_index;
@@ -27,4 +32,9 @@ void
 CacheSetRoundRobin::updateReplacementIndex(UInt32 accessed_index)
 {
    return;
+}
+
+
+UInt32 CacheSetRoundRobin::getIndexLRUBits(UInt32 index){
+    return 1;
 }

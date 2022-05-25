@@ -19,6 +19,11 @@ CacheSetPLRU::~CacheSetPLRU()
 }
 
 UInt32
+CacheSetPLRU::getReplacementIndex(CacheCntlr *cntlr, int& pos)
+{
+}
+
+UInt32
 CacheSetPLRU::getReplacementIndex(CacheCntlr *cntlr)
 {
    // Invalidations may mess up the LRU bits
@@ -112,4 +117,8 @@ CacheSetPLRU::updateReplacementIndex(UInt32 accessed_index)
    {
       LOG_PRINT_ERROR("PLRU doesn't support associativity %d", m_associativity);
    }
+}
+
+UInt32 CacheSetPLRU::getIndexLRUBits(UInt32 index){
+    return 1;
 }

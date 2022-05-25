@@ -95,12 +95,13 @@ CacheSet::invalidate(IntPtr& tag)
    return false;
 }
 
-void
+int
 CacheSet::insert(CacheBlockInfo* cache_block_info, Byte* fill_buff, bool* eviction, CacheBlockInfo* evict_block_info, Byte* evict_buff, CacheCntlr *cntlr)
 {
    // This replacement strategy does not take into account the fact that
    // cache blocks can be voluntarily flushed or invalidated due to another write request
-   const UInt32 index = getReplacementIndex(cntlr);
+   int pos = -1;
+   const UInt32 index = getReplacementIndex(cntlr, pos);
    assert(index < m_associativity);
 
    assert(eviction != NULL);
@@ -123,6 +124,8 @@ CacheSet::insert(CacheBlockInfo* cache_block_info, Byte* fill_buff, bool* evicti
 
    if (fill_buff != NULL && m_blocks != NULL)
       memcpy(&m_blocks[index * m_blocksize], (void*) fill_buff, m_blocksize);
+   
+   return pos;
 }
 
 char*

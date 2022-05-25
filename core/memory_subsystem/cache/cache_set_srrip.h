@@ -13,7 +13,9 @@ class CacheSetSRRIP : public CacheSet
       ~CacheSetSRRIP();
 
       UInt32 getReplacementIndex(CacheCntlr *cntlr);
+      UInt32 getReplacementIndex(CacheCntlr *cntlr, int& pos);
       void updateReplacementIndex(UInt32 accessed_index);
+      virtual UInt32 getIndexLRUBits(UInt32 index);
 
    private:
       const UInt8 m_rrip_numbits;

@@ -11,7 +11,9 @@ class CacheSetPLRU : public CacheSet
       ~CacheSetPLRU();
 
       UInt32 getReplacementIndex(CacheCntlr *cntlr);
+      UInt32 getReplacementIndex(CacheCntlr *cntlr, int& pos);
       void updateReplacementIndex(UInt32 accessed_index);
+      virtual UInt32 getIndexLRUBits(UInt32 index);
 
    private:
       UInt8 b[8];

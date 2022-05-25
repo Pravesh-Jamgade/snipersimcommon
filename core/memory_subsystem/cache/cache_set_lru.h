@@ -33,8 +33,10 @@ class CacheSetLRU : public CacheSet
             UInt32 associativity, UInt32 blocksize, CacheSetInfoLRU* set_info, UInt8 num_attempts);
       virtual ~CacheSetLRU();
 
+      virtual UInt32 getReplacementIndex(CacheCntlr *cntlr, int& pos);
       virtual UInt32 getReplacementIndex(CacheCntlr *cntlr);
       void updateReplacementIndex(UInt32 accessed_index);
+      virtual UInt32 getIndexLRUBits(UInt32 index);
 
    protected:
       const UInt8 m_num_attempts;

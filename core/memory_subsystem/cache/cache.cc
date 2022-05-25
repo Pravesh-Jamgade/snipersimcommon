@@ -1,6 +1,7 @@
 #include "simulator.h"
 #include "cache.h"
 #include "log.h"
+#include "DeadBlockAnalysis.h"
 
 // Cache class
 // constructors/destructors
@@ -24,6 +25,7 @@ Cache::Cache(
    m_cache_type(cache_type),
    m_fault_injector(fault_injector)
 {
+   ptr = Sim()->getCBTracker();
    m_set_info = CacheSet::createCacheSetInfo(name, cfgname, core_id, replacement_policy, m_associativity);
    m_sets = new CacheSet*[m_num_sets];
    for (UInt32 i = 0; i < m_num_sets; i++)
@@ -99,6 +101,11 @@ Cache::accessSingleLine(IntPtr addr, access_t access_type,
    if (cache_block_info == NULL)
       return NULL;
 
+   // String haddr = DeadBlockAnalysisSpace::Int2HexMap::insert(addr);
+   
+   if(ptr!=nullptr)
+      ptr->doCBUsageTracking(addr, 0, getName());
+
    if (access_type == LOAD)
    {
       // NOTE: assumes error occurs in memory. If we want to model bus errors, insert the error into buff instead
@@ -132,10 +139,18 @@ Cache::insertSingleLine(IntPtr addr, Byte* fill_buff,
    CacheBlockInfo* cache_block_info = CacheBlockInfo::create(m_cache_type);
    cache_block_info->setTag(tag);
 
-   m_sets[set_index]->insert(cache_block_info, fill_buff,
+   int pos = m_sets[set_index]->insert(cache_block_info, fill_buff,
          eviction, evict_block_info, evict_buff, cntlr);
    *evict_addr = tagToAddress(evict_block_info->getTag());
 
+   // String ehaddr = DeadBlockAnalysisSpace::Int2HexMap::insert(*evict_addr);
+   // String haddr = DeadBlockAnalysisSpace::Int2HexMap::insert(addr);
+
+   if(ptr!=nullptr){
+      ptr->doCBUsageTracking(addr, pos, getName());
+      ptr->doCBUsageTracking(*evict_addr, pos, getName(), true);
+   }
+      
    if (m_fault_injector) {
       // NOTE: no callback is generated for read of evicted data
       UInt32 line_index = -1;

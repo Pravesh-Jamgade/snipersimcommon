@@ -12,6 +12,9 @@
 #include "core.h"
 #include "fault_injection.h"
 
+//
+#include "DeadBlockAnalysis.h"
+
 // Define to enable the set usage histogram
 //#define ENABLE_SET_USAGE_HIST
 
@@ -68,6 +71,8 @@ class Cache : public CacheBase
 
       void enable() { m_enabled = true; }
       void disable() { m_enabled = false; }
+
+      std::shared_ptr<DeadBlockAnalysisSpace::CacheBlockTracker> ptr=nullptr;
 };
 
 template <class T>
