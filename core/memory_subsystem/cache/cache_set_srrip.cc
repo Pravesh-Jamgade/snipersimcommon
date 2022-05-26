@@ -109,6 +109,6 @@ CacheSetSRRIP::updateReplacementIndex(UInt32 accessed_index)
       m_rrip_bits[accessed_index]--;
 }
 
-UInt32 CacheSetSRRIP::getIndexLRUBits(UInt32 index){
+bool CacheSetSRRIP::getPos(UInt32 index){
     return 1;
 }

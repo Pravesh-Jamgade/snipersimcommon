@@ -103,9 +103,11 @@ Cache::accessSingleLine(IntPtr addr, access_t access_type,
 
    // String haddr = DeadBlockAnalysisSpace::Int2HexMap::insert(addr);
    
-   if(ptr!=nullptr)
-      ptr->doCBUsageTracking(addr, 0, getName());
-
+   if(ptr!=nullptr){
+      bool pos = set->getPos(line_index);
+      ptr->doCBUsageTracking(addr, pos, getName());
+   }
+      
    if (access_type == LOAD)
    {
       // NOTE: assumes error occurs in memory. If we want to model bus errors, insert the error into buff instead
@@ -148,7 +150,7 @@ Cache::insertSingleLine(IntPtr addr, Byte* fill_buff,
 
    if(ptr!=nullptr){
       ptr->doCBUsageTracking(addr, pos, getName());
-      ptr->doCBUsageTracking(*evict_addr, pos, getName(), true);
+      ptr->doCBUsageTracking(*evict_addr, pos, getName(), eviction);
    }
       
    if (m_fault_injector) {

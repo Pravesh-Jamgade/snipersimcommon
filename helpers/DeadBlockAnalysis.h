@@ -134,7 +134,7 @@ namespace DeadBlockAnalysisSpace
         if(eviction)
         {
             if(cbTracker.find(name)==cbTracker.end()){
-                printf("[XXX---------------XXX]\n");
+                printf("[XXX-------yyy--------XXX]\n");
                 return;
             }
             // name found
@@ -143,10 +143,9 @@ namespace DeadBlockAnalysisSpace
             if(findAddr!=cbTracker[name].end()){
                 auto findCB = findAddr->second;
                 findCB->kickedFirstTime();
-                findCB->increaseCBE();
+                increaseCBE(name,haddr);
             }
             else{
-                printf("[evict] %ld\n", haddr);
             }
             return;
         }

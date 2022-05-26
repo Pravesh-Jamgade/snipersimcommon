@@ -90,6 +90,6 @@ CacheSetNRU::updateReplacementIndex(UInt32 accessed_index)
 }
 
 
-UInt32 CacheSetNRU::getIndexLRUBits(UInt32 index){
+bool CacheSetNRU::getPos(UInt32 index){
     return 1;
 }

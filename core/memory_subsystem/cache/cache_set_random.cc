@@ -50,6 +50,6 @@ CacheSetRandom::updateReplacementIndex(UInt32 accessed_index)
 {
 }
 
-UInt32 CacheSetRandom::getIndexLRUBits(UInt32 index){
+bool CacheSetRandom::getPos(UInt32 index){
     return 1;
 }
