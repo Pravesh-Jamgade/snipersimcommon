@@ -472,7 +472,7 @@ MemoryManager::MemoryManager(Core* core,
 
 MemoryManager::~MemoryManager()
 {
-   PCStatCollector->logGlobalPCFreq();
+   // PCStatCollector->logGlobalPCFreq();
    printf("l1=%ld, l2=%ld,l3=%ld\n", PCStatCollector->l1.getCount(), PCStatCollector->l2.getCount(), PCStatCollector->l3.getCount());
    // for(auto pc: PCStatCollector->globalAllLevelPCStat){
    //    std::vector<Helper::Message> allMsg = PCStatCollector->processEpocEndComputation(pc.first, PCStatCollector->globalAllLevelPCStat,0);

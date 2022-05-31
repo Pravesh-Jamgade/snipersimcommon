@@ -298,6 +298,80 @@ CacheCntlr::~CacheCntlr()
 {
    if (isMasterCache())
    {
+      _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG, 
+         "loads,stores,load-misses,store-misses,load-overlapping-misses,store-overlapping-misses,loads-prefetch,stores-prefetch,hits-prefetch,evict-prefetch,invalidate-prefetch,prefetches,hits-warmup,evict-warmup,invalidate-warmup,coherency_downgrades,coherency_upgrades,coherency_invalidates,coherency_writebacks,");
+      
+      for(CacheState::cstate_t state = CacheState::CSTATE_FIRST; state < CacheState::NUM_CSTATE_STATES; state = CacheState::cstate_t(int(state)+1)) {
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG, 
+            "loads-%c,stores-%c,load-misses-%c,store-misses-%c,evict-%c,backinval-%c,", 
+            CStateString(state),
+            CStateString(state),
+            CStateString(state),
+            CStateString(state),
+            CStateString(state),
+            CStateString(state)
+         );
+      }
+      
+      for(HitWhere::where_t hit_where = HitWhere::WHERE_FIRST; hit_where < HitWhere::NUM_HITWHERES; hit_where = HitWhere::where_t(int(hit_where)+1)) {
+         const char * where_str = HitWhereString(hit_where);
+         if (where_str[0] == '?') continue;
+         
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG,
+            (String("loads-where-")+where_str).c_str());
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG, ",");
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG,
+            (String("stroes-where-")+where_str).c_str() );
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG, ",");
+      }
+
+      _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG, "\n");
+
+      _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG, 
+      "%s\n%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,",
+         getName().c_str(),
+         stats.loads, 
+         stats.stores, 
+         stats.load_misses, 
+         stats.store_misses, 
+         stats.load_overlapping_misses, 
+         stats.store_overlapping_misses, 
+         stats.loads_prefetch, 
+         stats.stores_prefetch, 
+         stats.hits_prefetch, 
+         stats.evict_prefetch,
+         stats.invalidate_prefetch, 
+         stats.prefetches,
+         stats.hits_warmup,
+         stats.evict_warmup,
+         stats.invalidate_warmup,
+         stats.coherency_downgrades,
+         stats.coherency_upgrades,
+         stats.coherency_invalidates,
+         stats.coherency_writebacks
+      );
+      for(CacheState::cstate_t state = CacheState::CSTATE_FIRST; state < CacheState::NUM_CSTATE_STATES; state = CacheState::cstate_t(int(state)+1)) {
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG, "%ld,%ld,%ld,%ld,%ld,",
+               stats.loads_state[state],
+               stats.stores_state[state],
+               stats.load_misses_state[state],
+               stats.store_misses_state[state],
+               stats.evict[state],
+               stats.backinval[state]
+            )
+      }
+      for(HitWhere::where_t hit_where = HitWhere::WHERE_FIRST; hit_where < HitWhere::NUM_HITWHERES; hit_where = HitWhere::where_t(int(hit_where)+1)) {
+         const char * where_str = HitWhereString(hit_where);
+         if (where_str[0] == '?') continue;
+          _LOG_CUSTOM_LOGGER(
+               Log::Warning, 
+               Log::LogDst::DEBUG, 
+               "%ld,%ld,", 
+               stats.loads_where[hit_where], 
+               stats.stores_where[hit_where]);
+      }
+      _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG, "\n");
+
       delete m_master;
    }
    delete m_shmem_perf;
