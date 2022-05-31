@@ -117,24 +117,12 @@ namespace DeadBlockAnalysisSpace
         if(num == 3) return "L3";
     }
 
-    // void doCBUsageTracking(IntPtr haddr, bool recenyPos, String cacheName){
-    //     auto findAddr = addrMap.find(haddr);
-    //     if(findAddr==addrMap.end()){
-    //         addrMap.insert({haddr, haddr});
-    //     }
-    // }
-
-
     void doCBUsageTracking(IntPtr haddr, bool recenyPos, String cacheName, bool eviction=false){
         int name= get(cacheName);
-        // std::cout<<addr<<" "<<recenyPos<<" "<<name<<std::endl;
-
-        // IntPtr haddr = &(std::to_string(addr))[0];
-        // IntPtr haddr = Util::Misc::toHex(addr);
+       
         if(eviction)
         {
             if(cbTracker.find(name)==cbTracker.end()){
-                printf("[XXX---------------XXX]\n");
                 return;
             }
             // name found
@@ -169,23 +157,6 @@ namespace DeadBlockAnalysisSpace
             // make count if addr is in the lower half of recency list
             if(recenyPos)
                 increaseCBLHH(name, haddr);
-        }
-    }
-
-    void setFirstTimeEvict(String cacheName, IntPtr haddr){
-        int name= get(cacheName);
-        // IntPtr addr = *paddr;
-        // IntPtr haddr = Util::Misc::toHex(addr);
-        
-        if(!cacheEntryFound(name)){
-            return ;
-        }
-
-        if(addrEntryFound(name, haddr)){
-            increaseCBE(name, haddr);
-        }
-        else{
-            return ;
         }
     }
  };
