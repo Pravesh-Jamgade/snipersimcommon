@@ -21,6 +21,9 @@ class CheetahManager;
 #include "cpuid.h"
 #include "hit_where.h"
 
+#include <iostream>
+#include <memory>
+
 struct MemoryResult {
    HitWhere::where_t hit_where;
    subsecond_time_t latency;

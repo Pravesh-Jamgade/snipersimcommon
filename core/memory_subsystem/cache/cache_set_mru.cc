@@ -19,6 +19,11 @@ CacheSetMRU::~CacheSetMRU()
 }
 
 UInt32
+CacheSetMRU::getReplacementIndex(CacheCntlr *cntlr, int& pos)
+{
+}
+
+UInt32
 CacheSetMRU::getReplacementIndex(CacheCntlr *cntlr)
 {
    // Invalidations may mess up the LRU bits
@@ -58,4 +63,8 @@ CacheSetMRU::updateReplacementIndex(UInt32 accessed_index)
          m_lru_bits[i] ++;
    }
    m_lru_bits[accessed_index] = 0;
+}
+
+bool CacheSetMRU::getPos(UInt32 index){
+   return m_lru_bits[index]<m_associativity/2;
 }

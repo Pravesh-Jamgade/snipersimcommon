@@ -11,7 +11,9 @@ class CacheSetMRU : public CacheSet
       ~CacheSetMRU();
 
       UInt32 getReplacementIndex(CacheCntlr *cntlr);
+      UInt32 getReplacementIndex(CacheCntlr *cntlr, int& pos);
       void updateReplacementIndex(UInt32 accessed_index);
+      virtual bool getPos(UInt32 index);
 
    private:
       UInt8* m_lru_bits;

@@ -20,6 +20,9 @@ class CacheSetInfoLRU : public CacheSetInfo
          else
             LOG_ASSERT_ERROR(attempt == 0, "No place to store attempt# histogram but attempt != 0");
       }
+
+      UInt32 getAssociativity(){return m_associativity;}
+
    private:
       const UInt32 m_associativity;
       UInt64* m_access;
@@ -33,8 +36,10 @@ class CacheSetLRU : public CacheSet
             UInt32 associativity, UInt32 blocksize, CacheSetInfoLRU* set_info, UInt8 num_attempts);
       virtual ~CacheSetLRU();
 
+      virtual UInt32 getReplacementIndex(CacheCntlr *cntlr, int& pos);
       virtual UInt32 getReplacementIndex(CacheCntlr *cntlr);
       void updateReplacementIndex(UInt32 accessed_index);
+      virtual bool getPos(UInt32 index);
 
    protected:
       const UInt8 m_num_attempts;

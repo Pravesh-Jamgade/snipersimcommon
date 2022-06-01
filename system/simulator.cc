@@ -125,6 +125,7 @@ Simulator::Simulator()
    , m_running(false)
    , m_inst_mode_output(true)
 {
+   cbTracker = std::make_shared<DeadBlockAnalysisSpace::CacheBlockTracker>(getConfig()->getOutputDirectory());
 }
 
 void Simulator::start()

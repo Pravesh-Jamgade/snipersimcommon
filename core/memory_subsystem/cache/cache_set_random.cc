@@ -18,6 +18,11 @@ CacheSetRandom::~CacheSetRandom()
 }
 
 UInt32
+CacheSetRandom::getReplacementIndex(CacheCntlr *cntlr, int& pos)
+{
+}
+
+UInt32
 CacheSetRandom::getReplacementIndex(CacheCntlr *cntlr)
 {
    // Invalidations may mess up the LRU bits
@@ -43,4 +48,8 @@ CacheSetRandom::getReplacementIndex(CacheCntlr *cntlr)
 void
 CacheSetRandom::updateReplacementIndex(UInt32 accessed_index)
 {
+}
+
+bool CacheSetRandom::getPos(UInt32 index){
+    return 1;
 }

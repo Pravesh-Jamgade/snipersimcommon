@@ -11,7 +11,9 @@ class CacheSetRandom : public CacheSet
       ~CacheSetRandom();
 
       UInt32 getReplacementIndex(CacheCntlr *cntlr);
+      UInt32 getReplacementIndex(CacheCntlr *cntlr, int& pos);
       void updateReplacementIndex(UInt32 accessed_index);
+      virtual bool getPos(UInt32 index);
 
    private:
       Random m_rand;

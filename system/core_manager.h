@@ -12,6 +12,7 @@
 #include <map>
 #include <vector>
 
+
 class Core;
 
 class CoreManager
@@ -50,6 +51,7 @@ class CoreManager
       bool amiUserThread();
       bool amiCoreThread();
       bool amiSimThread();
+
    private:
 
       UInt32 *tid_map;

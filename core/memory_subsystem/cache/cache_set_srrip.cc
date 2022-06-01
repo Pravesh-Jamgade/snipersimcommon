@@ -28,6 +28,11 @@ CacheSetSRRIP::~CacheSetSRRIP()
 }
 
 UInt32
+CacheSetSRRIP::getReplacementIndex(CacheCntlr *cntlr, int& pos)
+{
+}
+
+UInt32
 CacheSetSRRIP::getReplacementIndex(CacheCntlr *cntlr)
 {
    for (UInt32 i = 0; i < m_associativity; i++)
@@ -102,4 +107,8 @@ CacheSetSRRIP::updateReplacementIndex(UInt32 accessed_index)
 
    if (m_rrip_bits[accessed_index] > 0)
       m_rrip_bits[accessed_index]--;
+}
+
+bool CacheSetSRRIP::getPos(UInt32 index){
+    return 1;
 }

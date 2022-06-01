@@ -24,11 +24,22 @@ CacheSetLRU::~CacheSetLRU()
 UInt32
 CacheSetLRU::getReplacementIndex(CacheCntlr *cntlr)
 {
+}
+
+UInt32
+CacheSetLRU::getReplacementIndex(CacheCntlr *cntlr, int& pos)
+{
    // First try to find an invalid block
    for (UInt32 i = 0; i < m_associativity; i++)
    {
       if (!m_cache_block_info_array[i]->isValid())
       {
+         int tmp = m_lru_bits[i];
+
+         pos=0;// mru
+         if(tmp > m_associativity/2)
+            pos=1;//lru
+
          // Mark our newly-inserted line as most-recently used
          moveToMRU(i);
          return i;
@@ -122,4 +133,9 @@ CacheSetInfoLRU::~CacheSetInfoLRU()
    delete [] m_access;
    if (m_attempts)
       delete [] m_attempts;
+}
+
+
+bool CacheSetLRU::getPos(UInt32 index){
+   return m_lru_bits[index] > m_set_info->getAssociativity()/2; 
 }

@@ -7,6 +7,11 @@
 
 #include <decoder.h>
 
+//update
+#include <iostream>
+#include <memory>
+#include "DeadBlockAnalysis.h"
+
 class _Thread;
 class SyscallServer;
 class SyncServer;
@@ -82,6 +87,10 @@ public:
    // Access to the Decoder library for the simulator run
    void createDecoder();
    dl::Decoder *getDecoder();
+
+   //update
+   std::shared_ptr<DeadBlockAnalysisSpace::CacheBlockTracker> cbTracker;
+   std::shared_ptr<DeadBlockAnalysisSpace::CacheBlockTracker> getCBTracker(){ return cbTracker;}
    
 private:
    Config m_config;
