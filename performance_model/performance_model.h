@@ -82,7 +82,7 @@ public:
       else
          disableDetailedModel();
    }
-
+   UInt64 getCycleCount(){return m_elapsed_time.getCycleCount();}
 protected:
    friend class SpawnInstruction;
    friend class FastforwardPerformanceModel;
