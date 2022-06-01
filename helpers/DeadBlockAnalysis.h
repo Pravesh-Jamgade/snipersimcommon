@@ -41,7 +41,7 @@ namespace DeadBlockAnalysisSpace
     void increaseCBLHH(){cacheBlockLowerHalfHits.increase();}
     void increaseCBE(){cacheBlockEvict.increase();}
     bool IsItKickedAlready(){ return cacheBlockEvictedFirstTime;}
-    bool kickedFirstTime(){cacheBlockEvictedFirstTime=true;}
+    bool kickedFirstTime(){cacheBlockEvictedFirstTime=true; increaseCBE();}
  };
 
  class CacheBlockTracker
@@ -77,6 +77,9 @@ namespace DeadBlockAnalysisSpace
                 UInt64 cbLHH = cb.second->cacheBlockLowerHalfHits.getCount();
                 UInt64 cbE = cb.second->cacheBlockEvict.getCount();
                 cbStream<<haddr<<','<<cbAccess<<','<<cbReuse<<','<<cbLHH<<','<<cbE<<'\n';
+                if(cb.second->IsItKickedAlready()){
+                    printf("[A]%ld, %ld\n", haddr, cbE);
+                }
             }
             cbStream.close();
         }
@@ -122,19 +125,14 @@ namespace DeadBlockAnalysisSpace
        
         if(eviction)
         {
-            if(cbTracker.find(name)==cbTracker.end()){
-                return;
-            }
-            // name found
-            auto findAddr = cbTracker[name].find(haddr);
-            // addr found
-            if(findAddr!=cbTracker[name].end()){
-                auto findCB = findAddr->second;
-                findCB->kickedFirstTime();
-                findCB->increaseCBE();
-            }
-            else{
-                printf("[evict] %ld\n", haddr);
+            auto findCacheName = cbTracker.find(name);
+            if(findCacheName!=cbTracker.end()){
+                auto findAddr = findCacheName->second.find(haddr);
+                if(findAddr!=findCacheName->second.end()){
+                    //name,addr found
+                    findAddr->second->kickedFirstTime();
+                    printf("[**] kick=%ld\n", haddr);
+                }
             }
             return;
         }

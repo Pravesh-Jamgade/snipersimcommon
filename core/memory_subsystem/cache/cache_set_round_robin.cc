@@ -35,6 +35,6 @@ CacheSetRoundRobin::updateReplacementIndex(UInt32 accessed_index)
 }
 
 
-UInt32 CacheSetRoundRobin::getIndexLRUBits(UInt32 index){
+bool CacheSetRoundRobin::getPos(UInt32 index){
     return 1;
 }

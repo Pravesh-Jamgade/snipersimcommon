@@ -136,6 +136,6 @@ CacheSetInfoLRU::~CacheSetInfoLRU()
 }
 
 
-UInt32 CacheSetLRU::getIndexLRUBits(UInt32 index){
-   return m_lru_bits[index];
+bool CacheSetLRU::getPos(UInt32 index){
+   return m_lru_bits[index] > m_set_info->getAssociativity()/2; 
 }

@@ -67,6 +67,6 @@ CacheSetNMRU::updateReplacementIndex(UInt32 accessed_index)
    m_lru_bits[accessed_index] = 0;
 }
 
-UInt32 CacheSetNMRU::getIndexLRUBits(UInt32 index){
+bool CacheSetNMRU::getPos(UInt32 index){
     return 1;
 }

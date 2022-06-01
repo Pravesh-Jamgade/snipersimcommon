@@ -119,6 +119,6 @@ CacheSetPLRU::updateReplacementIndex(UInt32 accessed_index)
    }
 }
 
-UInt32 CacheSetPLRU::getIndexLRUBits(UInt32 index){
+bool CacheSetPLRU::getPos(UInt32 index){
     return 1;
 }
