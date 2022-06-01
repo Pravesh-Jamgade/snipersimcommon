@@ -44,6 +44,10 @@ MemoryManager::MemoryManager(Core* core,
    m_dram_cntlr_present(false),
    m_enabled(false)
 {
+   //update
+   UInt64 epocLength = Sim()->getCfg()->getInt("param/epoc");
+   epocManager = std::make_shared<EpocManagerSpace::EpocManager>(epocLength, getCore()->getPerformanceModel()->getCycleCount());
+
    // Read Parameters from the Config file
    std::map<MemComponent::component_t, CacheParameters> cache_parameters;
    std::map<MemComponent::component_t, String> cache_names;
@@ -439,8 +443,11 @@ MemoryManager::coreInitiateMemoryAccess(
          modeled == Core::MEM_MODELED_NONE || modeled == Core::MEM_MODELED_COUNT ? false : true,
          modeled == Core::MEM_MODELED_NONE ? false : true);
 
-   // epoc process
-   
+   // epoc end process
+   if(epocManager->IsEpocEnded(getCore()->getPerformanceModel()->getCycleCount())){
+      
+   }
+
    return result;
 }
 

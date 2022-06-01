@@ -16,6 +16,9 @@
 
 #include <map>
 
+#include "EpocManager.h"
+#include <memory>
+
 class DramCache;
 class ShmemPerf;
 
@@ -61,6 +64,9 @@ namespace ParametricDramDirectoryMSI
          static CacheCntlrMap m_all_cache_cntlrs;
 
          void accessTLB(TLB * tlb, IntPtr address, bool isIfetch, Core::MemModeled modeled);
+
+         //update
+         std::shared_ptr<EpocManagerSpace::EpocManager> epocManager;
 
       public:
          MemoryManager(Core* core, Network* network, ShmemPerfModel* shmem_perf_model);

@@ -7,16 +7,16 @@ namespace EpocManagerSpace
 {
     class EpocManager
     {   
-        UInt64 epocLength, reuse;
+        UInt64 epocLength, currCyle;
         public:
-        EpocManager(UInt64 epocLength){
-            reuse=epocLength=epocLength;
+        EpocManager(UInt64 epocLength, UInt64 currCyle){
+            epocLength=epocLength;
+            currCyle=currCyle;
         }
-        bool IsEpocEnded(){
-            return epocLength==0;
+        bool IsEpocEnded(UInt64 cycle){
+            cycle = abs(cycle-currCyle);
+            return cycle%epocLength == 0;
         }
-        void decrease(){epocLength--;}
-        void reset(){epocLength=reuse;}
     };
 }
 
