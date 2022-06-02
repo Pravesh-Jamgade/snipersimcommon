@@ -5,6 +5,7 @@
 #include "performance_model.h"
 #include "core.h"
 #include "core_manager.h"
+#include "config.hpp"
 
 // Cache class
 // constructors/destructors
@@ -94,6 +95,11 @@ UInt64 Cache::getCycle(){
    return cycle;
 }
 
+String Cache::logCache(){
+            String logCache = Sim()->getCfg()->getString("param/cache");
+            return logCache;
+      }
+
 CacheBlockInfo*
 Cache::accessSingleLine(IntPtr addr, access_t access_type,
       Byte* buff, UInt32 bytes, SubsecondTime now, bool update_replacement)
@@ -114,8 +120,8 @@ Cache::accessSingleLine(IntPtr addr, access_t access_type,
       return NULL;
 
    // String haddr = DeadBlockAnalysisSpace::Int2HexMap::insert(addr);
-   
-   if(ptr!=nullptr){
+
+   if(ptr!=nullptr && m_name==logCache()){
       bool pos = set->getPos(line_index);
       ptr->addEntry(addr, pos, getCycle());
    }
@@ -160,7 +166,7 @@ Cache::insertSingleLine(IntPtr addr, Byte* fill_buff,
    // String ehaddr = DeadBlockAnalysisSpace::Int2HexMap::insert(*evict_addr);
    // String haddr = DeadBlockAnalysisSpace::Int2HexMap::insert(addr);
 
-   if(ptr!=nullptr){
+   if(ptr!=nullptr && m_name == logCache()){
       ptr->addEntry(addr, pos, getCycle());
       ptr->addEntry(*evict_addr, pos, getCycle(), eviction);
    }

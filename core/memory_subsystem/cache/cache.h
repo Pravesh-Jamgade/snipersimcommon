@@ -76,6 +76,7 @@ class Cache : public CacheBase
 
       UInt64 getCycle();
       void logAndClear(UInt64 epoc);
+      String logCache();
 };
 
 template <class T>

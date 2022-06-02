@@ -73,21 +73,25 @@ namespace DeadBlockAnalysisSpace
 
         CacheBlockTracker(String path){
             totalBlocks=totalDeadBlocks=Helper::Counter(0);
+            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DBA, "epoc,addr,lhh,evicts,reuse,access,dead\n");
         }
 
         void logAndClear(UInt64 epoc){
+           
             for(auto addr: cbTracker){
-                CBUsage cbUsage = addr.second;
-                _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DBA, "%ld,%ld,%ld,%ld,%ld,%ld\n", 
+                if(addr.second.deadBlock.getCount() == 0)
+                    continue;
+                _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DBA, "%ld,%ld,%ld,%ld,%ld,%ld,%ld\n", 
+                    epoc,
                     addr.first, 
-                    cbUsage.cacheBlockLowerHalfHits.getCount(),
-                    cbUsage.cacheBlockEvict.getCount(),
-                    cbUsage.cacheBlockReuse.getCount(),
-                    cbUsage.cacheBlockAccess.getCount(),
-                    cbUsage.deadBlock.getCount()
+                    addr.second.cacheBlockLowerHalfHits.getCount(),
+                    addr.second.cacheBlockEvict.getCount(),
+                    addr.second.cacheBlockReuse.getCount(),
+                    addr.second.cacheBlockAccess.getCount(),
+                    addr.second.deadBlock.getCount()
                     );
             }
-            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DBA, "[epoc]=%ld\n", epoc);
+            cbTracker.clear();
         }
 
         void addEntry(IntPtr addr, bool pos, UInt64 cycle, bool eviction=false){
@@ -95,6 +99,7 @@ namespace DeadBlockAnalysisSpace
             auto findAddr = cbTracker.find(addr);
             if(findAddr!=cbTracker.end()){
                 if(eviction){
+                    findAddr->second.kickedFirstTime();
                     findAddr->second.setEvictCycle(cycle);
                     findAddr->second.increaseCBE();
                     // check if it is deadblock
@@ -104,6 +109,9 @@ namespace DeadBlockAnalysisSpace
                     return;
                 }
                 else{//block is accessed more than once
+                    if(findAddr->second.IsItKickedAlready()){
+                        findAddr->second.increaseCBR();
+                    }
                     findAddr->second.increaseCBA();
                     if(pos)
                         findAddr->second.increaseCBLHH();

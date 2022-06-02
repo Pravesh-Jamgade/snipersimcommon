@@ -95,6 +95,7 @@ void Log::initFileDescriptors()
 
    int size=LogDst::END - LogDst::AddressAnalyzer + 1;
    _loggerFiles = new FILE*[size];
+   _loggerLocks = new Lock*[size];
    for(int i=0;i<size;i++){
       _loggerFiles[i]=NULL;
       _loggerLocks[i]= new Lock[i];
