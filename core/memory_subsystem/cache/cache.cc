@@ -213,3 +213,8 @@ Cache::updateHits(Core::mem_op_t mem_op_type, UInt64 hits)
       m_num_hits += hits;
    }
 }
+
+void 
+Cache::logAndClear(UInt64 epoc){
+   ptr->logAndClear(epoc);
+}

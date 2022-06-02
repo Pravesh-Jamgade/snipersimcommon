@@ -311,6 +311,11 @@ CacheCntlr::setPrevCacheCntlrs(CacheCntlrList& prev_cache_cntlrs)
    #endif
 }
 
+void CacheCntlr::cacheDeadBlockAnalysis(UInt64 epocNumber)
+{
+   m_master->m_cache->logAndClear(epocNumber);
+}
+
 void
 CacheCntlr::setDRAMDirectAccess(DramCntlrInterface* dram_cntlr, UInt64 num_outstanding)
 {

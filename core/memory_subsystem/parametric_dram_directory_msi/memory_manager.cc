@@ -445,7 +445,9 @@ MemoryManager::coreInitiateMemoryAccess(
 
    // epoc end process
    if(epocManager->IsEpocEnded(getCore()->getPerformanceModel()->getCycleCount())){
-      
+      for(UInt32 i = MemComponent::FIRST_LEVEL_CACHE; i <= (UInt32)m_last_level_cache; ++i) {
+         m_cache_cntlrs[(MemComponent::component_t)i]->cacheDeadBlockAnalysis(epocManager->number);
+      }
    }
 
    return result;

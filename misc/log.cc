@@ -93,6 +93,13 @@ void Log::initFileDescriptors()
       _simFiles[i] = NULL;
    }
 
+   int size=LogDst::END - LogDst::AddressAnalyzer + 1;
+   _loggerFiles = new FILE*[size];
+   for(int i=0;i<size;i++){
+      _loggerFiles[i]=NULL;
+      _loggerLocks[i]= new Lock[i];
+   }
+   
    _coreLocks = new Lock [_coreCount];
    _simLocks = new Lock [_coreCount];
 
@@ -367,4 +374,59 @@ void Log::log(ErrorState err, const char* source_file, SInt32 source_line, const
    default:
       break;
    }
+}
+
+void Log::log(Log::LogDst logDst, const char *format, ...)// Log::LogState logState,
+{
+   // if(logState == LogState::DISABLE)
+   //    return ;
+   core_id_t core_id;
+   bool sim_thread;
+   discoverCore(&core_id, &sim_thread);
+
+   FILE *file;
+   Lock *lock;
+
+   // getFile(-1, sim_thread, &file, &lock);
+   assert(core_id < _coreCount);
+   char filename[256];
+   
+
+   for (int logtype=LogDst::AddressAnalyzer; logtype<= LogDst::END; logtype++)
+   {
+      if(logtype==logDst)
+      {
+         
+         if(_loggerFiles[logDst]==NULL)
+         {
+            sprintf(filename, "customLog_%u.log", logDst);
+            _loggerFiles[logDst]=fopen(formatFileName(filename).c_str(), "w");
+         }
+         file=_loggerFiles[logDst];
+         lock=_loggerLocks[logDst];
+         break;
+      }
+   }
+   if(file==NULL and lock==NULL)
+   {
+      printf("break as object is NULL\n");
+   }
+    
+   int tid = syscall(__NR_gettid);
+
+
+   char message[512];
+   char *p = message;
+
+   va_list args;
+   va_start(args, format);
+   p += vsprintf(p, format, args);
+   va_end(args);
+
+   // lock->acquire();
+   fputs(message, file);
+   fflush(file);
+
+   // lock->release();
+
 }

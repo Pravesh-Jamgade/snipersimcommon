@@ -60,7 +60,7 @@ namespace DeadBlockAnalysisSpace
         void setLastAccessCycle(UInt64 cycle){
             lastAccessCycle=cycle;
         }
-        void setLoadCycle(UIt64 cycle){
+        void setLoadCycle(UInt64 cycle){
             loadCycle=cycle;
         }
     };
@@ -75,12 +75,27 @@ namespace DeadBlockAnalysisSpace
             totalBlocks=totalDeadBlocks=Helper::Counter(0);
         }
 
+        void logAndClear(UInt64 epoc){
+            for(auto addr: cbTracker){
+                CBUsage cbUsage = addr.second;
+                _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DBA, "%ld,%ld,%ld,%ld,%ld,%ld\n", 
+                    addr.first, 
+                    cbUsage.cacheBlockLowerHalfHits.getCount(),
+                    cbUsage.cacheBlockEvict.getCount(),
+                    cbUsage.cacheBlockReuse.getCount(),
+                    cbUsage.cacheBlockAccess.getCount(),
+                    cbUsage.deadBlock.getCount()
+                    );
+            }
+            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DBA, "[epoc]=%ld\n", epoc);
+        }
+
         void addEntry(IntPtr addr, bool pos, UInt64 cycle, bool eviction=false){
 
             auto findAddr = cbTracker.find(addr);
             if(findAddr!=cbTracker.end()){
                 if(eviction){
-                    findAddr->second.setEvictCyle(cycle);
+                    findAddr->second.setEvictCycle(cycle);
                     findAddr->second.increaseCBE();
                     // check if it is deadblock
                     if(findAddr->second.check()){

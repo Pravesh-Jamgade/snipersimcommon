@@ -75,6 +75,7 @@ class Cache : public CacheBase
       std::shared_ptr<DeadBlockAnalysisSpace::CacheBlockTracker> ptr;
 
       UInt64 getCycle();
+      void logAndClear(UInt64 epoc);
 };
 
 template <class T>
