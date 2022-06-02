@@ -25,139 +25,91 @@ namespace DeadBlockAnalysisSpace
     };
 
 
- class CBUsage
- {
-    public:
-    Helper::Counter cacheBlockAccess, cacheBlockLowerHalfHits, cacheBlockReuse, cacheBlockEvict;
-    bool cacheBlockEvictedFirstTime;
-    CBUsage(){
-        cacheBlockEvictedFirstTime=false;
-        cacheBlockAccess=Helper::Counter(1);
-        cacheBlockEvict=cacheBlockLowerHalfHits=cacheBlockReuse=Helper::Counter(0);
-    }
+    class CBUsage
+    {
+        public:
+        Helper::Counter cacheBlockAccess, cacheBlockLowerHalfHits, cacheBlockReuse, cacheBlockEvict, deadBlock;
+        bool cacheBlockEvictedFirstTime;
+        UInt64 loadCycle, evictCycle, lastAccessCycle;
+        CBUsage(){
+            cacheBlockEvictedFirstTime=false;
+            cacheBlockAccess=Helper::Counter(1);
+            deadBlock=cacheBlockEvict=cacheBlockLowerHalfHits=cacheBlockReuse=Helper::Counter(0);
+            loadCycle=evictCycle=lastAccessCycle=0;
+        }
 
-    void increaseCBA(){cacheBlockAccess.increase();}
-    void increaseCBR(){cacheBlockReuse.increase();}
-    void increaseCBLHH(){cacheBlockLowerHalfHits.increase();}
-    void increaseCBE(){cacheBlockEvict.increase();}
-    bool IsItKickedAlready(){ return cacheBlockEvictedFirstTime;}
-    bool kickedFirstTime(){cacheBlockEvictedFirstTime=true; increaseCBE();}
- };
+        void increaseCBA(){cacheBlockAccess.increase();}
+        void increaseCBR(){cacheBlockReuse.increase();}
+        void increaseCBLHH(){cacheBlockLowerHalfHits.increase();}
+        void increaseCBE(){cacheBlockEvict.increase();}
+        bool IsItKickedAlready(){ return cacheBlockEvictedFirstTime;}
+        bool kickedFirstTime(){cacheBlockEvictedFirstTime=true; increaseCBE();}
+        bool check(){
+            UInt64 total = evictCycle-loadCycle;
+            UInt64 tillLastAccess = lastAccessCycle-loadCycle;
+            double percentage = (double)tillLastAccess/(double)total;
+            bool isItDeadBlock =percentage>0.500001?true:false;
+            if(isItDeadBlock)
+                deadBlock.increase();
+                
+            return isItDeadBlock;
+        }
+        void setEvictCycle(UInt64 cycle){
+            evictCycle=cycle;
+        }
+        void setLastAccessCycle(UInt64 cycle){
+            lastAccessCycle=cycle;
+        }
+        void setLoadCycle(UIt64 cycle){
+            loadCycle=cycle;
+        }
+    };
 
- class CacheBlockTracker
- {
-    typedef std::unordered_map<IntPtr, CBUsage*> CBTracker;
-    std::unordered_map<int, CBTracker> cbTracker;
+    class CacheBlockTracker
+    {
+        std::unordered_map<IntPtr, CBUsage> cbTracker;
+        Helper::Counter totalDeadBlocks, totalBlocks;
+        public:
 
-    String output_dir="";
-    public:
+        CacheBlockTracker(String path){
+            totalBlocks=totalDeadBlocks=Helper::Counter(0);
+        }
 
-    CacheBlockTracker(){
-    }
+        void addEntry(IntPtr addr, bool pos, UInt64 cycle, bool eviction=false){
 
-    CacheBlockTracker(String output_dir){
-        this->output_dir = output_dir;
-        std::cout<<"my output @ "<<output_dir<<'\n';
-    }
-
-    ~CacheBlockTracker(){
-        String cbtInfo="cbt_log.out";
-
-        for(auto cacheTracker: cbTracker){
-            String cache=get(cacheTracker.first);
-            cache = '/'+cache+'_'+cbtInfo;
-            String path = output_dir + cache;
-            std::fstream cbStream(path.c_str(), std::fstream::out);
-
-            cbStream<<"addr,access,reuse,lhl,evicts\n";
-            for(auto cb: cacheTracker.second){
-                IntPtr haddr = cb.first;
-                UInt64 cbAccess = cb.second->cacheBlockAccess.getCount();
-                UInt64 cbReuse = cb.second->cacheBlockReuse.getCount();
-                UInt64 cbLHH = cb.second->cacheBlockLowerHalfHits.getCount();
-                UInt64 cbE = cb.second->cacheBlockEvict.getCount();
-                cbStream<<haddr<<','<<cbAccess<<','<<cbReuse<<','<<cbLHH<<','<<cbE<<'\n';
-                if(cb.second->IsItKickedAlready()){
-                    printf("[A]%ld, %ld\n", haddr, cbE);
+            auto findAddr = cbTracker.find(addr);
+            if(findAddr!=cbTracker.end()){
+                if(eviction){
+                    findAddr->second.setEvictCyle(cycle);
+                    findAddr->second.increaseCBE();
+                    // check if it is deadblock
+                    if(findAddr->second.check()){
+                        totalDeadBlocks.increase();
+                    }
+                    return;
+                }
+                else{//block is accessed more than once
+                    findAddr->second.increaseCBA();
+                    if(pos)
+                        findAddr->second.increaseCBLHH();
+                    findAddr->second.setLastAccessCycle(cycle);
                 }
             }
-            cbStream.close();
-        }
-    }
-
-    void increaseCBA(int name, IntPtr haddr){cbTracker[name][haddr]->increaseCBA();}
-    void increaseCBR(int name, IntPtr haddr){cbTracker[name][haddr]->increaseCBR();}
-    void increaseCBLHH(int name, IntPtr haddr){cbTracker[name][haddr]->increaseCBLHH();}
-    void increaseCBE(int name, IntPtr haddr){cbTracker[name][haddr]->increaseCBE();}
-    bool IsItkickedAlready(int name, IntPtr haddr){ 
-        return cbTracker[name][haddr]->IsItKickedAlready();
-    }
-    bool cacheEntryFound(int name){
-        if(cbTracker.find(name)!=cbTracker.end()){
-            return true;
-        }
-        return false;
-    }
-
-    bool addrEntryFound(int name, IntPtr haddr){
-        if(cbTracker[name].find(haddr)!=cbTracker[name].end()){
-            return true;
-        }
-        return false;
-    }
-
-    int get(String name){
-        if(name == "L1-D") return 0;
-        if(name == "L1-I") return 1;
-        if(name == "L2") return 2;
-        if(name == "L3") return 3;
-    }
-
-    String get(int num){
-        if(num == 0) return "L1-D";
-        if(num == 1) return "L1-I";
-        if(num == 2) return "L2";
-        if(num == 3) return "L3";
-    }
-
-    void doCBUsageTracking(IntPtr haddr, bool recenyPos, String cacheName, bool eviction=false){
-        int name= get(cacheName);
-       
-        if(eviction)
-        {
-            auto findCacheName = cbTracker.find(name);
-            if(findCacheName!=cbTracker.end()){
-                auto findAddr = findCacheName->second.find(haddr);
-                if(findAddr!=findCacheName->second.end()){
-                    //name,addr found
-                    findAddr->second->kickedFirstTime();
-                    printf("[**] kick=%ld\n", haddr);
+            else{
+                if(eviction){//entry is not present even then asked  for evicition could be error
+                    return;
                 }
+
+                cbTracker.insert({addr, CBUsage()});
+                totalBlocks.increase();// new added block counted
+                if(pos)
+                    cbTracker[addr].increaseCBLHH();
+                cbTracker[addr].setLoadCycle(cycle);
             }
-            return;
+            
+            
         }
-
-        if(!cacheEntryFound(name)){
-            cbTracker[name].insert({haddr, new CBUsage()});
-            return;
-        }
-
-        if(!addrEntryFound(name,haddr)){
-            cbTracker[name].insert({haddr, new CBUsage()});
-            return;
-        }
-
-        if(IsItkickedAlready(name, haddr)){
-            increaseCBR(name, haddr);
-        }
-        else{
-            increaseCBA(name, haddr);
-            // make count if addr is in the lower half of recency list
-            if(recenyPos)
-                increaseCBLHH(name, haddr);
-        }
-    }
- };
+    };
 
 }
 #endif

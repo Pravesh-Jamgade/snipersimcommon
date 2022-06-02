@@ -14,7 +14,9 @@ namespace EpocManagerSpace
             currCyle=currCyle;
         }
         bool IsEpocEnded(UInt64 cycle){
-            cycle = abs(cycle-currCyle);
+            cycle = cycle-currCyle;
+            if(cycle<0)
+                cycle*=-1;
             return cycle%epocLength == 0;
         }
     };

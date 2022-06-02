@@ -2,6 +2,9 @@
 #include "cache.h"
 #include "log.h"
 #include "DeadBlockAnalysis.h"
+#include "performance_model.h"
+#include "core.h"
+#include "core_manager.h"
 
 // Cache class
 // constructors/destructors
@@ -25,7 +28,7 @@ Cache::Cache(
    m_cache_type(cache_type),
    m_fault_injector(fault_injector)
 {
-   ptr = Sim()->getCBTracker();
+   ptr = std::make_shared<DeadBlockAnalysisSpace::CacheBlockTracker>(Sim()->getConfig()->getOutputDirectory());
    m_set_info = CacheSet::createCacheSetInfo(name, cfgname, core_id, replacement_policy, m_associativity);
    m_sets = new CacheSet*[m_num_sets];
    for (UInt32 i = 0; i < m_num_sets; i++)
@@ -82,6 +85,15 @@ Cache::invalidateSingleLine(IntPtr addr)
    return m_sets[set_index]->invalidate(tag);
 }
 
+UInt64 Cache::getCycle(){
+   Core* core = Sim()->getCoreManager()->getCurrentCore();
+   UInt64 cycle;
+   if(core!=nullptr){
+      cycle=core->getPerformanceModel()->getCycleCount();
+   }
+   return cycle;
+}
+
 CacheBlockInfo*
 Cache::accessSingleLine(IntPtr addr, access_t access_type,
       Byte* buff, UInt32 bytes, SubsecondTime now, bool update_replacement)
@@ -105,7 +117,7 @@ Cache::accessSingleLine(IntPtr addr, access_t access_type,
    
    if(ptr!=nullptr){
       bool pos = set->getPos(line_index);
-      ptr->doCBUsageTracking(addr, pos, getName());
+      ptr->addEntry(addr, pos, getCycle());
    }
       
    if (access_type == LOAD)
@@ -149,8 +161,8 @@ Cache::insertSingleLine(IntPtr addr, Byte* fill_buff,
    // String haddr = DeadBlockAnalysisSpace::Int2HexMap::insert(addr);
 
    if(ptr!=nullptr){
-      ptr->doCBUsageTracking(addr, pos, getName());
-      ptr->doCBUsageTracking(*evict_addr, pos, getName(), eviction);
+      ptr->addEntry(addr, pos, getCycle());
+      ptr->addEntry(*evict_addr, pos, getCycle(), eviction);
    }
       
    if (m_fault_injector) {
