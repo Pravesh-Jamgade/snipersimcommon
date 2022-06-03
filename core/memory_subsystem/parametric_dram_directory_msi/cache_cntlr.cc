@@ -349,6 +349,7 @@ MYLOG("%c%c %lx+%u..+%u", mem_op_type == Core::WRITE ? 'W' : 'R', mem_op_type ==
 LOG_ASSERT_ERROR((ca_address & (getCacheBlockSize() - 1)) == 0, "address at cache line + %x", ca_address & (getCacheBlockSize() - 1));
 LOG_ASSERT_ERROR(offset + data_length <= getCacheBlockSize(), "access until %u > %u", offset + data_length, getCacheBlockSize());
 
+printf("hello");
    #ifdef PRIVATE_L2_OPTIMIZATION
    /* if this is the second part of an atomic operation: we already have the lock, don't lock again */
    if (lock_signal != Core::UNLOCK)
