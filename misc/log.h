@@ -41,7 +41,7 @@ class Log
          E,
       };
 
-      String logFiles[3]={"l1", "l2", "l3"};
+      char* logFiles[3]={"l1", "l2", "l3"};
       std::map<LogFileName, FILE*> logFileObject;
 
       void log(ErrorState err, const char *source_file, SInt32 source_line, const char* format, ...);
@@ -52,8 +52,8 @@ class Log
 
       String getModule(const char *filename);
 
-      String getFileName(LogFileName lf){
-         return logFiles[lf];
+      char* getFileName(LogFileName lf){
+         return logFiles[lf-1];
       }
 
    private:

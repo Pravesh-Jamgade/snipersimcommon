@@ -94,10 +94,11 @@ namespace DeadBlockAnalysisSpace
 
         void logAndClear(String name, UInt64 epoc=0){
            Log::LogFileName log = getProperLog(name);
+           printf("[]log=%d", log);
             for(auto addr: cbTracker){
                 if(addr.second.deadBlock.getCount() == 0)
                     continue;
-                _LOG_CUSTOM_LOGGER(Log::Warning, log, "%ld,%ld,%ld,%ld,%ld,%ld,%ld,%f\n", 
+                _LOG_CUSTOM_LOGGER(Log::Warning, static_cast<Log::LogFileName>(log), "%ld,%ld,%ld,%ld,%ld,%ld,%ld,%f\n", 
                     epoc,
                     addr.first, 
                     addr.second.cacheBlockLowerHalfHits.getCount(),

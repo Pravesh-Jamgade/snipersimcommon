@@ -395,7 +395,8 @@ void Log::log(Log::LogFileName logFileName, const char *format, ...)// Log::LogS
    auto findObj = logFileObject.find(logFileName);
    if(findObj==logFileObject.end())
    {
-      sprintf(filename, "customLog_%u.log", getFileName(logFileName));
+      sprintf(filename, "customLog_%s.log", getFileName(logFileName));
+      printf("[+]%s, %d\n", filename, logFileName);
       file=fopen(formatFileName(filename).c_str(), "w");
       logFileObject[logFileName]=file;
    }

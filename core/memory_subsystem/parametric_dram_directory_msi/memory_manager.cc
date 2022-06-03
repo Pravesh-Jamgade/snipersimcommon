@@ -44,10 +44,6 @@ MemoryManager::MemoryManager(Core* core,
    m_dram_cntlr_present(false),
    m_enabled(false)
 {
-   //update
-   UInt64 epocLength = Sim()->getCfg()->getInt("param/epoc");
-   epocManager = std::make_shared<EpocManagerSpace::EpocManager>(epocLength, getCore()->getPerformanceModel()->getCycleCount());
-
    // Read Parameters from the Config file
    std::map<MemComponent::component_t, CacheParameters> cache_parameters;
    std::map<MemComponent::component_t, String> cache_names;
@@ -67,10 +63,14 @@ MemoryManager::MemoryManager(Core* core,
    UInt32 dram_directory_home_lookup_param = 0;
    ComponentLatency dram_directory_cache_access_time(global_domain, 0);
 
+   //update
+   UInt64 epocLength = Sim()->getCfg()->getInt("param/epoc");
+   epocManager = std::make_shared<EpocManagerSpace::EpocManager>(epocLength, getCore()->getPerformanceModel()->getCycleCount());
+
    try
    {
       m_cache_block_size = Sim()->getCfg()->getInt("perf_model/l1_icache/cache_block_size");
- 
+
       m_last_level_cache = (MemComponent::component_t)(Sim()->getCfg()->getInt("perf_model/cache/levels") - 2 + MemComponent::L2_CACHE);
 
       UInt32 stlb_size = Sim()->getCfg()->getInt("perf_model/stlb/size");
@@ -427,7 +427,6 @@ MemoryManager::coreInitiateMemoryAccess(
       Byte* data_buf, UInt32 data_length,
       Core::MemModeled modeled)
 {
-   printf("coreInt\n");
    LOG_ASSERT_ERROR(mem_component <= m_last_level_cache,
       "Error: invalid mem_component (%d) for coreInitiateMemoryAccess", mem_component);
 
@@ -435,23 +434,14 @@ MemoryManager::coreInitiateMemoryAccess(
       accessTLB(m_itlb, address, true, modeled);
    else if (mem_component == MemComponent::L1_DCACHE && m_dtlb)
       accessTLB(m_dtlb, address, false, modeled);
-   printf("processMem\n");
-   HitWhere::where_t result =  m_cache_cntlrs[mem_component]->processMemOpFromCore(
+
+   return m_cache_cntlrs[mem_component]->processMemOpFromCore(
          lock_signal,
          mem_op_type,
          address, offset,
          data_buf, data_length,
          modeled == Core::MEM_MODELED_NONE || modeled == Core::MEM_MODELED_COUNT ? false : true,
          modeled == Core::MEM_MODELED_NONE ? false : true);
-
-   // // epoc end process
-   // if(epocManager->IsEpocEnded(getCore()->getPerformanceModel()->getCycleCount())){
-   //    for(UInt32 i = MemComponent::FIRST_LEVEL_CACHE; i <= (UInt32)m_last_level_cache; ++i) {
-   //       m_cache_cntlrs[(MemComponent::component_t)i]->cacheDeadBlockAnalysis(epocManager->number);
-   //    }
-   // }
-
-   return result;
 }
 
 void
