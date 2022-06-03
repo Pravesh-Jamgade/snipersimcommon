@@ -75,8 +75,17 @@ class Cache : public CacheBase
       std::shared_ptr<DeadBlockAnalysisSpace::CacheBlockTracker> ptr;
 
       UInt64 getCycle();
-      void logAndClear(UInt64 epoc);
+      void logAndClear(UInt64 epoc=0);
       String logCache();
+      bool allowed(){
+            if(m_name == logCache())
+                  return true;
+            if(logCache() == "x"){
+                  if(m_name == "L1-D" || m_name == "L2" || m_name =="L3")
+                        return true;
+            }
+            return false;
+      }
 };
 
 template <class T>

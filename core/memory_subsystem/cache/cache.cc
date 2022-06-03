@@ -29,7 +29,7 @@ Cache::Cache(
    m_cache_type(cache_type),
    m_fault_injector(fault_injector)
 {
-   ptr = std::make_shared<DeadBlockAnalysisSpace::CacheBlockTracker>(Sim()->getConfig()->getOutputDirectory());
+   ptr = std::make_shared<DeadBlockAnalysisSpace::CacheBlockTracker>(Sim()->getConfig()->getOutputDirectory(), m_name);
    m_set_info = CacheSet::createCacheSetInfo(name, cfgname, core_id, replacement_policy, m_associativity);
    m_sets = new CacheSet*[m_num_sets];
    for (UInt32 i = 0; i < m_num_sets; i++)
@@ -46,6 +46,10 @@ Cache::Cache(
 
 Cache::~Cache()
 {
+   if(allowed())
+   {
+      logAndClear();
+   }
    #ifdef ENABLE_SET_USAGE_HIST
    printf("Cache %s set usage:", m_name.c_str());
    for (SInt32 i = 0; i < (SInt32) m_num_sets; i++)
@@ -121,7 +125,7 @@ Cache::accessSingleLine(IntPtr addr, access_t access_type,
 
    // String haddr = DeadBlockAnalysisSpace::Int2HexMap::insert(addr);
 
-   if(ptr!=nullptr && m_name==logCache()){
+   if(ptr!=nullptr && allowed()){
       bool pos = set->getPos(line_index);
       ptr->addEntry(addr, pos, getCycle());
    }
@@ -166,7 +170,7 @@ Cache::insertSingleLine(IntPtr addr, Byte* fill_buff,
    // String ehaddr = DeadBlockAnalysisSpace::Int2HexMap::insert(*evict_addr);
    // String haddr = DeadBlockAnalysisSpace::Int2HexMap::insert(addr);
 
-   if(ptr!=nullptr && m_name == logCache()){
+   if(ptr!=nullptr && allowed()){
       ptr->addEntry(addr, pos, getCycle());
       ptr->addEntry(*evict_addr, pos, getCycle(), eviction);
    }
@@ -222,5 +226,5 @@ Cache::updateHits(Core::mem_op_t mem_op_type, UInt64 hits)
 
 void 
 Cache::logAndClear(UInt64 epoc){
-   ptr->logAndClear(epoc);
+   ptr->logAndClear(m_name,epoc);
 }

@@ -377,6 +377,53 @@ void Log::log(ErrorState err, const char* source_file, SInt32 source_line, const
    }
 }
 
+void Log::log(Log::LogFileName logFileName, const char *format, ...)// Log::LogState logState,
+{
+   // if(logState == LogState::DISABLE)
+   //    return ;
+   core_id_t core_id;
+   bool sim_thread;
+   // discoverCore(&core_id, &sim_thread);
+
+   FILE *file;
+
+   // getFile(-1, sim_thread, &file, &lock);
+   assert(core_id < _coreCount);
+   char filename[256];
+   
+   
+   auto findObj = logFileObject.find(logFileName);
+   if(findObj==logFileObject.end())
+   {
+      sprintf(filename, "customLog_%s.log", getFileName(logFileName));
+      printf("[+]%s, %d\n", filename, logFileName);
+      file=fopen(formatFileName(filename).c_str(), "w");
+      logFileObject[logFileName]=file;
+   }
+   else 
+   {
+      file=logFileObject[logFileName];
+   }
+
+   int tid = syscall(__NR_gettid);
+
+
+   char message[512];
+   char *p = message;
+
+   va_list args;
+   va_start(args, format);
+   p += vsprintf(p, format, args);
+   va_end(args);
+
+   // lock->acquire();
+   fputs(message, file);
+   fflush(file);
+
+   // lock->release();
+
+}
+
 void Log::log(Log::LogDst logDst, const char *format, ...)// Log::LogState logState,
 {
    // if(logState == LogState::DISABLE)

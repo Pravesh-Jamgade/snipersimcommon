@@ -33,12 +33,28 @@ class Log
          END,
       };
 
+      enum LogFileName{
+         S=0,
+         L1,
+         L2,
+         L3,
+         E,
+      };
+
+      char* logFiles[3]={"l1", "l2", "l3"};
+      std::map<LogFileName, FILE*> logFileObject;
+
       void log(ErrorState err, const char *source_file, SInt32 source_line, const char* format, ...);
       void log(Log::LogDst logDst, const char *format, ...);
+      void log(Log::LogFileName logFileName, const char *format, ...);
       bool isEnabled(const char* module);
       bool isLoggingEnabled() const { return _anyLoggingEnabled; }
 
       String getModule(const char *filename);
+
+      char* getFileName(LogFileName lf){
+         return logFiles[lf-1];
+      }
 
    private:
       UInt64 getTimestamp();

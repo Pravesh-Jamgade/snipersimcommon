@@ -31,11 +31,13 @@ namespace DeadBlockAnalysisSpace
         Helper::Counter cacheBlockAccess, cacheBlockLowerHalfHits, cacheBlockReuse, cacheBlockEvict, deadBlock;
         bool cacheBlockEvictedFirstTime;
         UInt64 loadCycle, evictCycle, lastAccessCycle;
+        double percentage;
         CBUsage(){
             cacheBlockEvictedFirstTime=false;
             cacheBlockAccess=Helper::Counter(1);
             deadBlock=cacheBlockEvict=cacheBlockLowerHalfHits=cacheBlockReuse=Helper::Counter(0);
             loadCycle=evictCycle=lastAccessCycle=0;
+            percentage=0;
         }
 
         void increaseCBA(){cacheBlockAccess.increase();}
@@ -43,7 +45,9 @@ namespace DeadBlockAnalysisSpace
         void increaseCBLHH(){cacheBlockLowerHalfHits.increase();}
         void increaseCBE(){cacheBlockEvict.increase();}
         bool IsItKickedAlready(){ return cacheBlockEvictedFirstTime;}
-        bool kickedFirstTime(){cacheBlockEvictedFirstTime=true; increaseCBE();}
+        void setEvictFirstTime(){
+            cacheBlockEvictedFirstTime=1;
+        }
         bool check(){
             UInt64 total = evictCycle-loadCycle;
             UInt64 tillLastAccess = evictCycle-lastAccessCycle;
@@ -51,8 +55,11 @@ namespace DeadBlockAnalysisSpace
             bool isItDeadBlock =percentage>0.500001?true:false;
             if(isItDeadBlock)
                 deadBlock.increase();
-                
+            this->percentage+=percentage;
             return isItDeadBlock;
+        }
+        double avgDeadPercent(){
+            return this->percentage/(double)cacheBlockEvict.getCount();
         }
         void setEvictCycle(UInt64 cycle){
             evictCycle=cycle;
@@ -71,35 +78,48 @@ namespace DeadBlockAnalysisSpace
         Helper::Counter totalDeadBlocks, totalBlocks;
         public:
 
-        CacheBlockTracker(String path){
+        CacheBlockTracker(String path, String name){
             totalBlocks=totalDeadBlocks=Helper::Counter(0);
-            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DBA, "epoc,addr,lhh,evicts,reuse,access,dead\n");
+            _LOG_CUSTOM_LOGGER(Log::Warning, getProperLog(name), "epoc,addr,lhh,evicts,reuse,access,dead\n");
         }
 
-        void logAndClear(UInt64 epoc){
-           
+        Log::LogFileName getProperLog(String name){
+            if(name == "L1-D")
+                return Log::L1;
+            if(name == "L2")
+                return Log::L2;
+            if(name == "L3")
+                return Log::L3;
+        }
+
+        void logAndClear(String name, UInt64 epoc=0){
+           Log::LogFileName log = getProperLog(name);
+           printf("[]log=%d", log);
             for(auto addr: cbTracker){
                 if(addr.second.deadBlock.getCount() == 0)
                     continue;
-                _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DBA, "%ld,%ld,%ld,%ld,%ld,%ld,%ld\n", 
+                _LOG_CUSTOM_LOGGER(Log::Warning, static_cast<Log::LogFileName>(log), "%ld,%ld,%ld,%ld,%ld,%ld,%ld,%f\n", 
                     epoc,
                     addr.first, 
                     addr.second.cacheBlockLowerHalfHits.getCount(),
                     addr.second.cacheBlockEvict.getCount(),
                     addr.second.cacheBlockReuse.getCount(),
                     addr.second.cacheBlockAccess.getCount(),
-                    addr.second.deadBlock.getCount()
+                    addr.second.deadBlock.getCount(),
+                    addr.second.avgDeadPercent()
                     );
             }
+            _LOG_CUSTOM_LOGGER(Log::Warning, log, "%ld,%ld\n", totalDeadBlocks.getCount(), totalBlocks.getCount());
+            _LOG_CUSTOM_LOGGER(Log::Warning, log, "--------------------------------------\n");
             cbTracker.clear();
         }
 
         void addEntry(IntPtr addr, bool pos, UInt64 cycle, bool eviction=false){
-
+            
             auto findAddr = cbTracker.find(addr);
             if(findAddr!=cbTracker.end()){
                 if(eviction){
-                    findAddr->second.kickedFirstTime();
+                    findAddr->second.setEvictFirstTime();
                     findAddr->second.setEvictCycle(cycle);
                     findAddr->second.increaseCBE();
                     // check if it is deadblock
