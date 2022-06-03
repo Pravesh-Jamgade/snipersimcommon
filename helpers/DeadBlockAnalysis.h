@@ -46,7 +46,7 @@ namespace DeadBlockAnalysisSpace
         bool kickedFirstTime(){cacheBlockEvictedFirstTime=true; increaseCBE();}
         bool check(){
             UInt64 total = evictCycle-loadCycle;
-            UInt64 tillLastAccess = lastAccessCycle-loadCycle;
+            UInt64 tillLastAccess = evictCycle-lastAccessCycle;
             double percentage = (double)tillLastAccess/(double)total;
             bool isItDeadBlock =percentage>0.500001?true:false;
             if(isItDeadBlock)
@@ -61,7 +61,7 @@ namespace DeadBlockAnalysisSpace
             lastAccessCycle=cycle;
         }
         void setLoadCycle(UInt64 cycle){
-            loadCycle=cycle;
+            evictCycle=lastAccessCycle=loadCycle=cycle;
         }
     };
 
