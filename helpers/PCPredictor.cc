@@ -41,7 +41,7 @@ void PCStatHelper::processEndPerformanceAnalysis(IntPtr pc, LevelPredictor level
             MemComponent::component_t comp = static_cast<MemComponent::component_t>(i);
 
             if(levelP.canSkipLevel(comp)){// skip
-                if( (mmratio[i-MemComponent::component_t::L1_DCACHE].getMissRatio())){// mm high
+                if(interpretMMratio(mmratio[i-MemComponent::component_t::L1_DCACHE].getMissRatio())){// mm high
                     perLevelLPperf[comp].inc(LPPerf::State::fs);//hazard
                 }
                 else{
@@ -75,10 +75,10 @@ void PCStatHelper::updateLPTable()
     sort(bag.begin(), bag.end());
     
     std::vector<IntPtr> highpc;
-    int co=10;
-    for(auto it=bag.rbegin();it!=bag.rend() && co;it++){
-        co--;
-        highpc.push_back(it->second);
+    UInt64 thresold = getThreshold();
+    for(auto it=bag.rbegin();it!=bag.rend();it++){
+        if(it->first > thresold)
+            highpc.push_back(it->second);
     }
 
     // performance analysis is LPT(x-1) vs MMT(x) decision deviation based type access count
