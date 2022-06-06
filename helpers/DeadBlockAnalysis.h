@@ -29,6 +29,7 @@ namespace DeadBlockAnalysisSpace
     class CBUsage
     {
         public:
+        UInt64 step;
         Helper::Counter cacheBlockAccess, cacheBlockLowerHalfHits, cacheBlockReuse, cacheBlockEvict, deadBlock;
         bool cacheBlockEvictedFirstTime;
         bool inserted;
@@ -44,6 +45,7 @@ namespace DeadBlockAnalysisSpace
             addPercent=0;
             mulPercent=1;
             inserted=false;
+            step=0;
         }
 
         void increaseCBA(){cacheBlockAccess.increase();}
@@ -94,6 +96,11 @@ namespace DeadBlockAnalysisSpace
         void countInsertOperations(){
             countInserts++;
         }
+        void insert(){
+            step+=10;
+        }
+        void rereference(){step-=1;}
+        bool isDead(){return step<0;}
     };
 
     class CacheBlockTracker
