@@ -30,54 +30,31 @@ namespace DeadBlockAnalysisSpace
     {
         public:
         UInt64 step;
-        Helper::Counter cacheBlockAccess, cacheBlockLowerHalfHits, cacheBlockReuse, cacheBlockEvict, deadBlock;
-        bool cacheBlockEvictedFirstTime;
-        bool inserted;
+        Helper::Counter cacheBlockAccess, cacheBlockLowerHalfHits;
         UInt64 loadCycle, evictCycle, lastAccessCycle;
         double addPercent, mulPercent;
-        UInt64 countInserts;
         std::map<UInt64, int> deadperiod;//deadperiod-length
         CBUsage(){
-            cacheBlockEvictedFirstTime=false;
             cacheBlockAccess=Helper::Counter(1);
-            deadBlock=cacheBlockEvict=cacheBlockLowerHalfHits=cacheBlockReuse=Helper::Counter(0);
+            cacheBlockLowerHalfHits=Helper::Counter(0);
             loadCycle=evictCycle=lastAccessCycle=0;
             addPercent=0;
             mulPercent=1;
-            inserted=false;
             step=0;
         }
 
         void increaseCBA(){cacheBlockAccess.increase();}
-        void increaseCBR(){cacheBlockReuse.increase();}
         void increaseCBLHH(){cacheBlockLowerHalfHits.increase();}
-        void increaseCBE(){cacheBlockEvict.increase();}
-        bool IsItKickedAlready(){ return cacheBlockEvictedFirstTime;}
-        void setEvictFirstTime(){
-            cacheBlockEvictedFirstTime=1;
-        }
-        void addDeadPeriod(){
-            if(deadperiod.find(getDeadPeriod()) != deadperiod.end()){
-                deadperiod[getDeadPeriod()]++;
-            }
-            else deadperiod[getDeadPeriod()]=1;
-        }
         UInt64 getTotalLife(){ return evictCycle-loadCycle;}
         UInt64 getDeadPeriod(){ return evictCycle-lastAccessCycle;}
-        double deadPercent(){return (double)getDeadPeriod()/(double)getTotalLife();}
+        double deadPercent(){return ((double)getDeadPeriod()/(double)getTotalLife())*100;}
         bool check(){
             double percentage = deadPercent();            
-            deadBlock.increase();
             addPercent += percentage;
             mulPercent *= percentage;
             return true;
         }
-        double geomean(){
-            return pow(mulPercent, 1/deadBlock.getCount());
-        }
-        double mean(){
-            return addPercent/(double)deadBlock.getCount();
-        }
+        
         void setEvictCycle(UInt64 cycle){
             evictCycle=cycle;
         }
@@ -87,31 +64,32 @@ namespace DeadBlockAnalysisSpace
         void setLoadCycle(UInt64 cycle){
             evictCycle=lastAccessCycle=loadCycle=cycle;
         }
-        void setInsert(){
-            inserted=true;
+        void insert(){step+=10;}
+        void rereference(){step-=2;}
+        bool isDead(){return deadPercent()>5;}
+
+        bool operator<(const CBUsage& c)const{
+            return true;
         }
-        void resetInsert(){
-            inserted=false;
-        }
-        void countInsertOperations(){
-            countInserts++;
-        }
-        void insert(){
-            step+=10;
-        }
-        void rereference(){step-=1;}
-        bool isDead(){return step<0;}
     };
 
     class CacheBlockTracker
     {
         std::unordered_map<IntPtr, CBUsage> cbTracker;
+        std::unordered_map<IntPtr, std::set<CBUsage>> dbTracker;
         Helper::Counter totalDeadBlocks, totalBlocks;
+
         public:
+        double geomean(double value){
+            return pow(value, 1/dbTracker.size());
+        }
+        double mean(double value){
+            return value/(double)dbTracker.size();
+        }
 
         CacheBlockTracker(String path, String name){
             totalBlocks=totalDeadBlocks=Helper::Counter(0);
-            _LOG_CUSTOM_LOGGER(Log::Warning, getProperLog(name), "epoc,addr,lhh,evicts,reuse,access,dead,gmean,mean,inserts%s\n", name.c_str());
+            _LOG_CUSTOM_LOGGER(Log::Warning, getProperLog(name), "addr,#deadblocks%s\n", name.c_str());
         }
 
         Log::LogFileName getProperLog(String name){
@@ -127,101 +105,56 @@ namespace DeadBlockAnalysisSpace
            Log::LogFileName log = getProperLog(name);
            printf("[]log=%d", log);
 
-            // before logging, check if any block is inserted but not evicted yet, set evict cycle for it
-            for(auto addr: cbTracker){
-                if(addr.second.inserted){
-                    addr.second.resetInsert();
-                    addr.second.setEvictCycle(cycle);
-                    if(addr.second.check()){
-                        totalDeadBlocks.increase();
-                    }
-                }
-            }
-
-            for(auto addr: cbTracker){
-                if(addr.second.deadBlock.getCount() == 0)
-                    continue;
-                _LOG_CUSTOM_LOGGER(Log::Warning, static_cast<Log::LogFileName>(log), "%ld,%ld,%ld,%ld,%ld,%ld,%ld,%f,%f,%ld\n", 
-                        epoc,
-                        addr.first, 
-                        addr.second.cacheBlockLowerHalfHits.getCount(),
-                        addr.second.cacheBlockEvict.getCount(),
-                        addr.second.cacheBlockReuse.getCount(),
-                        addr.second.cacheBlockAccess.getCount(),
-                        addr.second.deadBlock.getCount(),
-                        addr.second.geomean(),
-                        addr.second.mean(),
-                        addr.second.countInserts
-                    );
-                
-                for(auto deadPeriod: addr.second.deadperiod){
-                    _LOG_CUSTOM_LOGGER(Log::Warning, Log::DEBUG, "%ld, %ld, %ld, %d\n", epoc, addr.first, deadPeriod.first, deadPeriod.second);
-                }
-            }
-            _LOG_CUSTOM_LOGGER(Log::Warning, log, "%ld,%ld\n", totalDeadBlocks.getCount(), totalBlocks.getCount());
-            _LOG_CUSTOM_LOGGER(Log::Warning, log, "--------------------------------------\n");
-            cbTracker.clear();
+           for(auto deadBlock: dbTracker){
+               _LOG_CUSTOM_LOGGER(Log::Warning, static_cast<Log::LogFileName>(log), "%ld,%ld\n",
+                    deadBlock.first,
+                    deadBlock.second.size());
+           }
+           _LOG_CUSTOM_LOGGER(Log::Warning, static_cast<Log::LogFileName>(log), "total=%ld,dead=%ld\n",
+                    totalBlocks.getCount(),
+                    totalDeadBlocks.getCount());
+           
         }
 
         void addEntry(IntPtr addr, bool pos, UInt64 cycle, bool eviction=false){
-            
             auto findAddr = cbTracker.find(addr);
+            CBUsage* cbUsage=nullptr;
             if(findAddr!=cbTracker.end()){
-                if(eviction){
-                    findAddr->second.setEvictFirstTime();
-                    findAddr->second.setEvictCycle(cycle);
-                    findAddr->second.increaseCBE();
-                    findAddr->second.resetInsert();
-                    findAddr->second.addDeadPeriod();
-                    // check if it is deadblock
-                    if(findAddr->second.check()){
-                        totalDeadBlocks.increase();
-                    }
+                cbUsage=&findAddr->second;
+            }
+
+            if(eviction){
+                if(cbUsage==nullptr)
                     return;
+                cbUsage->setEvictCycle(cycle);
+                cbUsage->check();
+                cbTracker.erase(findAddr);
+                if(cbUsage->isDead()){
+                    auto dbFind = dbTracker.find(addr);
+                    if(dbFind!=dbTracker.end())
+                        dbTracker[addr].insert(*cbUsage);
+                    else
+                        dbTracker.insert({addr, {*cbUsage}});
+                    totalDeadBlocks.increase();
                 }
-                else{
-                    //block is accessed more than once
-                    if(findAddr->second.IsItKickedAlready()){
-                        findAddr->second.increaseCBR();
-                    }
-
-                    // reinserted cache block 
-                    if(!findAddr->second.inserted){//false then block was evicted and access came again and reinserted
-                        findAddr->second.setInsert();
-                        cbTracker[addr].countInsertOperations();
-                        cbTracker[addr].setLoadCycle(cycle);
-                    }
-                    
-                    // keeping track of all accesses irrespective of how many time reinserted and evicted
-                    findAddr->second.increaseCBA();
-
-                    // keeping track of lower level recency hits
-                    if(pos)
-                        findAddr->second.increaseCBLHH();
-
-                    // keeping track of last access cycle
-                    findAddr->second.setLastAccessCycle(cycle);
-                }
+                return;
+            }
+            
+            if(cbUsage!=nullptr){
+                cbUsage->rereference();
+                cbUsage->setLastAccessCycle(cycle);
+                cbUsage->increaseCBA();
             }
             else{
-                if(eviction){//entry is not present even then asked  for evicition could be error
-                    return;
-                }
-
-                cbTracker.insert({addr, CBUsage()});
-                // new added block counted
+                cbUsage = new CBUsage();
+                cbUsage->setLoadCycle(cycle);
+                cbUsage->insert();
+                cbTracker[addr]=*cbUsage;
                 totalBlocks.increase();
-                // count lower level hits of recency list
-                if(pos)
-                    cbTracker[addr].increaseCBLHH();
-                // set load cycle for newly inserted block
-                cbTracker[addr].setLoadCycle(cycle);
-                // set inserted status true
-                cbTracker[addr].setInsert();
-                cbTracker[addr].countInsertOperations();
             }
-            
-            
+
+            if(pos)
+                cbTracker[addr].increaseCBLHH();
         }
     };
 
