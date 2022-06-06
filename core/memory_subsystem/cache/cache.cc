@@ -226,5 +226,5 @@ Cache::updateHits(Core::mem_op_t mem_op_type, UInt64 hits)
 
 void 
 Cache::logAndClear(UInt64 epoc){
-   ptr->logAndClear(m_name,epoc);
+   ptr->logAndClear(m_name,getCycle(),epoc);
 }
