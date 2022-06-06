@@ -126,41 +126,6 @@ void PCStatHelper::logPerEpocSkiporNotSkipStatus(std::vector<Helper::Message>&al
     
 }
 
-void PCStatHelper::logLPPerfPerLevel(){
-    for(auto level: perLevelLPperf){
-        if(level.first == MemComponent::L1_DCACHE){
-            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_PERF_L1, "%ld,%ld,%ld,%ld,%ld\n", 
-                counter,
-                level.second.getCount(LPPerf::fs),
-                level.second.getCount(LPPerf::ts),
-                level.second.getCount(LPPerf::fns),
-                level.second.getCount(LPPerf::tns)
-            );
-        }
-
-        if(level.first == MemComponent::L2_CACHE){
-            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_PERF_L2, "%ld,%ld,%ld,%ld,%ld\n", 
-                counter,
-                level.second.getCount(LPPerf::fs),
-                level.second.getCount(LPPerf::ts),
-                level.second.getCount(LPPerf::fns),
-                level.second.getCount(LPPerf::tns)
-            );
-        }
-
-        if(level.first == llc){
-            _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_PERF_L3, "%ld,%ld,%ld,%ld,%ld\n", 
-                counter,
-                level.second.getCount(LPPerf::fs),
-                level.second.getCount(LPPerf::ts),
-                level.second.getCount(LPPerf::fns),
-                level.second.getCount(LPPerf::tns)
-            );
-        }
-        
-    }
-}
-
 void PCStatHelper::logTopVsTotalPC(){
     _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_TOP_VS_TOTAL_PC, "%ld,%d,%d\n", counter, LPHelper::getTopPCcount(), getTotalPCCount());
 }
@@ -213,12 +178,8 @@ void PCStatHelper::logInit(){
     if(LPHelper::getLockStatus() !=1){
         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_LP_VS_TYPE_ACCESS, "epoc,lp,p,fs1,ts1,fns1,tns1,q,fs2,ts2,fns2,tns2,r,fs3,ts3,fns3,tns3,s\n");
         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_TOP_PC_ACCESS, "epoc,toppcaccess, toppccount\n");
-        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LP_SUCCESS_VS_TOTAL_LP_ACCESS,"epoc,match,total,#matched cache level for actual & noskip, total LP access\n");
         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LP_VS_TOTAL_ACCESS, "epoc,total,lp\n");
         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_TOP_VS_TOTAL_PC, "epoc,top,total\n");
-        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_PERF_L1, "epoc,fs,ts,fns,tns\n");
-        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_PERF_L2, "epoc,fs,ts,fns,tns\n");
-        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_PERF_L3, "epoc,fs,ts,fns,tns\n");
         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_LEVEL_UNI_PC, "epoc,pc1,pc2,pc3,#unique pc count per level\n");
        
         for(int i=MemComponent::component_t::L1_DCACHE; i<= llc; i++){
@@ -239,10 +200,7 @@ void PCStatHelper::logInit(){
       
       logPerLevelLPVsTotalLPAccess();
 
-      logLPPerfPerLevel();
-
       logPerLevelPCCount();
-
 
       if(isLockEnabled()!=1){
         lockenable();

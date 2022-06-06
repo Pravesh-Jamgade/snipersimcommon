@@ -36,12 +36,8 @@ class Log
       {
          AddressAnalyzer=0,
          DEBUG_LEVEL_UNI_PC,
-         LP_PERF_L1,
-         LP_PERF_L2,
-         LP_PERF_L3,
          LP_TOP_VS_TOTAL_PC,
          LP_LP_VS_TOTAL_ACCESS,
-         LP_LP_SUCCESS_VS_TOTAL_LP_ACCESS,
          LP_TOP_PC_ACCESS,
          DEBUG_LP_VS_TYPE_ACCESS,
          DEBUG,

@@ -168,7 +168,6 @@ namespace PCPredictorSpace
             this->llc=llc;
             totalAccessPerEpoc=0;
             counter=0;
-            precisionLPHitActualLevel=0;
             lpEntryFound=0;
             lpaccess=Helper::Counter(0);
             for(int level=MemComponent::component_t::L1_DCACHE; level<= llc; level++){
@@ -194,12 +193,9 @@ namespace PCPredictorSpace
         // per pc per level per epoc LP perfromance (missmatch between actual and prediction for all levels)
         std::unordered_map<IntPtr, std::vector<EpocPerformanceStat>> perPCperLevelperEpocLPPerf;
        
-        std::map<IntPtr, Helper::Counter> pcfreq;
-        
         std::vector<MemComponent::component_t> memLevels;
         // LP x-1, x performance comparison
         std::map<int, LPPerf> perLevelLPperf,accessTypeCount;
-        UInt64 precisionLPHitActualLevel;
 
         Helper::Counter lpaccess;
         // epoc counter
@@ -210,7 +206,6 @@ namespace PCPredictorSpace
             perPCperLevelperEpocLPPerf.clear();
             perEpocperPCStat.clear();
             totalAccessPerEpoc=0;
-            precisionLPHitActualLevel=0;
             lpEntryFound=0;
             perLevelAccessCount.clear();
             perLevelUniqPC.clear();
@@ -291,17 +286,12 @@ namespace PCPredictorSpace
         }
 
         void addPerEpocPerPCinfo(IntPtr pc, int level){
-            if(level>3)
+            if(level>3)// implicitly only caculating traffic at L1D for picking top pc
                 return;
             if(perEpocperPCStat.find(pc)!=perEpocperPCStat.end()){
                 perEpocperPCStat[pc].increase();
             }
             else perEpocperPCStat[pc]=Helper::Counter(1);
-
-            if(pcfreq.find(pc)!=pcfreq.end()){
-                pcfreq[pc].increase();
-            }
-            else pcfreq[pc]=Helper::Counter(1);
         }
 
         bool LPPredictionVerifier(IntPtr pc, MemComponent::component_t actual_level, bool cache_hit){
@@ -315,7 +305,7 @@ namespace PCPredictorSpace
         bool LPPredictionVerifier2(IntPtr pc, MemComponent::component_t actual_level, bool cache_hit){
             
             if(LPHelper::getLockStatus()==1){
-                
+                // if not cache hit and not llc return else if at llc its cache miss or any level and hit then process further
                 if(!cache_hit && actual_level!=llc){
                     if(LPHelper::tmpAllLevelLP.find(pc) != LPHelper::tmpAllLevelLP.end()){
                     }
@@ -391,11 +381,11 @@ namespace PCPredictorSpace
 
                     if(actSkip == 0 && actSkip==predSkip)// actual level and predction for that level is both no-skip
                     {
-                        precisionLPHitActualLevel++;
+                        // matching hit levels
                     }
 
                     if(actSkip==0){
-                        // lets not count miss-match further
+                        // lets not count miss-match further as actual hit already occured
                         return true;
                     }
                 }
@@ -428,14 +418,14 @@ namespace PCPredictorSpace
             }
         }
 
-        void insertToBoth(int level, IntPtr pc, bool cache_hit){
+        void insert2EpocStat(int level, IntPtr pc, bool cache_hit){
             // if(level<=2){
             //     return;
             // }
             countPerLevelAccess(level,cache_hit);
             countPerLevelUniqPC(level,pc);
             insert(tmpAllLevelPCStat, level,pc,cache_hit);            
-            // insertToBoth(level-1, pc, false);
+            // insert2EpocStat(level-1, pc, false);
         }
 
         void insertEntry(int level, IntPtr pc, bool cache_hit){
@@ -443,7 +433,7 @@ namespace PCPredictorSpace
                 return;
             addPerEpocPerPCinfo(pc, level);
             countTotalAccess(level);
-            insertToBoth(level,pc,cache_hit);
+            insert2EpocStat(level,pc,cache_hit);
         }
 
         bool learnFromPrevEpoc(IntPtr pc, MemComponent::component_t level);
@@ -490,7 +480,6 @@ namespace PCPredictorSpace
         void logLPTotalVsPreciseHitCount();
         void logLPTopPCTotalAccessCount();
         void logLPvsTypeAccess();
-        void logGlobalPCFreq();
         // init logging
         void logInit();
 
