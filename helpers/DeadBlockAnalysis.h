@@ -76,7 +76,7 @@ namespace DeadBlockAnalysisSpace
     class CacheBlockTracker
     {
         std::unordered_map<IntPtr, CBUsage> cbTracker;
-        std::unordered_map<IntPtr, std::set<CBUsage>> dbTracker;
+        std::unordered_map<IntPtr, CBUsage> dbTracker;
         Helper::Counter totalDeadBlocks, totalBlocks;
 
         public:
@@ -107,8 +107,7 @@ namespace DeadBlockAnalysisSpace
 
            for(auto deadBlock: dbTracker){
                _LOG_CUSTOM_LOGGER(Log::Warning, static_cast<Log::LogFileName>(log), "%ld,%ld\n",
-                    deadBlock.first,
-                    deadBlock.second.size());
+                    deadBlock.first);
            }
            _LOG_CUSTOM_LOGGER(Log::Warning, static_cast<Log::LogFileName>(log), "total=%ld,dead=%ld\n",
                     totalBlocks.getCount(),
@@ -123,34 +122,32 @@ namespace DeadBlockAnalysisSpace
                 cbUsage=&findAddr->second;
             }
 
+            // if evicted then remove from access tracker (cbTracker) and insert into evict tracker (dbTracker)
             if(eviction){
                 if(cbUsage==nullptr)
                     return;
-                cbUsage->setEvictCycle(cycle);
-                cbUsage->check();
                 cbTracker.erase(findAddr);
-                if(cbUsage->isDead()){
-                    auto dbFind = dbTracker.find(addr);
-                    if(dbFind!=dbTracker.end())
-                        dbTracker[addr].insert(*cbUsage);
-                    else
-                        dbTracker.insert({addr, {*cbUsage}});
-                    totalDeadBlocks.increase();
+                if(dbTracker.find(addr)==dbTracker.end()){
+                    dbTracker.insert({addr,*cbUsage});
                 }
                 return;
             }
             
+            //re-access
             if(cbUsage!=nullptr){
-                cbUsage->rereference();
-                cbUsage->setLastAccessCycle(cycle);
                 cbUsage->increaseCBA();
             }
             else{
+                // check if it is a load after evict request
+                auto findDB = dbTracker.find(addr);
+                if(findDB!=dbTracker.end()){
+                    //erase from evict tracker
+                    dbTracker.erase(findDB);
+                    //add to cbTracker
+                    cbTracker.insert({addr, *cbUsage});
+                }
                 cbUsage = new CBUsage();
-                cbUsage->setLoadCycle(cycle);
-                cbUsage->insert();
                 cbTracker[addr]=*cbUsage;
-                totalBlocks.increase();
             }
 
             if(pos)
