@@ -40,6 +40,7 @@ class Log
          LP_LP_VS_TOTAL_ACCESS,
          LP_TOP_PC_ACCESS,
          DEBUG_LP_VS_TYPE_ACCESS,
+         LP_PER_LEVEL_ACCURACY,
          DEBUG,
          END,
       };

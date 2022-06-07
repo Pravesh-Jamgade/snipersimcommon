@@ -5,6 +5,7 @@
 #include "stats.h"
 #include "queue_model.h"
 #include "shmem_perf.h"
+#include "cache.h"
 
 NucaCache::NucaCache(MemoryManagerBase* memory_manager, ShmemPerfModel* shmem_perf_model, AddressHomeLookup* home_lookup, UInt32 cache_block_size, ParametricDramDirectoryMSI::CacheParameters& parameters)
    : m_core_id(memory_manager->getCore()->getId())

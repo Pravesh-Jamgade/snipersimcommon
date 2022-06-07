@@ -172,9 +172,11 @@ namespace PCPredictorSpace
             lpaccess=Helper::Counter(0);
             for(int level=MemComponent::component_t::L1_DCACHE; level<= llc; level++){
                 memLevels.push_back(static_cast<MemComponent::component_t>(level));
+                perLevelAccuracy.insert({level,Helper::Counter(0)});
             }
             memLevels.push_back(MemComponent::component_t::DRAM);
             l1=l2=l3=Helper::Counter(0);
+            howManyMatch=howManyCmp=Helper::Counter(0);
         }
         
         // total access
@@ -187,7 +189,7 @@ namespace PCPredictorSpace
         //epoc based but reset for next epoc usage
         std::unordered_map<IntPtr, LevelPCStat> tmpAllLevelPCStat;//being reset
         // per level keep track of total access
-        std::map<int, Helper::Counter> perLevelAccessCount;
+        std::map<int, Helper::Counter> perLevelAccessCount, perLevelAccuracy;
         // per level keep track of uniq pc count
         std::map<int, std::unordered_set<IntPtr>> perLevelUniqPC;
         // per pc per level per epoc LP perfromance (missmatch between actual and prediction for all levels)
@@ -201,7 +203,11 @@ namespace PCPredictorSpace
         // epoc counter
         UInt64 counter;
 
+        Helper::Counter howManyCmp, howManyMatch;
+
         void reset(UInt64 x){
+            howManyCmp.reset();
+            howManyMatch.reset();
             tmpAllLevelPCStat.clear();
             perPCperLevelperEpocLPPerf.clear();
             perEpocperPCStat.clear();
@@ -216,6 +222,7 @@ namespace PCPredictorSpace
             for(auto comp: memLevels){
                 perLevelLPperf[comp]=LPPerf();
                 accessTypeCount[comp]=LPPerf();
+                perLevelAccuracy[comp].reset();
             }
             lpaccess.reset();
         }
@@ -360,6 +367,7 @@ namespace PCPredictorSpace
                         break;
                 }
 
+                bool predMatch = false;
                 // per level check skip-noskip missmatch or match, keep count
                 for(int i=MemComponent::component_t::L1_DCACHE;i<=llc;i++){
                     MemComponent::component_t comp = static_cast<MemComponent::component_t>(i);
@@ -378,16 +386,22 @@ namespace PCPredictorSpace
                     else{
                         perPCperLevelperEpocLPPerf[pc][i - MemComponent::component_t::L1_DCACHE].increaseHit();
                     }
+                    
+                    perLevelAccuracy[i].increase();
 
-                    if(actSkip == 0 && actSkip==predSkip)// actual level and predction for that level is both no-skip
+                    if(actSkip==predSkip && actSkip==0)// actual level and predction 
                     {
-                        // matching hit levels
+                        predMatch=true;
                     }
 
-                    if(actSkip==0){
-                        // lets not count miss-match further as actual hit already occured
-                        return true;
-                    }
+                    // if(actSkip==0){
+                    //     // lets not count miss-match further as actual hit already occured
+                    //     return true;
+                    // }
+                }
+                
+                if(predMatch){
+                    howManyMatch.increase();
                 }
             }
             

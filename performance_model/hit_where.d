@@ -1,4 +1,4 @@
-/mnt/B/sniper/common/performance_model/hit_where.o /mnt/B/sniper/common/performance_model/hit_where.d: $(wildcard /mnt/B/sniper/common/performance_model/hit_where.cc \
- /mnt/B/sniper/common/performance_model/hit_where.h \
- /mnt/B/sniper/common/core/memory_subsystem/mem_component.h \
- /mnt/B/sniper/common/misc/fixed_types.h)
+/home/user/station/version/sniper/common/performance_model/hit_where.o /home/user/station/version/sniper/common/performance_model/hit_where.d: $(wildcard \
+ /home/user/station/version/sniper/common/performance_model/hit_where.cc \
+ /home/user/station/version/sniper/common/performance_model/hit_where.h \
+ /home/user/station/version/sniper/common/core/memory_subsystem/mem_component.h)
