@@ -83,7 +83,9 @@ namespace DeadBlockAnalysisSpace
     {
         std::unordered_map<IntPtr, CBUsage> cbTracker;
         std::unordered_map<IntPtr, CBUsage> dbTracker;
-        Helper::Counter totalDeadBlocks, totalBlocks;
+        UInt64 totalDeadBlocks, totalBlocks, totalEpoc;
+        double avg_a, avg_e, avg_l;
+        String name;
 
         public:
         double geomean(double value){
@@ -94,8 +96,19 @@ namespace DeadBlockAnalysisSpace
         }
 
         CacheBlockTracker(String path, String name){
-            totalBlocks=totalDeadBlocks=Helper::Counter(0);
+            this->name=name;
+            totalDeadBlocks=totalBlocks=totalEpoc=0;
+            avg_a=avg_e=avg_l=0;
             _LOG_CUSTOM_LOGGER(Log::Warning, getProperLog(name), "#dead,#total,#avgA,#avgL,#avgE,%s\n", name.c_str());
+        }
+        ~CacheBlockTracker(){
+            double avg_dead= (double)totalDeadBlocks/(double)totalEpoc;//mean dead blocks per epoc
+            double avg_total = (double)totalBlocks/(double)totalEpoc;//mean total blocks per epoc
+            double avg_access = (double)avg_a/(double)totalEpoc;//mean access per dead block per epoc
+            double avg_evict = (double)avg_e/(double)totalEpoc;//mean evict perdead block per epoc
+            double avg_lru = (double)avg_l/(double)totalEpoc;//mean lru hits per dead block per epoc
+
+            _LOG_CUSTOM_LOGGER(Log::Warning, getProperLog(this->name), "%f,%f,%f,%f,%f\n", avg_dead, avg_total, avg_access, avg_evict, avg_lru);
         }
 
         Log::LogFileName getProperLog(String name){
@@ -129,10 +142,14 @@ namespace DeadBlockAnalysisSpace
                 }
                 total++;
             }
+            totalDeadBlocks+=dead;
+            totalBlocks+=total;
+            totalEpoc++;
             avgA = avgA/(double)dead;
             avgL = avgL/(double)dead;
             avgE = avgE/(double)dead;
-            _LOG_CUSTOM_LOGGER(Log::Warning, static_cast<Log::LogFileName>(log), "%ld,%ld, %f,%f,%f\n", dead,total,avgA,avgL,avgE);
+
+            avg_a+=avgA, avg_l+=avgL, avg_e+=avgE;
         }
 
         void addEntry(IntPtr addr, bool pos, UInt64 cycle, bool eviction=false){
