@@ -34,6 +34,7 @@ namespace DeadBlockAnalysisSpace
         UInt64 loadCycle, evictCycle, lastAccessCycle;
         double addPercent, mulPercent;
         std::map<UInt64, int> deadperiod;//deadperiod-length
+        int pos;
         CBUsage(){
             cacheBlockAccess=Helper::Counter(1);
             cacheBlockLowerHalfHits=Helper::Counter(0);
@@ -41,8 +42,11 @@ namespace DeadBlockAnalysisSpace
             addPercent=0;
             mulPercent=1;
             step=0;
+            pos=0;// default upper part of recency list
         }
 
+        bool checkPos(){return pos;}
+        void setPos(int pos){}
         void increaseCBA(){cacheBlockAccess.increase();}
         void increaseCBLHH(){cacheBlockLowerHalfHits.increase();}
         UInt64 getTotalLife(){ return evictCycle-loadCycle;}
@@ -105,13 +109,11 @@ namespace DeadBlockAnalysisSpace
            Log::LogFileName log = getProperLog(name);
            printf("[]log=%d", log);
 
-           for(auto deadBlock: dbTracker){
-               _LOG_CUSTOM_LOGGER(Log::Warning, static_cast<Log::LogFileName>(log), "%ld,%ld\n",
-                    deadBlock.first);
-           }
-           _LOG_CUSTOM_LOGGER(Log::Warning, static_cast<Log::LogFileName>(log), "total=%ld,dead=%ld\n",
-                    totalBlocks.getCount(),
-                    totalDeadBlocks.getCount());
+         // evicted blocks from dbTracker list are neither live and dead, they are evicted
+         // blocks in cbTracker are either live or dead
+            for(auto cBlock: cbTracker){
+                if(cBlock->second)
+            }
            
         }
 
@@ -120,6 +122,10 @@ namespace DeadBlockAnalysisSpace
             CBUsage* cbUsage=nullptr;
             if(findAddr!=cbTracker.end()){
                 cbUsage=&findAddr->second;
+            }
+
+            if(cbUsage!=nullptr){
+                cbUsage->setPos(pos);
             }
 
             // if evicted then remove from access tracker (cbTracker) and insert into evict tracker (dbTracker)

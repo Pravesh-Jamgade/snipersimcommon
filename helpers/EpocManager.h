@@ -11,17 +11,17 @@ namespace EpocManagerSpace
         
         public:
         UInt64 number;
-        EpocManager(UInt64 epocLength, UInt64 currCyle){
+        EpocManager(UInt64 epocLength){
             epocLength=epocLength;
-            currCyle=currCyle;
             number=0;
         }
+        UInt64 getEpoc(){return number;}
         bool IsEpocEnded(UInt64 cycle){
-            number++;
-            cycle = cycle-currCyle;
-            if(cycle<0)
-                cycle*=-1;
-            return cycle%epocLength == 0;
+            if(cycle%epocLength == 0){
+                number++;
+                return true;
+            }
+            return false;
         }
     };
 }

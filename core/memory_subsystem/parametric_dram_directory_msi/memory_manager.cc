@@ -65,7 +65,7 @@ MemoryManager::MemoryManager(Core* core,
 
    //update
    UInt64 epocLength = Sim()->getCfg()->getInt("param/epoc");
-   epocManager = std::make_shared<EpocManagerSpace::EpocManager>(epocLength, getCore()->getPerformanceModel()->getCycleCount());
+   epocManager = std::make_shared<EpocManagerSpace::EpocManager>(epocLength);
 
    try
    {
@@ -435,13 +435,21 @@ MemoryManager::coreInitiateMemoryAccess(
    else if (mem_component == MemComponent::L1_DCACHE && m_dtlb)
       accessTLB(m_dtlb, address, false, modeled);
 
-   return m_cache_cntlrs[mem_component]->processMemOpFromCore(
+   if(epocManager->IsEpocEnded(getCore()->getPerformanceModel()->getCycleCount())){
+      for(UInt32 i = MemComponent::FIRST_LEVEL_CACHE; i <= (UInt32)m_last_level_cache; ++i) {
+         m_cache_cntlrs[(MemComponent::component_t)i]->cacheDeadBlockAnalysis(epocManager->getEpoc());
+      }
+   }
+
+   HitWhere::where_t result =  m_cache_cntlrs[mem_component]->processMemOpFromCore(
          lock_signal,
          mem_op_type,
          address, offset,
          data_buf, data_length,
          modeled == Core::MEM_MODELED_NONE || modeled == Core::MEM_MODELED_COUNT ? false : true,
          modeled == Core::MEM_MODELED_NONE ? false : true);
+   
+   return result;
 }
 
 void
