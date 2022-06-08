@@ -29,7 +29,10 @@ Cache::Cache(
    m_cache_type(cache_type),
    m_fault_injector(fault_injector)
 {
-   ptr = std::make_shared<DeadBlockAnalysisSpace::CacheBlockTracker>(Sim()->getConfig()->getOutputDirectory(), m_name);
+   if(allowed()){
+      ptr = std::make_shared<DeadBlockAnalysisSpace::CacheBlockTracker>(Sim()->getConfig()->getOutputDirectory(), m_name);
+   }
+   
    m_set_info = CacheSet::createCacheSetInfo(name, cfgname, core_id, replacement_policy, m_associativity);
    m_sets = new CacheSet*[m_num_sets];
    for (UInt32 i = 0; i < m_num_sets; i++)
@@ -226,5 +229,7 @@ Cache::updateHits(Core::mem_op_t mem_op_type, UInt64 hits)
 
 void 
 Cache::logAndClear(UInt64 epoc){
+   if(!allowed())
+      return;
    ptr->logAndClear(m_name,getCycle(),epoc);
 }

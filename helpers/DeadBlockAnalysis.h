@@ -30,12 +30,13 @@ namespace DeadBlockAnalysisSpace
     {
         public:
         UInt64 step;
-        Helper::Counter cacheBlockAccess, cacheBlockLowerHalfHits;
+        Helper::Counter cacheBlockAccess, cacheBlockLowerHalfHits, cacheBlockEvicts;
         UInt64 loadCycle, evictCycle, lastAccessCycle;
         double addPercent, mulPercent;
         std::map<UInt64, int> deadperiod;//deadperiod-length
         int pos;
         CBUsage(){
+            cacheBlockEvicts=Helper::Counter(0);
             cacheBlockAccess=Helper::Counter(1);
             cacheBlockLowerHalfHits=Helper::Counter(0);
             loadCycle=evictCycle=lastAccessCycle=0;
@@ -47,8 +48,9 @@ namespace DeadBlockAnalysisSpace
 
         bool checkPos(){return pos;}
         void setPos(int pos){}
-        void increaseCBA(){cacheBlockAccess.increase();}
-        void increaseCBLHH(){cacheBlockLowerHalfHits.increase();}
+        void increaseCBA(){cacheBlockAccess.increase();} UInt64 getAccess(){return cacheBlockAccess.getCount();}
+        void increaseCBLHH(){cacheBlockLowerHalfHits.increase();} UInt64 getLLH(){return cacheBlockLowerHalfHits.getCount();}
+        void increaseEvicts(){cacheBlockEvicts.increase();} UInt64 getEvicts(){return cacheBlockEvicts.getCount();}
         UInt64 getTotalLife(){ return evictCycle-loadCycle;}
         UInt64 getDeadPeriod(){ return evictCycle-lastAccessCycle;}
         double deadPercent(){return ((double)getDeadPeriod()/(double)getTotalLife())*100;}
@@ -93,7 +95,7 @@ namespace DeadBlockAnalysisSpace
 
         CacheBlockTracker(String path, String name){
             totalBlocks=totalDeadBlocks=Helper::Counter(0);
-            _LOG_CUSTOM_LOGGER(Log::Warning, getProperLog(name), "addr,#deadblocks%s\n", name.c_str());
+            _LOG_CUSTOM_LOGGER(Log::Warning, getProperLog(name), "#dead,#total,#avgA,#avgL,#avgE,%s\n", name.c_str());
         }
 
         Log::LogFileName getProperLog(String name){
@@ -107,14 +109,30 @@ namespace DeadBlockAnalysisSpace
 
         void logAndClear(String name, UInt64 cycle, UInt64 epoc=0){
            Log::LogFileName log = getProperLog(name);
-           printf("[]log=%d", log);
 
          // evicted blocks from dbTracker list are neither live and dead, they are evicted
          // blocks in cbTracker are either live or dead
+         UInt64 total, dead;
+         double avgA, avgL, avgE;
+         total=dead=0;
+         avgA=avgL=avgE=0;
+
             for(auto cBlock: cbTracker){
-                if(cBlock->second)
+                if(cBlock.second.checkPos()){
+                    CBUsage cbu = cBlock.second;
+                    // _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DBA, "%ld,%ld,%ld,%ld,%ld\n", 
+                    //     epoc, cBlock.first, cbu.getAccess(), cbu.getLLH(), cbu.getEvicts());
+                    avgA += cbu.getAccess();
+                    avgL += cbu.getLLH();
+                    avgE += cbu.getEvicts();
+                    dead++;
+                }
+                total++;
             }
-           
+            avgA = avgA/(double)dead;
+            avgL = avgL/(double)dead;
+            avgE = avgE/(double)dead;
+            _LOG_CUSTOM_LOGGER(Log::Warning, static_cast<Log::LogFileName>(log), "%ld,%ld, %f,%f,%f\n", dead,total,avgA,avgL,avgE);
         }
 
         void addEntry(IntPtr addr, bool pos, UInt64 cycle, bool eviction=false){
@@ -150,7 +168,7 @@ namespace DeadBlockAnalysisSpace
                     //erase from evict tracker
                     dbTracker.erase(findDB);
                     //add to cbTracker
-                    cbTracker.insert({addr, *cbUsage});
+                    cbTracker.emplace(addr, *cbUsage);
                 }
                 cbUsage = new CBUsage();
                 cbTracker[addr]=*cbUsage;
