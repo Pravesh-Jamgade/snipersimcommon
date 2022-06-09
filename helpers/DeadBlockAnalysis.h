@@ -187,7 +187,7 @@ namespace DeadBlockAnalysisSpace
                     //add to cbTracker
                     cbTracker.insert({addr,*cbUsage});
                 }
-                cbTracker[addr]=CBUsage();
+                else cbTracker.insert({addr, CBUsage()});
             }
 
             if(pos)
