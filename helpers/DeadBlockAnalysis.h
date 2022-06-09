@@ -167,10 +167,10 @@ namespace DeadBlockAnalysisSpace
             if(eviction){
                 if(cbUsage==nullptr)
                     return;
-                cbTracker.erase(findAddr);
                 if(dbTracker.find(addr)==dbTracker.end()){
                     dbTracker.insert({addr,*cbUsage});
                 }
+                cbTracker.erase(findAddr);
                 return;
             }
             
@@ -183,11 +183,10 @@ namespace DeadBlockAnalysisSpace
                 auto findDB = dbTracker.find(addr);
                 if(findDB!=dbTracker.end()){
                     //erase from evict tracker
+                    cbUsage = &findAddr->second;
                     dbTracker.erase(findDB);
-                    //add to cbTracker
-                    cbTracker.insert({addr,*cbUsage});
                 }
-                cbUsage = new CBUsage();
+                else cbUsage = new CBUsage();
                 cbTracker[addr]=*cbUsage;
             }
 
