@@ -185,7 +185,6 @@ namespace DeadBlockAnalysisSpace
                     //erase from evict tracker
                     dbTracker.erase(findDB);
                     //add to cbTracker
-                    CBUsage temp = *cbUsage;
                     cbTracker.insert({addr,*cbUsage});
                 }
                 cbUsage = new CBUsage();
