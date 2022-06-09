@@ -182,10 +182,10 @@ namespace DeadBlockAnalysisSpace
                 // check if it is a load after evict request
                 auto findDB = dbTracker.find(addr);
                 if(findDB!=dbTracker.end()){
-                    //erase from evict tracker
-                    dbTracker.erase(findDB);
                     //add to cbTracker
-                    cbTracker.insert({addr,*cbUsage});
+                    cbTracker.insert({addr, findDB->second});
+                     //erase from evict tracker
+                    dbTracker.erase(findDB);
                 }
                 else cbTracker.insert({addr, CBUsage()});
             }
