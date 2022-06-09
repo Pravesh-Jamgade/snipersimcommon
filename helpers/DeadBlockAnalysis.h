@@ -81,8 +81,8 @@ namespace DeadBlockAnalysisSpace
 
     class CacheBlockTracker
     {
-        std::unordered_map<IntPtr, CBUsage> cbTracker;
-        std::unordered_map<IntPtr, CBUsage> dbTracker;
+        std::map<IntPtr, CBUsage> cbTracker;
+        std::map<IntPtr, CBUsage> dbTracker;
         UInt64 totalDeadBlocks, totalBlocks, totalEpoc;
         double avg_a, avg_e, avg_l;
         String name;
@@ -187,8 +187,7 @@ namespace DeadBlockAnalysisSpace
                     //add to cbTracker
                     cbTracker.insert({addr,*cbUsage});
                 }
-                cbUsage = new CBUsage();
-                cbTracker[addr]=*cbUsage;
+                cbTracker[addr]=CBUsage();
             }
 
             if(pos)
