@@ -10,6 +10,7 @@
 // Cache class
 // constructors/destructors
 Cache::Cache(
+   bool shared,
    String name,
    String cfgname,
    core_id_t core_id,
@@ -29,10 +30,8 @@ Cache::Cache(
    m_cache_type(cache_type),
    m_fault_injector(fault_injector)
 {
-   if(allowed()){
-      ptr = std::make_shared<DeadBlockAnalysisSpace::CacheBlockTracker>(Sim()->getConfig()->getOutputDirectory(), m_name);
-   }
-   
+   this->shared = shared;
+   this->core_id = core_id;
    m_set_info = CacheSet::createCacheSetInfo(name, cfgname, core_id, replacement_policy, m_associativity);
    m_sets = new CacheSet*[m_num_sets];
    for (UInt32 i = 0; i < m_num_sets; i++)
@@ -49,10 +48,6 @@ Cache::Cache(
 
 Cache::~Cache()
 {
-   if(allowed())
-   {
-      logAndClear();
-   }
    #ifdef ENABLE_SET_USAGE_HIST
    printf("Cache %s set usage:", m_name.c_str());
    for (SInt32 i = 0; i < (SInt32) m_num_sets; i++)
@@ -127,10 +122,10 @@ Cache::accessSingleLine(IntPtr addr, access_t access_type,
       return NULL;
 
    // String haddr = DeadBlockAnalysisSpace::Int2HexMap::insert(addr);
-
+   auto ptr = Sim()->getCbTracker();
    if(ptr!=nullptr && allowed()){
       bool pos = set->getPos(line_index);
-      ptr->addEntry(addr, pos, getCycle());
+      ptr->addEntry(addr, pos, getCycle(), core_id, m_name, isShared());
    }
       
    if (access_type == LOAD)
@@ -172,10 +167,11 @@ Cache::insertSingleLine(IntPtr addr, Byte* fill_buff,
 
    // String ehaddr = DeadBlockAnalysisSpace::Int2HexMap::insert(*evict_addr);
    // String haddr = DeadBlockAnalysisSpace::Int2HexMap::insert(addr);
+   auto ptr = Sim()->getCbTracker();
 
    if(ptr!=nullptr && allowed()){
-      ptr->addEntry(addr, pos, getCycle());
-      ptr->addEntry(*evict_addr, pos, getCycle(), eviction);
+      ptr->addEntry(addr, pos, getCycle(), core_id, m_name, isShared());
+      ptr->addEntry(*evict_addr, pos, getCycle(), core_id, m_name, isShared(), eviction);
    }
       
    if (m_fault_injector) {

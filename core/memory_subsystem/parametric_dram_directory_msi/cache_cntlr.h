@@ -350,6 +350,7 @@ namespace ParametricDramDirectoryMSI
 
          CacheCntlr* lastLevelCache(void);
 
+         String name;
       public:
 
          CacheCntlr(MemComponent::component_t mem_component,
@@ -408,6 +409,9 @@ namespace ParametricDramDirectoryMSI
          void enable() { m_master->m_cache->enable(); }
          void disable() { m_master->m_cache->disable(); }
 
+
+         String getName(){return name;}
+         
          friend class CacheCntlrList;
          friend class MemoryManager;
    };

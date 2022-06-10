@@ -34,6 +34,9 @@ class Cache : public CacheBase
 
       FaultInjector *m_fault_injector;
 
+      core_id_t core_id;
+      bool shared;
+
       #ifdef ENABLE_SET_USAGE_HIST
       UInt64* m_set_usage_hist;
       #endif
@@ -41,7 +44,9 @@ class Cache : public CacheBase
    public:
 
       // constructors/destructors
-      Cache(String name,
+      Cache(
+            bool isShared,
+            String name,
             String cfgname,
             core_id_t core_id,
             UInt32 num_sets,
@@ -85,6 +90,10 @@ class Cache : public CacheBase
                         return true;
             }
             return false;
+      }
+
+      bool isShared(){
+            return shared;
       }
 };
 

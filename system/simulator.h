@@ -88,6 +88,9 @@ public:
    void createDecoder();
    dl::Decoder *getDecoder();
 
+   //ds
+   std::shared_ptr<DeadBlockAnalysisSpace::CacheBlockTracker> cacheBlockTracker;
+   std::shared_ptr<DeadBlockAnalysisSpace::CacheBlockTracker> getCbTracker(){return cacheBlockTracker;}
 private:
    Config m_config;
    Log m_log;

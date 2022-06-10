@@ -8,6 +8,7 @@
 #include "log.h"
 #include<fstream>
 #include <math.h>  
+#include "fixed_types.h"
 
 namespace DeadBlockAnalysisSpace
 {
@@ -29,11 +30,11 @@ namespace DeadBlockAnalysisSpace
     class CBUsage
     {
         public:
-        UInt64 step;
         Helper::Counter cacheBlockAccess, cacheBlockLowerHalfHits, cacheBlockEvicts;
         UInt64 loadCycle, evictCycle, lastAccessCycle;
         double addPercent, mulPercent;
         std::map<UInt64, int> deadperiod;//deadperiod-length
+        bool evicted;
         int pos;
         CBUsage(){
             cacheBlockEvicts=Helper::Counter(0);
@@ -42,12 +43,10 @@ namespace DeadBlockAnalysisSpace
             loadCycle=evictCycle=lastAccessCycle=0;
             addPercent=0;
             mulPercent=1;
-            step=0;
-            pos=0;// default upper part of recency list
+            evicted=false;
+            pos=0;//lru pos
         }
 
-        bool checkPos(){return pos;}
-        void setPos(int pos){}
         void increaseCBA(){cacheBlockAccess.increase();} UInt64 getAccess(){return cacheBlockAccess.getCount();}
         void increaseCBLHH(){cacheBlockLowerHalfHits.increase();} UInt64 getLLH(){return cacheBlockLowerHalfHits.getCount();}
         void increaseEvicts(){cacheBlockEvicts.increase();} UInt64 getEvicts(){return cacheBlockEvicts.getCount();}
@@ -70,45 +69,33 @@ namespace DeadBlockAnalysisSpace
         void setLoadCycle(UInt64 cycle){
             evictCycle=lastAccessCycle=loadCycle=cycle;
         }
-        void insert(){step+=10;}
-        void rereference(){step-=2;}
         bool isDead(){return deadPercent()>5;}
 
         bool operator<(const CBUsage& c)const{
             return true;
         }
+
+        bool isEvicted(){return evicted;}
+        void setEvicted(){evicted=true;}
+        void resetEvicted(){evicted=false;}
+
+        void setPos(int pos){pos=pos;}
+        bool isLRUBlock(){return pos;}
     };
 
     class CacheBlockTracker
-    {
-        std::unordered_map<IntPtr, CBUsage> cbTracker;
-        std::unordered_map<IntPtr, CBUsage> dbTracker;
+    {   
+        typedef std::map<IntPtr, CBUsage> CacheBlockUsage;
+        typedef std::map<String, CacheBlockUsage> Cache_t;
+        std::map<core_id_t, Cache_t> core_cbTracker;
+        std::map<IntPtr, CBUsage> shared_cbTracker;
         UInt64 totalDeadBlocks, totalBlocks, totalEpoc;
-        double avg_a, avg_e, avg_l;
-        String name;
-
+        std::map<core_id_t, std::map<String, UInt32>> mmp;
+        UINt64 deadBlocks;
         public:
-        double geomean(double value){
-            return pow(value, 1/dbTracker.size());
-        }
-        double mean(double value){
-            return value/(double)dbTracker.size();
-        }
 
-        CacheBlockTracker(String path, String name){
-            this->name=name;
-            totalDeadBlocks=totalBlocks=totalEpoc=0;
-            avg_a=avg_e=avg_l=0;
-            _LOG_CUSTOM_LOGGER(Log::Warning, getProperLog(name), "#dead,#total,#avgA,#avgL,#avgE,%s\n", name.c_str());
-        }
-        ~CacheBlockTracker(){
-            double avg_dead= (double)totalDeadBlocks/(double)totalEpoc;//mean dead blocks per epoc
-            double avg_total = (double)totalBlocks/(double)totalEpoc;//mean total blocks per epoc
-            double avg_access = (double)avg_a/(double)totalEpoc;//mean access per dead block per epoc
-            double avg_evict = (double)avg_e/(double)totalEpoc;//mean evict perdead block per epoc
-            double avg_lru = (double)avg_l/(double)totalEpoc;//mean lru hits per dead block per epoc
-
-            _LOG_CUSTOM_LOGGER(Log::Warning, getProperLog(this->name), "%f,%f,%f,%f,%f\n", avg_dead, avg_total, avg_access, avg_evict, avg_lru);
+        CacheBlockTracker(){
+            
         }
 
         Log::LogFileName getProperLog(String name){
@@ -121,77 +108,130 @@ namespace DeadBlockAnalysisSpace
         }
 
         void logAndClear(String name, UInt64 cycle, UInt64 epoc=0){
-           Log::LogFileName log = getProperLog(name);
-
-         // evicted blocks from dbTracker list are neither live and dead, they are evicted
-         // blocks in cbTracker are either live or dead
-         UInt64 total, dead;
-         double avgA, avgL, avgE;
-         total=dead=0;
-         avgA=avgL=avgE=0;
-
-            for(auto cBlock: cbTracker){
-                if(cBlock.second.checkPos()){
-                    CBUsage cbu = cBlock.second;
-                    // _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DBA, "%ld,%ld,%ld,%ld,%ld\n", 
-                    //     epoc, cBlock.first, cbu.getAccess(), cbu.getLLH(), cbu.getEvicts());
-                    avgA += cbu.getAccess();
-                    avgL += cbu.getLLH();
-                    avgE += cbu.getEvicts();
-                    dead++;
+            
+            for(auto core : core_cbTracker){
+                
+                // insert new core entry
+                auto findCore = mmp.find(core->first);
+                if(findCore==mmp.end()){
+                    std:map<String, UInt32> mp;
+                    mmp.insert({core, mp});
                 }
-                total++;
-            }
-            totalDeadBlocks+=dead;
-            totalBlocks+=total;
-            totalEpoc++;
-            avgA = avgA/(double)dead;
-            avgL = avgL/(double)dead;
-            avgE = avgE/(double)dead;
 
-            avg_a+=avgA, avg_l+=avgL, avg_e+=avgE;
-        }
+                core_id_t core_id = core->first;
 
-        void addEntry(IntPtr addr, bool pos, UInt64 cycle, bool eviction=false){
-            auto findAddr = cbTracker.find(addr);
-            CBUsage* cbUsage=nullptr;
-            if(findAddr!=cbTracker.end()){
-                cbUsage=&findAddr->second;
-            }
+                std::map<String, UInt32>* cc = findCore->second;
+                for(auto cache in core->second){
+                    
+                    String name = cache->first;
 
-            if(cbUsage!=nullptr){
-                cbUsage->setPos(pos);
-            }
+                    // insert new cache entry
+                    auto findName = cc->find(name);
+                    if(findName==cc->end()){
+                        cc->insert({name, 0});
+                    }
 
-            // if evicted then remove from access tracker (cbTracker) and insert into evict tracker (dbTracker)
-            if(eviction){
-                if(cbUsage==nullptr)
-                    return;
-                if(dbTracker.find(addr)==dbTracker.end()){
-                    dbTracker.insert({addr,*cbUsage});
+                    for(auto block in cache->second){
+                        CBUsage cbUsage = block->second;
+                        if(!cbUsage.isEvicted() && cbUsage.isLRUBlock()){
+                            cc->at(name)++;
+                        }
+                    }
                 }
-                cbTracker.erase(findAddr);
-                return;
             }
             
-            //re-access
-            if(cbUsage!=nullptr){
-                cbUsage->increaseCBA();
+            for(auto addr : shared_cbTracker){
+                
+            }
+        }
+
+        void addEntry(IntPtr addr, bool pos, UInt64 cycle, core_id_t core_id, String name, bool shared, bool eviction=false){
+            if(shared){
+                auto findAddr = shared_cbTracker.find(addr);
+                CBUsage* cbUsage = nullptr;
+                if(findAddr!=shared_cbTracker.end()){
+                    cbUsage=&findAddr->second;
+                }
+
+                if(cbUsage!=nullptr)
+                    cbUsage->setPos(pos);
+                
+                if(eviction){
+                    if(cbUsage==nullptr)
+                        return;
+                    cbUsage->setEvicted();
+                    return;
+                }
+                else{
+                    if(cbUsage!=nullptr){
+                        cbUsage->increaseCBA();
+                        // earlier it was evicted, with request now loaded
+                        if(cbUsage->isEvicted()){
+                            cbUsage->resetEvicted();
+                        }
+                    }
+                    else{
+                        cbUsage = new CBUsage();
+                        shared_cbTracker.insert({addr, *cbUsage});
+                    }
+                }
+
             }
             else{
-                // check if it is a load after evict request
-                auto findDB = dbTracker.find(addr);
-                if(findDB!=dbTracker.end()){
-                    //erase from evict tracker
-                    cbUsage = &findAddr->second;
-                    dbTracker.erase(findDB);
-                }
-                else cbUsage = new CBUsage();
-                cbTracker[addr]=*cbUsage;
-            }
+                auto findCore = core_cbTracker.find(addr);
 
-            if(pos)
-                cbTracker[addr].increaseCBLHH();
+                //core found
+                if(findCore!=core_cbTracker.end()){
+                    //get cores cache map
+                    Cache_t *cache_x = &(findCore->second);
+                    auto findName = cache_x->find(name);
+
+                    //cache found
+                    if(findName!=cache_x->end()){
+                        //get cache blocks of addresses
+                        CacheBlockUsage* cacheBlockusage = &(findName->second);
+                        auto findAddr = cacheBlockusage->find(addr);
+                        
+                        CBUsage* cbUsage = nullptr;
+                        if(findAddr!=cacheBlockusage->end()){
+                            cbUsage = &(findAddr->second);
+                        }
+                        if(eviction){
+                            if(cbUsage==nullptr)
+                                return;
+                            cbUsage->setEvicted();
+                            return;
+                        }
+                        else{
+                            if(cbUsage!=nullptr){
+                                cbUsage->increaseCBA();
+                                if(cbUsage->isEvicted()){
+                                    cbUsage->resetEvicted();
+                                }
+                            }
+                            else{
+                                cbUsage = new CBUsage();
+                                cacheBlockusage->insert({addr, *cbUsage});
+                            }
+                        }
+                    }
+                    else
+                    {
+                        CacheBlockUsage tmp;
+                        tmp.insert({addr, CBUsage()});
+                        cache_x->insert({name, tmp});
+                    }
+                }
+                else{
+                    std::map<IntPtr, CBUsage> cbUsage;
+                    cbUsage.insert({addr, CBUsage()});
+
+                    std::map<String, CacheBlockUsage> cache_name;
+                    cache_name.insert({name, cbUsage});
+
+                    core_cbTracker.insert({core_id, cache_name});
+                }
+            }            
         }
     };
 

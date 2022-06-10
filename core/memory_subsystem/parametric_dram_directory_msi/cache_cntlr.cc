@@ -154,6 +154,7 @@ CacheCntlr::CacheCntlr(MemComponent::component_t mem_component,
    m_shmem_perf_global(NULL),
    m_shmem_perf_model(shmem_perf_model)
 {
+   this->name = name;
    m_core_id_master = m_core_id - m_core_id % m_shared_cores;
    Sim()->getStatsManager()->logTopology(name, core_id, m_core_id_master);
 
@@ -166,7 +167,7 @@ CacheCntlr::CacheCntlr(MemComponent::component_t mem_component,
    {
       /* Master cache */
       m_master = new CacheMasterCntlr(name, core_id, cache_params.outstanding_misses);
-      m_master->m_cache = new Cache(name,
+      m_master->m_cache = new Cache(isShared(core_id), name,
             "perf_model/" + cache_params.configName,
             m_core_id,
             cache_params.num_sets,

@@ -30,6 +30,8 @@
 
 #include <sstream>
 
+#include "DeadBlockAnalysis.h"
+
 Simulator *Simulator::m_singleton;
 config::Config *Simulator::m_config_file;
 bool Simulator::m_config_file_allowed = true;
@@ -125,6 +127,7 @@ Simulator::Simulator()
    , m_running(false)
    , m_inst_mode_output(true)
 {
+   cacheBlockTracker = std::make_shared<DeadBlockAnalysisSpace::CacheBlockTracker>();
 }
 
 void Simulator::start()
