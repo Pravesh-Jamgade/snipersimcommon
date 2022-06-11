@@ -77,8 +77,6 @@ class Cache : public CacheBase
       void enable() { m_enabled = true; }
       void disable() { m_enabled = false; }
 
-      std::shared_ptr<DeadBlockAnalysisSpace::CacheBlockTracker> ptr;
-
       UInt64 getCycle();
       void logAndClear(UInt64 epoc=0);
       String logCache();

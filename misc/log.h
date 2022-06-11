@@ -35,13 +35,14 @@ class Log
 
       enum LogFileName{
          S=0,
-         L1,
-         L2,
-         L3,
+         C1,
+         C2,
+         C3,
+         C4,
          E,
       };
 
-      char* logFiles[3]={"l1", "l2", "l3"};
+      char* logFiles[3]={"c1", "c2", "c3"};
       std::map<LogFileName, FILE*> logFileObject;
 
       void log(ErrorState err, const char *source_file, SInt32 source_line, const char* format, ...);

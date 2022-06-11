@@ -7,18 +7,18 @@ namespace EpocManagerSpace
 {
     class EpocManager
     {   
-        UInt64 epocLength, currCyle;
-        
+        UInt64 epocLength;
+        UInt64 reset, prev;
         public:
         UInt64 number;
         EpocManager(UInt64 epocLength){
-            epocLength=epocLength;
-            number=0;
+            this->reset=this->epocLength=epocLength;
+            prev=number=0;
         }
         UInt64 getEpoc(){return number;}
         bool IsEpocEnded(UInt64 cycle){
-            if(cycle%epocLength == 0){
-                number++;
+            if(cycle%epocLength==0 && prev != cycle){
+                prev=cycle;
                 return true;
             }
             return false;

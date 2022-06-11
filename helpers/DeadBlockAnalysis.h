@@ -90,59 +90,60 @@ namespace DeadBlockAnalysisSpace
         std::map<core_id_t, Cache_t> core_cbTracker;
         std::map<IntPtr, CBUsage> shared_cbTracker;
         UInt64 totalDeadBlocks, totalBlocks, totalEpoc;
-        std::map<core_id_t, std::map<String, UInt32>> mmp;
-        UINt64 deadBlocks;
+        UInt64 deadBlock;
+        std::map<core_id_t, std::map<String, UInt64>> mmp;
+        UInt32 totalCores;
         public:
-
-        CacheBlockTracker(){
-            
-        }
-
-        Log::LogFileName getProperLog(String name){
-            if(name == "L1-D")
-                return Log::L1;
-            if(name == "L2")
-                return Log::L2;
-            if(name == "L3")
-                return Log::L3;
+        
+        CacheBlockTracker(UInt32 totalCores){
+            deadBlock=0;
+            totalCores=4;
         }
 
         void logAndClear(String name, UInt64 cycle, UInt64 epoc=0){
             
             for(auto core : core_cbTracker){
-                
                 // insert new core entry
-                auto findCore = mmp.find(core->first);
+                auto findCore = mmp.find(core.first);
                 if(findCore==mmp.end()){
-                    std:map<String, UInt32> mp;
-                    mmp.insert({core, mp});
+                    std::map<String, UInt64> mp;
+                    mp.insert({"L1", 0});
+                    mp.insert({"L2", 0});
+                    mmp.insert({core.first, mp});
                 }
+            }
 
-                core_id_t core_id = core->first;
-
-                std::map<String, UInt32>* cc = findCore->second;
-                for(auto cache in core->second){
-                    
-                    String name = cache->first;
-
-                    // insert new cache entry
-                    auto findName = cc->find(name);
-                    if(findName==cc->end()){
-                        cc->insert({name, 0});
-                    }
-
-                    for(auto block in cache->second){
-                        CBUsage cbUsage = block->second;
+            for(auto core : core_cbTracker){
+                for(auto cache : core.second){
+                    for(auto block : cache.second){
+                        CBUsage cbUsage = block.second;
                         if(!cbUsage.isEvicted() && cbUsage.isLRUBlock()){
-                            cc->at(name)++;
+                            mmp[core.first][cache.first]++;
                         }
                     }
                 }
             }
             
             for(auto addr : shared_cbTracker){
-                
+                if(!addr.second.isEvicted() && addr.second.isLRUBlock()){
+                    deadBlock++;
+                }
             }
+
+            //per core a file 
+            int i=0;
+            for(auto core: mmp){
+                // log epoc
+                _LOG_CUSTOM_LOGGER(Log::Warning, static_cast<Log::LogFileName>(core.first), "\n%ld", epoc);
+
+                for(auto cache: core.second){
+                    //log cache dead block
+                    _LOG_CUSTOM_LOGGER(Log::Warning, static_cast<Log::LogFileName>(core.first), "%ld,", cache.second);
+                }
+                i++;
+            }
+           
+            _LOG_CUSTOM_LOGGER(Log::Warning, Log::DBA, "%ld,%ld\n", epoc, deadBlock);
         }
 
         void addEntry(IntPtr addr, bool pos, UInt64 cycle, core_id_t core_id, String name, bool shared, bool eviction=false){

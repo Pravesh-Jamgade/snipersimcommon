@@ -127,7 +127,7 @@ Simulator::Simulator()
    , m_running(false)
    , m_inst_mode_output(true)
 {
-   cacheBlockTracker = std::make_shared<DeadBlockAnalysisSpace::CacheBlockTracker>();
+   cacheBlockTracker = std::make_shared<DeadBlockAnalysisSpace::CacheBlockTracker>(Config::getSingleton()->getTotalCores());
 }
 
 void Simulator::start()

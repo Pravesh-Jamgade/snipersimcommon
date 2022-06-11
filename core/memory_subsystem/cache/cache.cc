@@ -123,6 +123,7 @@ Cache::accessSingleLine(IntPtr addr, access_t access_type,
 
    // String haddr = DeadBlockAnalysisSpace::Int2HexMap::insert(addr);
    auto ptr = Sim()->getCbTracker();
+   
    if(ptr!=nullptr && allowed()){
       bool pos = set->getPos(line_index);
       ptr->addEntry(addr, pos, getCycle(), core_id, m_name, isShared());
@@ -225,6 +226,7 @@ Cache::updateHits(Core::mem_op_t mem_op_type, UInt64 hits)
 
 void 
 Cache::logAndClear(UInt64 epoc){
+   auto ptr = Sim()->getCbTracker();
    if(!allowed())
       return;
    ptr->logAndClear(m_name,getCycle(),epoc);
