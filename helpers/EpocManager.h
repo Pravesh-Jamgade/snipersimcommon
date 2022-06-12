@@ -7,21 +7,25 @@ namespace EpocManagerSpace
 {
     class EpocManager
     {   
-        UInt64 epocLength, currCyle;
+        UInt64 epocLength, prevCycle;
         
         public:
         UInt64 number;
         EpocManager(UInt64 epocLength){
             epocLength=epocLength;
+            prevCycle=0;
             number=0;
         }
         UInt64 getEpoc(){return number;}
         bool IsEpocEnded(UInt64 cycle){
-            if(cycle%epocLength == 0){
+            bool epoc=false;
+            UInt64 modCycle = cycle%epocLength;
+            if(modCycle<prevCycle){
                 number++;
-                return true;
+                epoc=true;
             }
-            return false;
+            prevCycle=modCycle;
+            return epoc;
         }
     };
 }
