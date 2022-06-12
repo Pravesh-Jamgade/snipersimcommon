@@ -119,7 +119,7 @@ void PCStatHelper::logPerLevelPCCount()
         }
         else _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_LEVEL_UNI_PC, "0,");
     }
-    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_LEVEL_UNI_PC, "\n");
+    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_LEVEL_UNI_PC, "%d\n",core);
 }
 
 void PCStatHelper::logPerEpocSkiporNotSkipStatus(std::vector<Helper::Message>&allMsg, IntPtr pc){
@@ -127,15 +127,16 @@ void PCStatHelper::logPerEpocSkiporNotSkipStatus(std::vector<Helper::Message>&al
 }
 
 void PCStatHelper::logTopVsTotalPC(){
-    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_TOP_VS_TOTAL_PC, "%ld,%d,%d\n", counter, LPHelper::getTopPCcount(), getTotalPCCount());
+    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_TOP_VS_TOTAL_PC, "%ld,%d,%d,%d\n", counter, LPHelper::getTopPCcount(), getTotalPCCount(), core);
 }
 
 void PCStatHelper::logPerLevelLPVsTotalLPAccess(){
-    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LP_VS_TOTAL_ACCESS, "%ld,%ld,%ld,%ld \n", 
+    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LP_VS_TOTAL_ACCESS, "%ld,%ld,%ld,%ld,%d \n", 
         counter,
         totalAccessPerEpoc,
         getTotalLPAccessCount(),
-        howManyMatch.getCount()
+        howManyMatch.getCount(),
+        core
     );
 }
 
@@ -148,7 +149,7 @@ void PCStatHelper::logLPTopPCTotalAccessCount(){
             total=findPC->second.getCount();//before level l1
         sum += total;
     }
-    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_TOP_PC_ACCESS, "%ld,%ld,%d\n", counter, sum, LPHelper::getTopPCcount());
+    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_TOP_PC_ACCESS, "%ld,%ld,%d,%d\n", counter, sum, LPHelper::getTopPCcount(),core);
     
 }
 
@@ -169,7 +170,7 @@ void PCStatHelper::logLPvsTypeAccess(){
         else{ _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_LP_VS_TYPE_ACCESS, "0,0,0,0,*,");}
         
     }
-    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_LP_VS_TYPE_ACCESS, "\n");
+    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_LP_VS_TYPE_ACCESS, "%d\n", core);
 
 }
 
@@ -177,11 +178,11 @@ void PCStatHelper::logInit(){
       
     LPHelper::clearLPTable();
     if(LPHelper::getLockStatus() !=1){
-        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_LP_VS_TYPE_ACCESS, "epoc,lp,p,fs1,ts1,fns1,tns1,q,fs2,ts2,fns2,tns2,r,fs3,ts3,fns3,tns3,s\n");
-        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_TOP_PC_ACCESS, "epoc,toppcaccess, toppccount\n");
-        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LP_VS_TOTAL_ACCESS, "epoc,total,lp,accuracy\n");
-        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_TOP_VS_TOTAL_PC, "epoc,top,total\n");
-        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_LEVEL_UNI_PC, "epoc,pc1,pc2,pc3,#unique pc count per level\n");
+        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_LP_VS_TYPE_ACCESS, "epoc,lp,p,fs1,ts1,fns1,tns1,q,fs2,ts2,fns2,tns2,r,fs3,ts3,fns3,tns3,s,core\n");
+        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_TOP_PC_ACCESS, "epoc,toppcaccess,toppccount,core\n");
+        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_LP_VS_TOTAL_ACCESS, "epoc,total,lp,accuracy,core\n");
+        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_TOP_VS_TOTAL_PC, "epoc,top,total,core\n");
+        _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_LEVEL_UNI_PC, "epoc,pc1,pc2,pc3,core\n");
        
         for(int i=MemComponent::component_t::L1_DCACHE; i<= llc; i++){
             

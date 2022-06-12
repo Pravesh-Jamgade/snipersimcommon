@@ -56,7 +56,6 @@ class CoreManager
       bool amiSimThread();
    private:
       std::shared_ptr<cache_helper::CacheHelper> cacheHelper;
-      std::shared_ptr<PCPredictorSpace::PCStatHelper> PCStatCollector;
       std::shared_ptr<Helper::Counter> epocCounter;
 
       UInt32 *tid_map;

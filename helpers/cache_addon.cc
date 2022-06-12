@@ -5,12 +5,12 @@ using namespace CacheAddonSpace;
 
 void PCHistoryTable::insert(IntPtr pc, IntPtr addr)
 {
-    std::unordered_map<IntPtr,AddressHistory>::const_iterator const_it=table.find(pc);
+    auto findPC =table.find(pc);
 
-    if(const_it!=table.end())
+    if(findPC!=table.end())
     {
-        AddressHistory addrh=const_it->second;
-        int pri = addrh.insert(addr);// will return frequency of addr, if 0->1st time and it is unique for pc hence also increase addressCounter
+        AddressHistory *addrh=&(findPC->second);
+        int pri = addrh->insert(addr);// will return frequency of addr, if 0->1st time and it is unique for pc hence also increase addressCounter
         if(pri==0)//implies new address
             addressCounter.increase();//only counting new addr
     }
@@ -25,17 +25,15 @@ void PCHistoryTable::insert(IntPtr pc, IntPtr addr)
 UInt64 AddressHistory::insert(IntPtr addr)
 {
     totalpcCounter.increase();
-    std::unordered_map<IntPtr, Helper::Counter*>::const_iterator const_it=addressCount.find(addr);
-    Helper::Counter* counter = new Helper::Counter();
-    if(const_it!=addressCount.end())
+    Helper::Counter* counter = find(addr);
+    if(counter!=nullptr)
     {
-        counter=const_it->second;
         counter->increase();
         return counter->getCount();
     }
     else
     {
-        addressCount.insert({addr, counter});
+        addressCount.insert({addr, new Helper::Counter(1)});
         return 0;
     }
     

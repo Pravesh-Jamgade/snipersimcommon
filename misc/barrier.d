@@ -1,5 +1,7 @@
-/mnt/B/sniper/common/misc/barrier.o /mnt/B/sniper/common/misc/barrier.d: $(wildcard /mnt/B/sniper/common/misc/barrier.cc \
- /mnt/B/sniper/common/misc/barrier.h \
- /mnt/B/sniper/common/misc/fixed_types.h /mnt/B/sniper/common/misc/cond.h \
- /mnt/B/sniper/common/misc/lock.h /mnt/B/sniper/common/misc/itostr.h \
- /mnt/B/sniper/common/misc/log.h)
+/home/user/station/version/sniper/common/misc/barrier.o /home/user/station/version/sniper/common/misc/barrier.d: $(wildcard /home/user/station/version/sniper/common/misc/barrier.cc \
+ /home/user/station/version/sniper/common/misc/barrier.h \
+ /home/user/station/version/sniper/common/misc/fixed_types.h \
+ /home/user/station/version/sniper/common/misc/cond.h \
+ /home/user/station/version/sniper/common/misc/lock.h \
+ /home/user/station/version/sniper/common/misc/itostr.h \
+ /home/user/station/version/sniper/common/misc/log.h)

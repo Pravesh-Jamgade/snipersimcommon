@@ -17,6 +17,9 @@
  /home/user/station/version/sniper/common/misc/cpuid.h \
  /home/user/station/version/sniper/common/performance_model/hit_where.h \
  /home/user/station/version/sniper/common/helpers/cache_helper.h \
+ /home/user/station/version/sniper/common/helpers/PCPredictor.h \
+ /home/user/station/version/sniper/common/helpers/libpqueue/src/pqueue.h \
+ /home/user/station/version/sniper/common/helpers/helpers.h \
  /home/user/station/version/sniper/common/network/network.h \
  /home/user/station/version/sniper/common/network/packet_type.h \
  /home/user/station/version/sniper/common/misc/cond.h \
@@ -33,8 +36,11 @@
  /home/user/station/version/sniper/common/performance_model/cache_perf_model.h \
  /home/user/station/version/sniper/common/performance_model/shmem_perf_model.h \
  /home/user/station/version/sniper/common/fault_injection/fault_injection.h \
- /home/user/station/version/sniper/common/helpers/test.h \
+ /home/user/station/version/sniper/common/helpers/cache_addon.h \
  /home/user/station/version/sniper/common/misc/config.h \
  /home/user/station/version/sniper/common/system/clock_skew_minimization_object.h \
  /home/user/station/version/sniper/common/system/cache_efficiency_tracker.h \
- /home/user/station/version/sniper/common/core/memory_subsystem/cache/cache_block_info.h)
+ /home/user/station/version/sniper/common/core/memory_subsystem/cache/cache_block_info.h \
+ /home/user/station/version/sniper/common/system/simulator.h \
+ /home/user/station/version/sniper/common/system/inst_mode.h \
+ /home/user/station/version/sniper/decoder_lib/decoder.h)

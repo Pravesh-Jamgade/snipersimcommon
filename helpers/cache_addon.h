@@ -64,7 +64,7 @@ namespace CacheAddonSpace
 
             std::unordered_set<IntPtr> allRemovableAddresses;
 
-            UInt64 modCycle = currCycleNumber%10000;
+            UInt64 modCycle = currCycleNumber%epocDuration;
 
             if(modCycle<prevCycleNumber)
             {
@@ -76,19 +76,22 @@ namespace CacheAddonSpace
                 }
                 std::sort(allPc.begin(),allPc.end());
 
+                int remove = allPc.size()/2;// remove half of total pc which are less frequent
                 for(auto e: allPc)//count-pc
                 {
-                    std::unordered_map<IntPtr, AddressHistory>::iterator it = table.find(e.second);//pc
+                    if(remove==0)
+                        break;
+                    remove--;
+                    auto it = table.find(e.second);//pc
                     if(it!=table.end())
                     {
                         for(auto p: it->second.getAddresses())
                         {
                             allRemovableAddresses.insert(p.first);
                         }
+                        table.erase(it);//pc
                     }
-                    table.erase(it);//pc
                 }
-                refreshCounter.reset();
             }
             
             prevCycleNumber=modCycle;

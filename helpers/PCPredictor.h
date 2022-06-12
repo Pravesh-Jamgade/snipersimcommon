@@ -163,8 +163,10 @@ namespace PCPredictorSpace
         typedef PCStat EpocPerformanceStat;
         typedef std::map<int, PCStat> LevelPCStat;
         MemComponent::component_t llc;
+        int core;
         public:
-        PCStatHelper(MemComponent::component_t llc=MemComponent::component_t::LAST_LEVEL_CACHE){
+        PCStatHelper(int core, MemComponent::component_t llc=MemComponent::component_t::LAST_LEVEL_CACHE){
+            this->core=core;
             this->llc=llc;
             totalAccessPerEpoc=0;
             counter=0;
