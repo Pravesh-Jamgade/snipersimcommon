@@ -26,6 +26,9 @@ namespace Helper
         void decrease(){this->count--;}
         void decrease(UInt64 byk){this->count=this->count-byk;}
         void reset(){this->count=this->reuse;}
+        bool operator!=(int a){
+            return this==0;
+        }
     };
 
     class Message

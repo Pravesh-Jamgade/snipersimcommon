@@ -699,7 +699,7 @@ MYLOG("processMemOpFromCore l%d after next fill", m_mem_component);
 
 
    accessCache(mem_op_type, ca_address, offset, data_buf, data_length, 
-   hit_where == HitWhere::where_t(m_mem_component) && count, path);
+   hit_where == HitWhere::where_t(m_mem_component) && count);
 
 MYLOG("access done");
 
@@ -1509,13 +1509,13 @@ CacheCntlr::accessCache(
       case Core::READ_EX:
          m_master->m_cache->accessSingleLine(ca_address + offset, Cache::LOAD, data_buf, data_length,
                                              getShmemPerfModel()->getElapsedTime(ShmemPerfModel::_USER_THREAD), 
-                                             update_replacement, path);
+                                             update_replacement);
          break;
 
       case Core::WRITE:
          m_master->m_cache->accessSingleLine(ca_address + offset, Cache::STORE, data_buf, data_length,
                                              getShmemPerfModel()->getElapsedTime(ShmemPerfModel::_USER_THREAD),
-                                             update_replacement, path);
+                                             update_replacement);
          // Write-through cache - Write the next level cache also
          if (m_cache_writethrough) {
             LOG_ASSERT_ERROR(m_next_cache_cntlr, "Writethrough enabled on last-level cache !?");

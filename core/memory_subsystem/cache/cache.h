@@ -17,7 +17,7 @@
 // Define to enable the set usage histogram
 //#define ENABLE_SET_USAGE_HIST
 
-class Cache : public CacheBase, public CacheAddonSpace::PCHistoryTable
+class Cache : public CacheBase
 {
    private:
       bool m_enabled;
@@ -101,6 +101,7 @@ class Cache : public CacheBase, public CacheAddonSpace::PCHistoryTable
       static void resetSendMsgFlag(){
             sendMsgFlag=false;
       }
+      CacheAddonSpace::PCHistoryTable* pcHTable=nullptr;
 };
 
 template <class T>

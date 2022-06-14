@@ -4,7 +4,6 @@ using namespace PCPredictorSpace;
 
 int LPHelper::lp_unlock=2;
 std::unordered_map<IntPtr, LevelPredictor> LPHelper::tmpAllLevelLP;
-std::unordered_map<IntPtr, LevelPredictor> LPHelper::copyTmpAllLevelLP;
 
 void PCStatHelper::LPLookup(IntPtr pc){
     if(LPHelper::isLockEnabled()!=1)
@@ -82,8 +81,8 @@ void PCStatHelper::updateLPTable()
     }
 
     // performance analysis is LPT(x-1) vs MMT(x) decision deviation based type access count
-    for(auto pc: LPHelper::copyTmpAllLevelLP){
-        if(isLockEnabled()){
+    if(isLockEnabled()){
+        for(auto pc: LPHelper::tmpAllLevelLP){
             processEndPerformanceAnalysis(pc.first, pc.second);
         }
     }

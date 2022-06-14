@@ -138,7 +138,6 @@ namespace PCPredictorSpace
         public:
         static int lp_unlock;
         static std::unordered_map<IntPtr, LevelPredictor> tmpAllLevelLP;
-        static std::unordered_map<IntPtr, LevelPredictor> copyTmpAllLevelLP;
         static int getLockStatus(){return lp_unlock;}
         static void lockenable(){lp_unlock=1;}
         static int isLockEnabled(){return lp_unlock;}
@@ -149,9 +148,9 @@ namespace PCPredictorSpace
             tmpAllLevelLP.insert({pc, LevelPredictor()});
         }
         static void clearLPTable(){
-            copyTmpAllLevelLP.clear();
-            copyTmpAllLevelLP=tmpAllLevelLP;
-            tmpAllLevelLP.clear();
+            // copyTmpAllLevelLP.clear();
+            // std::copy(tmpAllLevelLP.begin(), tmpAllLevelLP.end(), copyTmpAllLevelLP.begin());
+            // tmpAllLevelLP.clear();
         }
         static int  getTopPCcount(){
             return tmpAllLevelLP.size();

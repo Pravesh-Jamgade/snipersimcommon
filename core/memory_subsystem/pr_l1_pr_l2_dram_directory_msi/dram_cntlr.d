@@ -79,4 +79,5 @@
  /home/user/station/version/sniper/common/core/memory_subsystem/parametric_dram_directory_msi/../pr_l1_pr_l2_dram_directory_msi/req_queue_list.h \
  /home/user/station/version/sniper/common/core/memory_subsystem/parametric_dram_directory_msi/../pr_l1_pr_l2_dram_directory_msi/shmem_req.h \
  /home/user/station/version/sniper/common/core/memory_subsystem/parametric_dram_directory_msi/../pr_l1_pr_l2_dram_directory_msi/shmem_perf.h \
- /home/user/station/version/sniper/common/core/memory_subsystem/directory_schemes/coherency_protocol.h)
+ /home/user/station/version/sniper/common/core/memory_subsystem/directory_schemes/coherency_protocol.h \
+ /home/user/station/version/sniper/common/helpers/EpocHelper.h)

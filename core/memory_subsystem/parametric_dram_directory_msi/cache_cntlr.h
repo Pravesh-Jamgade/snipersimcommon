@@ -299,7 +299,7 @@ namespace ParametricDramDirectoryMSI
          void accessCache(
                Core::mem_op_t mem_op_type,
                IntPtr ca_address, UInt32 offset,
-               Byte* data_buf, UInt32 data_length, bool update_replacement, String path);
+               Byte* data_buf, UInt32 data_length, bool update_replacement, String path="");
          bool operationPermissibleinCache(
                IntPtr address, Core::mem_op_t mem_op_type, CacheBlockInfo **cache_block_info = NULL);
 

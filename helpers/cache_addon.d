@@ -9,4 +9,5 @@
  /home/user/station/version/sniper/common/helpers/helpers.h \
  /home/user/station/version/sniper/common/core/memory_subsystem/mem_component.h \
  /home/user/station/version/sniper/common/misc/log.h \
- /home/user/station/version/sniper/common/misc/lock.h)
+ /home/user/station/version/sniper/common/misc/lock.h \
+ /home/user/station/version/sniper/common/helpers/EpocHelper.h)

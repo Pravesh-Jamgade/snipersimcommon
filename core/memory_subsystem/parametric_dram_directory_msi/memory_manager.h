@@ -21,6 +21,7 @@
 #include "cache_helper.h"
 #include "helpers.h"
 #include "PCPredictor.h"
+#include "EpocHelper.h"
 
 class DramCache;
 class ShmemPerf;
@@ -131,5 +132,7 @@ namespace ParametricDramDirectoryMSI
          std::shared_ptr<PCPredictorSpace::PCStatHelper> PCStatCollector;
          std::shared_ptr<Helper::Counter> epocCounter;
          UInt64 debugEpoc;
+         EpocHelper epocHelper;
+
    };
 }

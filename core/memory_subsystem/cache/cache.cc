@@ -24,13 +24,15 @@ Cache::Cache(
    AddressHomeLookup *ahl)
 :  //[ORIGINAL] // cache_helper::CacheHelper(name, num_sets, associativity, cache_block_size, hash, ahl),
    CacheBase(name, num_sets, associativity, cache_block_size, hash, ahl),
-   CacheAddonSpace::PCHistoryTable(Sim()->getCfg()->getInt("param/epoc")),
    m_enabled(false),
    m_num_accesses(0),
    m_num_hits(0),
    m_cache_type(cache_type),
    m_fault_injector(fault_injector)
 {
+   if(name == "L1-D"){
+      pcHTable = new CacheAddonSpace::PCHistoryTable();
+   }
    m_set_info = CacheSet::createCacheSetInfo(name, cfgname, core_id, replacement_policy, m_associativity);
    m_sets = new CacheSet*[m_num_sets];
    for (UInt32 i = 0; i < m_num_sets; i++)
@@ -206,40 +208,38 @@ UInt64 Cache::getCycleCount(){return cycleNumber;}
 
 bool Cache::processPCEntry(IntPtr pc, IntPtr addr, CacheBlockInfo* cache_block_info, bool count)
 {
-   IntPtr retAddr,retPC;
-   retAddr=retPC=-1;
-   if(getName() != "L1-D")
-      return false;
+   // IntPtr retAddr,retPC;
+   // retAddr=retPC=-1;
+   // if(getName() != "L1-D" || pcHTable==nullptr)
+   //    return false;
    
-   if(count){
-      // printf("=[verify1] %ld, %ld, %s\n",getEIP(),addr,getName().c_str());
-      cache_block_info->setOption(CacheBlockInfo::HOT_LINE);
-      insert(pc,addr);
-   }
+   // if(count){
+   //    pcHTable->insert(pc,addr);
+   // }
 
-   for(auto addr:action(getCycleCount()))//resetting table if counter == 0
-   {
-      IntPtr tag;
-      UInt32 set_index;
-      UInt32 line_index = -1;
-      UInt32 block_offset;
+   // for(auto addr:pcHTable->action())//setting cacheblock to hot from top pc addresses
+   // {
+   //    IntPtr tag;
+   //    UInt32 set_index;
+   //    UInt32 line_index = -1;
+   //    UInt32 block_offset;
 
-      splitAddress(addr, tag, set_index, block_offset);
+   //    splitAddress(addr, tag, set_index, block_offset);
 
-      CacheSet* set = m_sets[set_index];
-      CacheBlockInfo* cache_block_info = set->find(tag, &line_index);
-      if(cache_block_info!=NULL)
-      {
-         bool cool = cache_block_info->hasOption(CacheBlockInfo::HOT_LINE);
-         if(cool)
-         {
-            cache_block_info->clearOption(CacheBlockInfo::HOT_LINE);
-         }
-      }
-      if(!sendMsgFlag)
-      {
-         sendMsgFlag=true;
-      }
-   }
+   //    CacheSet* set = m_sets[set_index];
+   //    CacheBlockInfo* cache_block_info = set->find(tag, &line_index);
+   //    if(cache_block_info!=NULL)
+   //    {
+   //       bool cool = cache_block_info->hasOption(CacheBlockInfo::HOT_LINE);
+   //       if(!cool)
+   //       {
+   //          cache_block_info->setOption(CacheBlockInfo::HOT_LINE);
+   //       }
+   //    }
+   //    if(!sendMsgFlag)
+   //    {
+   //       sendMsgFlag=true;
+   //    }
+   // }
    return true;//if it is L1-D cache
 }

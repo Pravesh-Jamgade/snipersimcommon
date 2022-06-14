@@ -18,6 +18,8 @@
 #include "config.h"
 #include "mem_component.h"
 
+#include "EpocHelper.h"
+
 #if 0
    extern Lock iolock;
 #  include "core_manager.h"
@@ -51,6 +53,7 @@ MemoryManager::MemoryManager(Core* core,
    this->cacheHelper = core->getCacheHelper();
    this->PCStatCollector = core->getPCStatHelper();
    this->epocCounter = core->getEpocCounter();
+   this->epocHelper = EpocHelper(Sim()->getCfg()->getInt("param/epoc"));
    if(Sim()->getCfg()->hasKey("debug/epocNumber"))
    {
       debugEpoc=Sim()->getCfg()->getInt("debug/epocNumber");
@@ -552,11 +555,14 @@ MemoryManager::coreInitiateMemoryAccess(
          data_buf, data_length,
          modeled == Core::MEM_MODELED_NONE || modeled == Core::MEM_MODELED_COUNT ? false : true,
          modeled == Core::MEM_MODELED_NONE ? false : true,  eip, path, PCStatCollector);
-   if(Cache::sendMsgFlag){
+   
+   epocHelper.doStatusUpdate(getCore()->getPerformanceModel()->getCycleCount());
+   if(EpocHelper::getEpocStatus()){//Cache::sendMsgFlag
       PCStatCollector->logInit();
       epocCounter->increase();
       PCStatCollector->reset(epocCounter->getCount());
-      Cache::resetSendMsgFlag();
+      EpocHelper::reset();
+      //Cache::resetSendMsgFlag();
    }
    return hitWhere;
 }
