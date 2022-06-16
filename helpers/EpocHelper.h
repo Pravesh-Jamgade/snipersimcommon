@@ -13,11 +13,12 @@ class EpocHelper
         this->prevCycle=0;
     }
     void doStatusUpdate(UInt64 cycle){
-        UInt64 modCycle = cycle%epocLength;
+        UInt64 modCycle=cycle%epocLength;
         if(modCycle<prevCycle){
             epocEnded=true;
         }
         else epocEnded=false;
+        prevCycle=modCycle;
     }
     
     static bool getEpocStatus(){
