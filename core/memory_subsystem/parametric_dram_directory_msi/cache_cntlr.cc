@@ -495,7 +495,7 @@ LOG_ASSERT_ERROR(offset + data_length <= getCacheBlockSize(), "access until %u >
 
       //[update]
       // if debug level not specified, unlock to log all; or unlock individual level
-      this->loggingLevel(ca_address, mem_op_type, cache_hit);
+      // this->loggingLevel(ca_address, mem_op_type, cache_hit);
 
       if(pcStatHelper!=nullptr && m_mem_component == MemComponent::L1_DCACHE){ 
          // lookup Prediction before cache hierarchy access
@@ -987,7 +987,7 @@ SubsecondTime t_issue, bool have_write_lock, String& path, std::shared_ptr<PCPre
       if (isPrefetch == Prefetch::NONE){
          getCache()->updateCounters(cache_hit);
       }
-      this->loggingLevel(address, mem_op_type, cache_hit);//[update]
+      // this->loggingLevel(address, mem_op_type, cache_hit);//[update]
       updateCounters(mem_op_type, address, cache_hit, getCacheState(address), isPrefetch);
       if(pcStatHelper!=nullptr)
       {
