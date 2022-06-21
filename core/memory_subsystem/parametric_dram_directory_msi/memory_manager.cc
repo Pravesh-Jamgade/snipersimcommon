@@ -30,7 +30,8 @@ namespace ParametricDramDirectoryMSI
 
 std::map<CoreComponentType, CacheCntlr*> MemoryManager::m_all_cache_cntlrs;
 
-MemoryManager::MemoryManager(Core* core,
+MemoryManager::MemoryManager(
+      Core* core,
       Network* network, ShmemPerfModel* shmem_perf_model):
    MemoryManagerBase(core, network, shmem_perf_model),
    m_nuca_cache(NULL),
@@ -65,7 +66,7 @@ MemoryManager::MemoryManager(Core* core,
 
    //update
    UInt64 epocLength = Sim()->getCfg()->getInt("param/epoc");
-   epocManager = std::make_shared<EpocManagerSpace::EpocManager>(epocLength);
+   epocManager = core->getShEpocMngr();
 
    try
    {
@@ -435,10 +436,8 @@ MemoryManager::coreInitiateMemoryAccess(
    else if (mem_component == MemComponent::L1_DCACHE && m_dtlb)
       accessTLB(m_dtlb, address, false, modeled);
 
-   if(epocManager->IsEpocEnded(getCore()->getPerformanceModel()->getCycleCount())){
-      for(UInt32 i = MemComponent::FIRST_LEVEL_CACHE; i <= (UInt32)m_last_level_cache; ++i) {
-         m_cache_cntlrs[(MemComponent::component_t)i]->cacheDeadBlockAnalysis(epocManager->getEpoc());
-      }
+   if(getCore()->getShEpocMngr()->IsEpocEnded(getCore()->getPerformanceModel()->getCycleCount())){
+      getCore()->getCBHelper().logAndClear(getCore()->getId(), getCore()->getShEpocMngr()->getEpoc());
    }
 
    HitWhere::where_t result =  m_cache_cntlrs[mem_component]->processMemOpFromCore(

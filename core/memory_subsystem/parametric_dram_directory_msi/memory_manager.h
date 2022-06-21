@@ -16,8 +16,9 @@
 
 #include <map>
 
-#include "EpocManager.h"
 #include <memory>
+#include "EpocManager.h"
+#include "DeadBlockAnalysis.h"
 
 class DramCache;
 class ShmemPerf;
@@ -67,6 +68,7 @@ namespace ParametricDramDirectoryMSI
 
          //update
          std::shared_ptr<EpocManagerSpace::EpocManager> epocManager;
+         DeadBlockAnalysisSpace::CBHelper cbHelper;
 
       public:
          MemoryManager(Core* core, Network* network, ShmemPerfModel* shmem_perf_model);

@@ -18,6 +18,7 @@
 #include "cheetah_manager.h"
 
 #include <cstring>
+#include "DeadBlockAnalysis.h"
 
 #if 0
    extern Lock iolock;
@@ -64,7 +65,9 @@ Lock Core::m_global_core_lock;
 UInt64 Core::g_instructions_hpi_global = 0;
 UInt64 Core::g_instructions_hpi_global_callback = 0;
 
-Core::Core(SInt32 id)
+Core::Core(SInt32 id, 
+   std::shared_ptr<DeadBlockAnalysisSpace::CacheBlockTracker> shCbTracker,
+   std::shared_ptr<EpocManagerSpace::EpocManager> shEpocManager)
    : m_core_id(id)
    , m_dvfs_domain(Sim()->getDvfsManager()->getCoreDomain(id))
    , m_thread(NULL)
@@ -96,9 +99,11 @@ Core::Core(SInt32 id)
 
    m_shmem_perf_model = new ShmemPerfModel();
 
+   cbHelper = DeadBlockAnalysisSpace::CBHelper(shCbTracker);
+   this->shEpocManager = shEpocManager;
+
    LOG_PRINT("instantiated memory manager model");
-   m_memory_manager = MemoryManagerBase::createMMU(
-         Sim()->getCfg()->getString("caching_protocol/type"),
+   m_memory_manager = MemoryManagerBase::createMMU(Sim()->getCfg()->getString("caching_protocol/type"),
          this, m_network, m_shmem_perf_model);
 
    m_performance_model = PerformanceModel::create(this);

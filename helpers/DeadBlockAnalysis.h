@@ -4,28 +4,27 @@
 #include<iostream>
 #include<unordered_map>
 #include"helpers.h"
-#include"util.h"
 #include "log.h"
 #include<fstream>
 #include <math.h>  
 #include "fixed_types.h"
+#include<memory>
 
 namespace DeadBlockAnalysisSpace
 {
-    class Int2HexMap{
-        public:
-        static std::unordered_map<IntPtr, String> intMap;
-        static String insert(IntPtr addr){
-            auto findAddr = intMap.find(addr);
-            if(findAddr==intMap.end()){
-                String tmp = Util::Misc::toHex(addr);
-                intMap.insert({addr, tmp});
-                return tmp;
-            }
-            return findAddr->second;
-        }
-    };
-
+    // class Int2HexMap{
+    //     public:
+    //     static std::unordered_map<IntPtr, String> intMap;
+    //     static String insert(IntPtr addr){
+    //         auto findAddr = intMap.find(addr);
+    //         if(findAddr==intMap.end()){
+    //             String tmp = Util::Misc::toHex(addr);
+    //             intMap.insert({addr, tmp});
+    //             return tmp;
+    //         }
+    //         return findAddr->second;
+    //     }
+    // };
 
     class CBUsage
     {
@@ -45,6 +44,8 @@ namespace DeadBlockAnalysisSpace
             mulPercent=1;
             evicted=false;
             pos=0;//lru pos
+        }
+        ~CBUsage(){
         }
 
         void increaseCBA(){cacheBlockAccess.increase();} UInt64 getAccess(){return cacheBlockAccess.getCount();}
@@ -83,80 +84,87 @@ namespace DeadBlockAnalysisSpace
         bool isLRUBlock(){return pos;}
     };
 
+    class KeyObject{
+        String cache;
+        int core;
+        public:
+        KeyObject(){}
+        KeyObject(String cache, int core){
+            this->cache=cache;
+            this->core=core;
+        }
+        bool operator==(KeyObject* obj){
+            if(this->cache==obj->cache && this->core==obj->core){
+                return true;
+            }
+            return false;
+        }
+    };
+
     class CacheBlockTracker
     {   
-        typedef std::map<IntPtr, CBUsage> CacheBlockUsage;
-        typedef std::map<String, CacheBlockUsage> Cache_t;
-        std::map<core_id_t, Cache_t> core_cbTracker;
-        std::map<IntPtr, CBUsage> shared_cbTracker;
-        UInt64 totalDeadBlocks, totalBlocks, totalEpoc;
-        UInt64 deadBlock;
-        std::map<core_id_t, std::map<String, UInt64>> mmp;
-        UInt32 totalCores;
+        typedef std::map<IntPtr, std::shared_ptr<CBUsage>> CacheBlockUsage;
+        std::map<String, CacheBlockUsage> cbTracker;
+        std::map<String, UInt64> mmp;
+        std::vector<CBUsage*> del;
+
         public:
-        
-        CacheBlockTracker(UInt32 totalCores){
-            deadBlock=0;
-            totalCores=4;
+        CacheBlockTracker(){
+            cbTracker = std::map<String, CacheBlockUsage>();
+            mmp = std::map<String, UInt64>();
         }
 
-        void logAndClear(String name, UInt64 cycle, UInt64 epoc=0){
+        void logAndClear(int core, UInt64 epoc, bool isShared){
+            UInt64 dead = 0;
             
-            for(auto core : core_cbTracker){
-                // insert new core entry
-                auto findCore = mmp.find(core.first);
-                if(findCore==mmp.end()){
-                    std::map<String, UInt64> mp;
-                    mp.insert({"L1", 0});
-                    mp.insert({"L2", 0});
-                    mmp.insert({core.first, mp});
-                }
-            }
-
-            for(auto core : core_cbTracker){
-                for(auto cache : core.second){
-                    for(auto block : cache.second){
-                        CBUsage cbUsage = block.second;
-                        if(!cbUsage.isEvicted() && cbUsage.isLRUBlock()){
-                            mmp[core.first][cache.first]++;
-                        }
+            for(auto cache : cbTracker){
+                for(auto block : cache.second){
+                    std::shared_ptr<CBUsage> cbUsage = block.second;
+                    if(!cbUsage->isEvicted() && cbUsage->isLRUBlock()){
+                        dead++;
+                        auto findCache = mmp.find(cache.first);
+                        if(findCache!=mmp.end())
+                            mmp[cache.first]++;
+                        else mmp[cache.first]=0;
+                    }
+                    else{
                     }
                 }
             }
-            
-            for(auto addr : shared_cbTracker){
-                if(!addr.second.isEvicted() && addr.second.isLRUBlock()){
-                    deadBlock++;
+
+            printf("epoc=%ld,dead=%ld,shared=%d\n", epoc, dead, isShared);
+
+            //cache-CacheBlockUsage
+            for(auto cache: cbTracker){
+                //log cache dead block
+                //address-CBUsage
+                for(auto cb : cache.second){
+                    _LOG_CUSTOM_LOGGER(Log::Warning, static_cast<Log::LogFileName>(core), "%ld,%s,%ld,%d\n", 
+                        epoc, cache.first.c_str(), cb.first, cb.second->isLRUBlock());
                 }
             }
 
-            //per core a file 
-            int i=0;
-            for(auto core: mmp){
-                // log epoc
-                _LOG_CUSTOM_LOGGER(Log::Warning, static_cast<Log::LogFileName>(core.first), "\n%ld", epoc);
-
-                for(auto cache: core.second){
-                    //log cache dead block
-                    _LOG_CUSTOM_LOGGER(Log::Warning, static_cast<Log::LogFileName>(core.first), "%ld,", cache.second);
-                }
-                i++;
-            }
-           
-            _LOG_CUSTOM_LOGGER(Log::Warning, Log::DBA, "%ld,%ld\n", epoc, deadBlock);
+            // for(auto cache: cbTracker){
+            //     for(auto cb: cache.second){
+            //         cb.second.reset();
+            //     }
+            // }
+            cbTracker.clear();
+            mmp=std::map<String, UInt64>();
         }
 
-        void addEntry(IntPtr addr, bool pos, UInt64 cycle, core_id_t core_id, String name, bool shared, bool eviction=false){
-            if(shared){
-                auto findAddr = shared_cbTracker.find(addr);
-                CBUsage* cbUsage = nullptr;
-                if(findAddr!=shared_cbTracker.end()){
-                    cbUsage=&findAddr->second;
-                }
-
-                if(cbUsage!=nullptr)
-                    cbUsage->setPos(pos);
+        void addEntry(IntPtr addr, bool pos, UInt64 cycle, String name, bool eviction=false){
+            auto findName = cbTracker.find(name);
+            //cache found
+            if(findName!=cbTracker.end()){
+                //get cache blocks of addresses
+                CacheBlockUsage* cacheBlockusage = &(findName->second);
+                auto findAddr = cacheBlockusage->find(addr);
                 
+                std::shared_ptr<CBUsage> cbUsage = nullptr;
+                if(findAddr!=cacheBlockusage->end()){
+                    cbUsage = std::make_shared<CBUsage>();
+                }
                 if(eviction){
                     if(cbUsage==nullptr)
                         return;
@@ -166,75 +174,53 @@ namespace DeadBlockAnalysisSpace
                 else{
                     if(cbUsage!=nullptr){
                         cbUsage->increaseCBA();
-                        // earlier it was evicted, with request now loaded
                         if(cbUsage->isEvicted()){
                             cbUsage->resetEvicted();
                         }
                     }
                     else{
-                        cbUsage = new CBUsage();
-                        shared_cbTracker.insert({addr, *cbUsage});
+                        cbUsage = std::make_shared<CBUsage>();
+                        cacheBlockusage->insert({addr, cbUsage});
                     }
                 }
-
             }
-            else{
-                auto findCore = core_cbTracker.find(addr);
-
-                //core found
-                if(findCore!=core_cbTracker.end()){
-                    //get cores cache map
-                    Cache_t *cache_x = &(findCore->second);
-                    auto findName = cache_x->find(name);
-
-                    //cache found
-                    if(findName!=cache_x->end()){
-                        //get cache blocks of addresses
-                        CacheBlockUsage* cacheBlockusage = &(findName->second);
-                        auto findAddr = cacheBlockusage->find(addr);
-                        
-                        CBUsage* cbUsage = nullptr;
-                        if(findAddr!=cacheBlockusage->end()){
-                            cbUsage = &(findAddr->second);
-                        }
-                        if(eviction){
-                            if(cbUsage==nullptr)
-                                return;
-                            cbUsage->setEvicted();
-                            return;
-                        }
-                        else{
-                            if(cbUsage!=nullptr){
-                                cbUsage->increaseCBA();
-                                if(cbUsage->isEvicted()){
-                                    cbUsage->resetEvicted();
-                                }
-                            }
-                            else{
-                                cbUsage = new CBUsage();
-                                cacheBlockusage->insert({addr, *cbUsage});
-                            }
-                        }
-                    }
-                    else
-                    {
-                        CacheBlockUsage tmp;
-                        tmp.insert({addr, CBUsage()});
-                        cache_x->insert({name, tmp});
-                    }
-                }
-                else{
-                    std::map<IntPtr, CBUsage> cbUsage;
-                    cbUsage.insert({addr, CBUsage()});
-
-                    std::map<String, CacheBlockUsage> cache_name;
-                    cache_name.insert({name, cbUsage});
-
-                    core_cbTracker.insert({core_id, cache_name});
-                }
-            }            
+            else
+            {
+                CacheBlockUsage tmp;
+                tmp.insert({addr, std::make_shared<CBUsage>()});
+                cbTracker.insert({name, tmp});
+            }
         }
     };
 
+    class CBHelper{
+
+        public:
+        CacheBlockTracker local;
+        std::shared_ptr<CacheBlockTracker> shared;
+
+        CBHelper(){}
+        CBHelper(std::shared_ptr<CacheBlockTracker>shCbTracker){
+            local=CacheBlockTracker();
+            shared=shCbTracker;
+        }
+
+        void addEntry(IntPtr addr, bool pos, UInt64 cycle, String name, bool eviction=false, bool isItShared=false){
+            if(isItShared){
+                local.addEntry(addr,pos,cycle,name,eviction);
+            }
+            else{
+                shared->addEntry(addr,pos,cycle,name,eviction);
+            }
+        }
+
+        void logAndClear(core_id_t core, UInt64 epoc=0){
+            local.logAndClear(core,epoc,false);
+            if(shared==nullptr)
+                return;
+            shared->logAndClear(0,epoc,true);
+        }
+        
+    };
 }
 #endif

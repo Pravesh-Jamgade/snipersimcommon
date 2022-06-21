@@ -12,6 +12,10 @@
 #include <map>
 #include <vector>
 
+//update
+#include "DeadBlockAnalysis.h"
+#include "EpocManager.h"
+
 
 class Core;
 
@@ -52,6 +56,9 @@ class CoreManager
       bool amiCoreThread();
       bool amiSimThread();
 
+      std::shared_ptr<DeadBlockAnalysisSpace::CacheBlockTracker> sharedCbTracker;
+      std::shared_ptr<EpocManagerSpace::EpocManager> sharedEpocManager;
+    
    private:
 
       UInt32 *tid_map;

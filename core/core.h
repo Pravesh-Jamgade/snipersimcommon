@@ -24,6 +24,10 @@ class CheetahManager;
 #include <iostream>
 #include <memory>
 
+//update
+#include "DeadBlockAnalysis.h"
+#include "EpocManager.h"
+
 struct MemoryResult {
    HitWhere::where_t hit_where;
    subsecond_time_t latency;
@@ -83,7 +87,9 @@ class Core
 
       static const char * CoreStateString(State state);
 
-      Core(SInt32 id);
+      Core(SInt32 id, 
+      std::shared_ptr<DeadBlockAnalysisSpace::CacheBlockTracker> shCbTracker,
+      std::shared_ptr<EpocManagerSpace::EpocManager> shEpocManager);
       ~Core();
 
       // Query and update branch predictor, return true on mispredict
@@ -135,6 +141,12 @@ class Core
          m_spin_instructions += instructions;
          m_spin_elapsed_time += elapsed_time;
       }
+
+      std::shared_ptr<EpocManagerSpace::EpocManager> shEpocManager;
+      std::shared_ptr<EpocManagerSpace::EpocManager> getShEpocMngr(){return shEpocManager;}
+
+      DeadBlockAnalysisSpace::CBHelper cbHelper;// local and shared structure for deadblock statistics
+      DeadBlockAnalysisSpace::CBHelper getCBHelper(){return cbHelper;}
 
    private:
       core_id_t m_core_id;

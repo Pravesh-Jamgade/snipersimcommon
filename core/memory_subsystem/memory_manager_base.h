@@ -8,6 +8,9 @@
 #include "shmem_perf_model.h"
 #include "pr_l1_pr_l2_dram_directory_msi/shmem_msg.h"
 
+//update
+#include "DeadBlockAnalysis.h"
+
 void MemoryManagerNetworkCallback(void* obj, NetPacket packet);
 
 class MemoryManagerBase
@@ -35,6 +38,7 @@ class MemoryManagerBase
       void printCoreListWithMemoryControllers(std::vector<core_id_t>& core_list_with_memory_controllers);
 
    public:
+
       MemoryManagerBase(Core* core, Network* network, ShmemPerfModel* shmem_perf_model):
          m_core(core),
          m_network(network),

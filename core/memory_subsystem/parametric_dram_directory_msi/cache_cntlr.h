@@ -367,8 +367,6 @@ namespace ParametricDramDirectoryMSI
 
          virtual ~CacheCntlr();
 
-         void cacheDeadBlockAnalysis(UInt64 epoc);
-         
          Cache* getCache() { return m_master->m_cache; }
          Lock& getLock() { return m_master->m_cache_lock; }
 

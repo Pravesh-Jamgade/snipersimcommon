@@ -15,6 +15,11 @@
 
 #include "log.h"
 
+//update
+#include "DeadBlockAnalysis.h"
+#include "simulator.h"
+#include "config.hpp"
+
 CoreManager::CoreManager()
       : m_core_tls(TLS::create())
       , m_thread_type_tls(TLS::create())
@@ -22,10 +27,13 @@ CoreManager::CoreManager()
       , m_num_registered_core_threads(0)
 {
    LOG_PRINT("Starting CoreManager Constructor.");
-
+   UInt64 epocLength = Sim()->getCfg()->getInt("param/epoc");
+   printf("[XXXXXXXXXXX]epoc length=%ld\n", epocLength);
+   sharedEpocManager = std::make_shared<EpocManagerSpace::EpocManager>(epocLength);
+   sharedCbTracker = std::make_shared<DeadBlockAnalysisSpace::CacheBlockTracker>();
    for (UInt32 i = 0; i < Config::getSingleton()->getTotalCores(); i++)
    {
-      m_cores.push_back(new Core(i));
+      m_cores.push_back(new Core(i, sharedCbTracker, sharedEpocManager));
    }
 
    LOG_PRINT("Finished CoreManager Constructor.");

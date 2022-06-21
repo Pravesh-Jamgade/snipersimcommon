@@ -121,12 +121,12 @@ Cache::accessSingleLine(IntPtr addr, access_t access_type,
    if (cache_block_info == NULL)
       return NULL;
 
-   // String haddr = DeadBlockAnalysisSpace::Int2HexMap::insert(addr);
-   auto ptr = Sim()->getCbTracker();
-   
-   if(ptr!=nullptr && allowed()){
+   Core* core = Sim()->getCoreManager()->getCurrentCore();
+   auto ptr = core->getCBHelper();
+
+   if(allowed()){
       bool pos = set->getPos(line_index);
-      ptr->addEntry(addr, pos, getCycle(), core_id, m_name, isShared());
+      ptr.addEntry(addr, pos, getCycle(), m_name, false, isShared());
    }
       
    if (access_type == LOAD)
@@ -166,13 +166,13 @@ Cache::insertSingleLine(IntPtr addr, Byte* fill_buff,
          eviction, evict_block_info, evict_buff, cntlr);
    *evict_addr = tagToAddress(evict_block_info->getTag());
 
-   // String ehaddr = DeadBlockAnalysisSpace::Int2HexMap::insert(*evict_addr);
-   // String haddr = DeadBlockAnalysisSpace::Int2HexMap::insert(addr);
-   auto ptr = Sim()->getCbTracker();
+   Core* core = Sim()->getCoreManager()->getCurrentCore();
+   auto ptr = core->getCBHelper();
 
-   if(ptr!=nullptr && allowed()){
-      ptr->addEntry(addr, pos, getCycle(), core_id, m_name, isShared());
-      ptr->addEntry(*evict_addr, pos, getCycle(), core_id, m_name, isShared(), eviction);
+   if(allowed()){
+      ptr.addEntry(addr, pos, getCycle(), m_name, false, isShared());
+      if(*eviction)
+         ptr.addEntry(*evict_addr, pos, getCycle(), m_name, true, isShared());
    }
       
    if (m_fault_injector) {
@@ -222,12 +222,4 @@ Cache::updateHits(Core::mem_op_t mem_op_type, UInt64 hits)
       m_num_accesses += hits;
       m_num_hits += hits;
    }
-}
-
-void 
-Cache::logAndClear(UInt64 epoc){
-   auto ptr = Sim()->getCbTracker();
-   if(!allowed())
-      return;
-   ptr->logAndClear(m_name,getCycle(),epoc);
 }

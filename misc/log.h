@@ -34,15 +34,17 @@ class Log
       };
 
       enum LogFileName{
-         S=0,
-         C1,
-         C2,
-         C3,
-         C4,
+         S=-1,
+         Shared,
+         C0,C1,C2,C3,C4,C5,C6,C7,C8,
+         C9,C10,C11,C12,C13,C14,
+         C15,C16,C17,C18,C19,C20,
+         C21,C22,C23,C24,C25,C26,
+         C27,C28,C29,C30,
          E,
       };
 
-      char* logFiles[3]={"c1", "c2", "c3"};
+      char* logFiles[31]={"shared", "c0", "c1", "c2", "c3", "c4"};
       std::map<LogFileName, FILE*> logFileObject;
 
       void log(ErrorState err, const char *source_file, SInt32 source_line, const char* format, ...);
@@ -54,7 +56,7 @@ class Log
       String getModule(const char *filename);
 
       char* getFileName(LogFileName lf){
-         return logFiles[lf-1];
+         return logFiles[lf+1];
       }
 
    private:

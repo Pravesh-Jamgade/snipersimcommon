@@ -78,7 +78,7 @@ class Cache : public CacheBase
       void disable() { m_enabled = false; }
 
       UInt64 getCycle();
-      void logAndClear(UInt64 epoc=0);
+      
       String logCache();
       bool allowed(){
             if(m_name == logCache())

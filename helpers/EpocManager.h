@@ -17,11 +17,14 @@ namespace EpocManagerSpace
         }
         UInt64 getEpoc(){return number;}
         bool IsEpocEnded(UInt64 cycle){
-            if(cycle%epocLength==0 && prev != cycle){
-                prev=cycle;
-                return true;
+            UInt64 mod = cycle%epocLength;
+            bool status=false;
+            if(prev>mod){
+                number++;
+                status=true;
             }
-            return false;
+            prev=mod;
+            return status;
         }
     };
 }
