@@ -70,3 +70,7 @@ CacheSetNMRU::updateReplacementIndex(UInt32 accessed_index)
 bool CacheSetNMRU::getPos(UInt32 index){
     return 1;
 }
+
+bool CacheSetNMRU::isItDeadBlock(int lineIndex){
+   return 0;//:TODO
+}

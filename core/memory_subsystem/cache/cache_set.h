@@ -60,6 +60,8 @@ class CacheSet
       virtual UInt32 getReplacementIndex(CacheCntlr *cntlr) = 0;
       virtual void updateReplacementIndex(UInt32) = 0;
       virtual bool getPos(UInt32 index) = 0;
+      virtual bool isItDeadBlock(int lineIndex)=0;
+      UInt64 countDeadBlocks();
 
       bool isValidReplacement(UInt32 index);
 };

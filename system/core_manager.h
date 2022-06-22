@@ -58,6 +58,7 @@ class CoreManager
 
       std::shared_ptr<DeadBlockAnalysisSpace::CacheBlockTracker> sharedCbTracker;
       std::shared_ptr<EpocManagerSpace::EpocManager> sharedEpocManager;
+      std::vector<Core*> getAllCores(){return m_cores;}
     
    private:
 

@@ -14,6 +14,8 @@ class CacheSetRandom : public CacheSet
       UInt32 getReplacementIndex(CacheCntlr *cntlr, int& pos);
       void updateReplacementIndex(UInt32 accessed_index);
       virtual bool getPos(UInt32 index);
+      virtual bool isItDeadBlock(int lineIndex);
+
 
    private:
       Random m_rand;

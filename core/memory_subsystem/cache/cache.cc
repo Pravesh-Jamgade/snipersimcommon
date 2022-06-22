@@ -30,7 +30,9 @@ Cache::Cache(
    m_cache_type(cache_type),
    m_fault_injector(fault_injector)
 {
+   this->count_dead_blocks = 0;
    this->shared = shared;
+   this->loggedByOtherCore = false;
    this->core_id = core_id;
    m_set_info = CacheSet::createCacheSetInfo(name, cfgname, core_id, replacement_policy, m_associativity);
    m_sets = new CacheSet*[m_num_sets];
@@ -121,13 +123,12 @@ Cache::accessSingleLine(IntPtr addr, access_t access_type,
    if (cache_block_info == NULL)
       return NULL;
 
-   Core* core = Sim()->getCoreManager()->getCurrentCore();
-   auto ptr = core->getCBHelper();
+   // Core* core = Sim()->getCoreManager()->getCurrentCore();
+   // auto ptr = core->getCBHelper();
 
-   if(allowed()){
-      bool pos = set->getPos(line_index);
-      ptr.addEntry(addr, pos, getCycle(), m_name, false, isShared());
-   }
+   // if(allowed()){
+   //    ptr.addEntry(addr, pos, getCycle(), m_name, false, isShared());
+   // }
       
    if (access_type == LOAD)
    {
@@ -222,4 +223,33 @@ Cache::updateHits(Core::mem_op_t mem_op_type, UInt64 hits)
       m_num_accesses += hits;
       m_num_hits += hits;
    }
+}
+
+
+void
+Cache::logAndClear(UInt64 epoc, UInt64 numShCores){
+   if(!allowed())
+      return;
+   for(int i=0; i< m_num_sets; i++){
+     CacheSet* cset = m_sets[i];
+     count_dead_blocks += cset->countDeadBlocks();
+   }
+   int coreid = Sim()->getCoreManager()->getCurrentCore()->getId();
+   if(numShCores>1){
+      _LOG_CUSTOM_LOGGER(Log::Warning, static_cast<Log::LogFileName>(-1), "%ld,%ld,%d,%s\n", 
+         epoc,
+         count_dead_blocks,
+         coreid,
+         m_name.c_str()
+      );
+   }
+   else{
+      _LOG_CUSTOM_LOGGER(Log::Warning, static_cast<Log::LogFileName>(coreid), "%ld,%ld,%d,%s\n", 
+         epoc,
+         count_dead_blocks,
+         coreid,
+         m_name.c_str()
+      );
+   } 
+   count_dead_blocks=0;
 }

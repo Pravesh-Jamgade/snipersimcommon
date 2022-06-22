@@ -2304,4 +2304,9 @@ CacheCntlr::getNetworkThreadSemaphore()
    return m_network_thread_sem;
 }
 
+void
+CacheCntlr::logAndClear(UInt64 epoc){
+   getCache()->logAndClear(epoc, getNumSharedCores());
+}
+
 }

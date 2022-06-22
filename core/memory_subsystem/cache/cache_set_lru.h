@@ -40,6 +40,7 @@ class CacheSetLRU : public CacheSet
       virtual UInt32 getReplacementIndex(CacheCntlr *cntlr);
       void updateReplacementIndex(UInt32 accessed_index);
       virtual bool getPos(UInt32 index);
+      virtual bool isItDeadBlock(int lineIndex);
 
    protected:
       const UInt8 m_num_attempts;

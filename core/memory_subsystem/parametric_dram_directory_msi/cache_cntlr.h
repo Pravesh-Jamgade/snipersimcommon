@@ -409,6 +409,8 @@ namespace ParametricDramDirectoryMSI
 
 
          String getName(){return name;}
+         void logAndClear(UInt64 epoc);
+         UInt64 getNumSharedCores(){return m_shared_cores;}
          
          friend class CacheCntlrList;
          friend class MemoryManager;

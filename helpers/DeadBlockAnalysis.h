@@ -101,12 +101,12 @@ namespace DeadBlockAnalysisSpace
         }
     };
 
+    typedef std::map<IntPtr, std::shared_ptr<CBUsage>> CacheBlockUsage;
+
     class CacheBlockTracker
     {   
-        typedef std::map<IntPtr, std::shared_ptr<CBUsage>> CacheBlockUsage;
         std::map<String, CacheBlockUsage> cbTracker;
         std::map<String, UInt64> mmp;
-        std::vector<CBUsage*> del;
 
         public:
         CacheBlockTracker(){
@@ -116,8 +116,13 @@ namespace DeadBlockAnalysisSpace
 
         void logAndClear(int core, UInt64 epoc, bool isShared){
             UInt64 dead = 0;
-            
+
+            printf("[*]%ld,",epoc);
+
             for(auto cache : cbTracker){
+
+                printf("%d,", cache.second.size());
+
                 for(auto block : cache.second){
                     std::shared_ptr<CBUsage> cbUsage = block.second;
                     if(!cbUsage->isEvicted() && cbUsage->isLRUBlock()){
@@ -130,9 +135,10 @@ namespace DeadBlockAnalysisSpace
                     else{
                     }
                 }
+               
             }
 
-            printf("epoc=%ld,dead=%ld,shared=%d\n", epoc, dead, isShared);
+            printf("\n");
 
             //cache-CacheBlockUsage
             for(auto cache: cbTracker){
@@ -154,42 +160,43 @@ namespace DeadBlockAnalysisSpace
         }
 
         void addEntry(IntPtr addr, bool pos, UInt64 cycle, String name, bool eviction=false){
-            auto findName = cbTracker.find(name);
-            //cache found
-            if(findName!=cbTracker.end()){
-                //get cache blocks of addresses
-                CacheBlockUsage* cacheBlockusage = &(findName->second);
-                auto findAddr = cacheBlockusage->find(addr);
+            // auto findName = cbTracker.find(name);
+            // //cache found
+            // if(findName!=cbTracker.end()){
+            //     //get cache blocks of addresses
+            //     CacheBlockUsage* cacheBlockusage = &(findName->second);
+            //     auto findAddr = cacheBlockusage->find(addr);
                 
-                std::shared_ptr<CBUsage> cbUsage = nullptr;
-                if(findAddr!=cacheBlockusage->end()){
-                    cbUsage = std::make_shared<CBUsage>();
-                }
-                if(eviction){
-                    if(cbUsage==nullptr)
-                        return;
-                    cbUsage->setEvicted();
-                    return;
-                }
-                else{
-                    if(cbUsage!=nullptr){
-                        cbUsage->increaseCBA();
-                        if(cbUsage->isEvicted()){
-                            cbUsage->resetEvicted();
-                        }
-                    }
-                    else{
-                        cbUsage = std::make_shared<CBUsage>();
-                        cacheBlockusage->insert({addr, cbUsage});
-                    }
-                }
-            }
-            else
-            {
-                CacheBlockUsage tmp;
-                tmp.insert({addr, std::make_shared<CBUsage>()});
-                cbTracker.insert({name, tmp});
-            }
+            //     std::shared_ptr<CBUsage> cbUsage = nullptr;
+            //     if(findAddr!=cacheBlockusage->end()){
+            //         cbUsage = findAddr->second;
+            //     }
+            //     if(eviction){
+            //         if(cbUsage==nullptr)
+            //             return;
+            //         cbUsage->setEvicted();
+            //         return;
+            //     }
+            //     else{
+            //         if(cbUsage!=nullptr){
+            //             cbUsage->increaseCBA();
+            //             if(cbUsage->isEvicted()){
+            //                 cbUsage->resetEvicted();
+            //             }
+            //         }
+            //         else{
+            //             std::shared_ptr<CBUsage> cbUsage = std::make_shared<CBUsage>();
+            //             cacheBlockusage->insert({addr, cbUsage});
+            //         }
+            //     }
+            // }
+            // else
+            // {
+            //     CacheBlockUsage tmp = CacheBlockUsage();
+            //     std::shared_ptr<CBUsage> cbUsage = std::make_shared<CBUsage>();
+            //     tmp.insert({addr, cbUsage});
+            //     cbTracker.insert({name, tmp});
+            // }
         }
     };
 
@@ -206,7 +213,7 @@ namespace DeadBlockAnalysisSpace
         }
 
         void addEntry(IntPtr addr, bool pos, UInt64 cycle, String name, bool eviction=false, bool isItShared=false){
-            if(isItShared){
+            if(!isItShared){
                 local.addEntry(addr,pos,cycle,name,eviction);
             }
             else{

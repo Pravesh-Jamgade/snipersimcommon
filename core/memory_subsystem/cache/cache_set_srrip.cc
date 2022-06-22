@@ -112,3 +112,8 @@ CacheSetSRRIP::updateReplacementIndex(UInt32 accessed_index)
 bool CacheSetSRRIP::getPos(UInt32 index){
     return 1;
 }
+
+bool 
+CacheSetSRRIP::isItDeadBlock(int lineIndex){
+   
+}

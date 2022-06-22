@@ -122,3 +122,7 @@ CacheSetPLRU::updateReplacementIndex(UInt32 accessed_index)
 bool CacheSetPLRU::getPos(UInt32 index){
     return 1;
 }
+
+bool CacheSetPLRU::isItDeadBlock(int lineIndex){
+   return false;
+}

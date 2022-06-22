@@ -93,3 +93,7 @@ CacheSetNRU::updateReplacementIndex(UInt32 accessed_index)
 bool CacheSetNRU::getPos(UInt32 index){
     return 1;
 }
+
+bool CacheSetNRU::isItDeadBlock(int lineIndex){
+   return false;
+}

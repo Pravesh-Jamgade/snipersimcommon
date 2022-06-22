@@ -53,3 +53,7 @@ CacheSetRandom::updateReplacementIndex(UInt32 accessed_index)
 bool CacheSetRandom::getPos(UInt32 index){
     return 1;
 }
+
+bool CacheSetRandom::isItDeadBlock(int lineIndex){
+   return false;//:TODO
+}

@@ -37,6 +37,10 @@ class Cache : public CacheBase
       core_id_t core_id;
       bool shared;
 
+      //update
+      UInt64 count_dead_blocks;
+      bool loggedByOtherCore;
+
       #ifdef ENABLE_SET_USAGE_HIST
       UInt64* m_set_usage_hist;
       #endif
@@ -92,6 +96,13 @@ class Cache : public CacheBase
 
       bool isShared(){
             return shared;
+      }
+
+      void logAndClear(UInt64 epoc, UInt64 numShCores);
+
+      // to avoid any duplicacy 
+      bool isLoggedByOtherCore(){
+           return loggedByOtherCore;
       }
 };
 

@@ -139,3 +139,7 @@ CacheSetInfoLRU::~CacheSetInfoLRU()
 bool CacheSetLRU::getPos(UInt32 index){
    return m_lru_bits[index] > m_set_info->getAssociativity()/2; 
 }
+
+bool CacheSetLRU::isItDeadBlock(int lineIndex){
+   return getPos(lineIndex);//true: lru, false:mru
+}

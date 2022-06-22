@@ -38,3 +38,6 @@ CacheSetRoundRobin::updateReplacementIndex(UInt32 accessed_index)
 bool CacheSetRoundRobin::getPos(UInt32 index){
     return 1;
 }
+bool CacheSetRoundRobin::isItDeadBlock(int lineIndex){
+   return false;//make changes here :TODO
+}

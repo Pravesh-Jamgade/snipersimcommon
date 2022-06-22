@@ -245,3 +245,13 @@ bool CacheSet::isValidReplacement(UInt32 index)
       return true;
    }
 }
+
+UInt64 CacheSet::countDeadBlocks(){
+   UInt64 count=0;
+   for(int i=0; i< m_associativity; i++){
+      bool status = isItDeadBlock(i);
+       if(status)
+         count++;
+   }
+   return count;
+}

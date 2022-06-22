@@ -68,3 +68,7 @@ CacheSetMRU::updateReplacementIndex(UInt32 accessed_index)
 bool CacheSetMRU::getPos(UInt32 index){
    return m_lru_bits[index]<m_associativity/2;
 }
+
+bool CacheSetMRU::isItDeadBlock(int lineIndex){
+
+}
