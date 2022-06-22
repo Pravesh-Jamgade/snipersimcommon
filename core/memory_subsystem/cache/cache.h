@@ -40,6 +40,8 @@ class Cache : public CacheBase
       //update
       UInt64 count_dead_blocks;
       bool loggedByOtherCore;
+      double avg_dead_blocks_per_set;
+      bool addFirstLine;
 
       #ifdef ENABLE_SET_USAGE_HIST
       UInt64* m_set_usage_hist;

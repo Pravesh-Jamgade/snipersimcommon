@@ -34,12 +34,16 @@ Cache::Cache(
    this->shared = shared;
    this->loggedByOtherCore = false;
    this->core_id = core_id;
+   this->addFirstLine = true;
    m_set_info = CacheSet::createCacheSetInfo(name, cfgname, core_id, replacement_policy, m_associativity);
    m_sets = new CacheSet*[m_num_sets];
    for (UInt32 i = 0; i < m_num_sets; i++)
    {
       m_sets[i] = CacheSet::createCacheSet(cfgname, core_id, replacement_policy, m_cache_type, m_associativity, m_blocksize, m_set_info);
    }
+
+   printf("**** core=%d, cache=%s, #blocks=%d, #associativity=%d ****\n", core_id, m_name.c_str(), associativity*num_sets, associativity);
+   avg_dead_blocks_per_set=0;
 
    #ifdef ENABLE_SET_USAGE_HIST
    m_set_usage_hist = new UInt64[m_num_sets];
@@ -234,22 +238,27 @@ Cache::logAndClear(UInt64 epoc, UInt64 numShCores){
      CacheSet* cset = m_sets[i];
      count_dead_blocks += cset->countDeadBlocks();
    }
+   avg_dead_blocks_per_set = count_dead_blocks/m_num_sets;
+
    int coreid = Sim()->getCoreManager()->getCurrentCore()->getId();
+   int fileId = coreid;
+
    if(numShCores>1){
-      _LOG_CUSTOM_LOGGER(Log::Warning, static_cast<Log::LogFileName>(-1), "%ld,%ld,%d,%s\n", 
-         epoc,
-         count_dead_blocks,
-         coreid,
-         m_name.c_str()
-      );
+      fileId=-1;
    }
-   else{
-      _LOG_CUSTOM_LOGGER(Log::Warning, static_cast<Log::LogFileName>(coreid), "%ld,%ld,%d,%s\n", 
-         epoc,
-         count_dead_blocks,
-         coreid,
-         m_name.c_str()
-      );
-   } 
+
+   if(addFirstLine){
+      addFirstLine=false;
+      _LOG_CUSTOM_LOGGER(Log::Warning, static_cast<Log::LogFileName>(fileId), "epoc,dbPerCache,avgDbPerSet,cache\n");
+   }
+
+   _LOG_CUSTOM_LOGGER(Log::Warning, static_cast<Log::LogFileName>(fileId), "%ld,%ld,%f,%s\n", 
+      epoc,
+      count_dead_blocks,
+      avg_dead_blocks_per_set,
+      m_name.c_str()
+   );
+   
    count_dead_blocks=0;
+   avg_dead_blocks_per_set=0;
 }
