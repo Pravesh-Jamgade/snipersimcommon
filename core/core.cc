@@ -16,6 +16,7 @@
 #include "stats.h"
 #include "topology_info.h"
 #include "cheetah_manager.h"
+#include "dvfs_manager.h"
 
 #include "PCPredictor.h"
 #include "cache_helper.h"
@@ -66,8 +67,11 @@ Lock Core::m_global_core_lock;
 UInt64 Core::g_instructions_hpi_global = 0;
 UInt64 Core::g_instructions_hpi_global_callback = 0;
 
-Core::Core(SInt32 id, std::shared_ptr<cache_helper::CacheHelper> cacheHelper, 
-   std::shared_ptr<PCPredictorSpace::PCStatHelper> pcStatHelper, std::shared_ptr<Helper::Counter> epocCounter)
+Core::Core(SInt32 id, 
+   std::shared_ptr<cache_helper::CacheHelper> cacheHelper, 
+   std::shared_ptr<PCPredictorSpace::PCStatHelper> pcStatHelper, 
+   std::shared_ptr<Helper::Counter> epocCounter
+)
    : m_core_id(id)
    , m_dvfs_domain(Sim()->getDvfsManager()->getCoreDomain(id))
    , m_thread(NULL)
