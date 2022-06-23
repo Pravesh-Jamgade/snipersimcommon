@@ -383,9 +383,11 @@ void Log::log(Log::LogFileName logFileName, const char *format, ...)// Log::LogS
    //    return ;
    core_id_t core_id;
    bool sim_thread;
-   // discoverCore(&core_id, &sim_thread);
+   discoverCore(&core_id, &sim_thread);
 
    FILE *file;
+   Lock* lock = nullptr;
+   lock = &_coreLocks[core_id];
 
    // getFile(-1, sim_thread, &file, &lock);
    assert(core_id < _coreCount);
@@ -416,11 +418,11 @@ void Log::log(Log::LogFileName logFileName, const char *format, ...)// Log::LogS
    p += vsprintf(p, format, args);
    va_end(args);
 
-   // lock->acquire();
+   lock->acquire();
    fputs(message, file);
    fflush(file);
 
-   // lock->release();
+   lock->release();
 
 }
 

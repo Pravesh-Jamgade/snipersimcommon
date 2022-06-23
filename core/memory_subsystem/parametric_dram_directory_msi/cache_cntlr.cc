@@ -2306,6 +2306,7 @@ CacheCntlr::getNetworkThreadSemaphore()
 
 void
 CacheCntlr::logAndClear(UInt64 epoc){
+   ScopedLock sl(getLock());
    getCache()->logAndClear(epoc, getNumSharedCores());
 }
 

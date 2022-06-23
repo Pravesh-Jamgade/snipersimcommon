@@ -238,13 +238,14 @@ Cache::logAndClear(UInt64 epoc, UInt64 numShCores){
      CacheSet* cset = m_sets[i];
      count_dead_blocks += cset->countDeadBlocks();
    }
-   avg_dead_blocks_per_set = count_dead_blocks/m_num_sets;
+   avg_dead_blocks_per_set = (count_dead_blocks/(m_num_sets*m_associativity)) * 100;
 
    int coreid = Sim()->getCoreManager()->getCurrentCore()->getId();
    int fileId = coreid;
 
    if(numShCores>1){
       fileId=-1;
+      _LOG_CUSTOM_LOGGER(Log::Warning, Log::DBA, "%d=%d\n",numShCores,this->shared);
    }
 
    if(addFirstLine){
