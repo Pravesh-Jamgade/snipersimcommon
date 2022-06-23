@@ -150,7 +150,7 @@ namespace PCPredictorSpace
         static void clearLPTable(){
             // copyTmpAllLevelLP.clear();
             // std::copy(tmpAllLevelLP.begin(), tmpAllLevelLP.end(), copyTmpAllLevelLP.begin());
-            // tmpAllLevelLP.clear();
+            tmpAllLevelLP.clear();
         }
         static int  getTopPCcount(){
             return tmpAllLevelLP.size();
