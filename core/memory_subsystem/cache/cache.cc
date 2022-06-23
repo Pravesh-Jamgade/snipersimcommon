@@ -238,7 +238,8 @@ Cache::logAndClear(UInt64 epoc, UInt64 numShCores){
      CacheSet* cset = m_sets[i];
      count_dead_blocks += cset->countDeadBlocks();
    }
-   avg_dead_blocks_per_set = (count_dead_blocks/(m_num_sets*m_associativity)) * 100;
+   UInt64 totalBlocks = m_num_sets*m_associativity;
+   avg_dead_blocks_per_set = ((double)count_dead_blocks/(double)totalBlocks) * 100;
 
    int coreid = Sim()->getCoreManager()->getCurrentCore()->getId();
    int fileId = coreid;
