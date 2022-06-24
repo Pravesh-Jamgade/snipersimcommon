@@ -319,7 +319,8 @@ namespace PCPredictorSpace
                     }
                     return false;
                 }
-                
+                if(LPHelper::tmpAllLevelLP.size()==0)
+                    return false;
                 // if prediction found then only do missmatch bookkepping
                 LevelPredictor *prediction = new LevelPredictor();
                 if(LPHelper::tmpAllLevelLP.find(pc) != LPHelper::tmpAllLevelLP.end()){

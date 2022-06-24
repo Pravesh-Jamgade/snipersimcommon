@@ -82,8 +82,7 @@ class Core
 
       static const char * CoreStateString(State state);
 
-      Core(SInt32 id, std::shared_ptr<cache_helper::CacheHelper> cacheHelper, 
-         std::shared_ptr<PCPredictorSpace::PCStatHelper> pcStathelper, std::shared_ptr<Helper::Counter> epocCounter);
+      Core(SInt32 id, std::shared_ptr<cache_helper::CacheHelper> cacheHelper, std::shared_ptr<Helper::Counter> epocCounter);
       ~Core();
 
       // Query and update branch predictor, return true on mispredict

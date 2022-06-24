@@ -458,11 +458,11 @@ void Log::log(Log::LogDst logDst, const char *format, ...)// Log::LogState logSt
    p += vsprintf(p, format, args);
    va_end(args);
 
-   // lock->acquire();
+   lock->acquire();
    fputs(message, file);
    fflush(file);
 
-   // lock->release();
+   lock->release();
 
 }
 

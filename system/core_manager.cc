@@ -36,8 +36,7 @@ CoreManager::CoreManager()
    
    for (UInt32 i = 0; i < Config::getSingleton()->getTotalCores(); i++)
    {
-      std::shared_ptr<PCPredictorSpace::PCStatHelper> pcStatHelper = std::make_shared<PCPredictorSpace::PCStatHelper>(i);
-      Core* core = new Core(i,cacheHelper, pcStatHelper, epocCounter);//[update]
+      Core* core = new Core(i,cacheHelper, epocCounter);//[update]
       m_cores.push_back(core);
    }
 

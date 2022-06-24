@@ -6,7 +6,7 @@ int LPHelper::lp_unlock=2;
 std::unordered_map<IntPtr, LevelPredictor> LPHelper::tmpAllLevelLP;
 
 void PCStatHelper::LPLookup(IntPtr pc){
-    if(LPHelper::isLockEnabled()!=1)
+    if(LPHelper::isLockEnabled()!=1 || LPHelper::tmpAllLevelLP.size()==0)
         return;
     // increase count if pc predicition found
     auto findPred = LPHelper::tmpAllLevelLP.find(pc);
