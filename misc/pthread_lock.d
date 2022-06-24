@@ -1,6 +1,4 @@
-/home/user/station/version/sniper/common/misc/pthread_lock.o /home/user/station/version/sniper/common/misc/pthread_lock.d: $(wildcard \
- /home/user/station/version/sniper/common/misc/pthread_lock.cc \
- /home/user/station/version/sniper/common/misc/pthread_lock.h \
- /home/user/station/version/sniper/common/misc/lock.h \
- /home/user/station/version/sniper/common/misc/itostr.h \
- /home/user/station/version/sniper/common/misc/fixed_types.h)
+/mnt/B/sniper/common/misc/pthread_lock.o /mnt/B/sniper/common/misc/pthread_lock.d: $(wildcard /mnt/B/sniper/common/misc/pthread_lock.cc \
+ /mnt/B/sniper/common/misc/pthread_lock.h \
+ /mnt/B/sniper/common/misc/lock.h /mnt/B/sniper/common/misc/itostr.h \
+ /mnt/B/sniper/common/misc/fixed_types.h)
