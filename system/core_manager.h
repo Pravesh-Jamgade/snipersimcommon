@@ -56,7 +56,6 @@ class CoreManager
       bool amiCoreThread();
       bool amiSimThread();
 
-      std::shared_ptr<DeadBlockAnalysisSpace::CacheBlockTracker> sharedCbTracker;
       std::shared_ptr<EpocManagerSpace::EpocManager> sharedEpocManager;
       std::vector<Core*> getAllCores(){return m_cores;}
     

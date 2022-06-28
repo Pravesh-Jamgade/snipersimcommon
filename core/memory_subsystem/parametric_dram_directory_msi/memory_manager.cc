@@ -436,14 +436,6 @@ MemoryManager::coreInitiateMemoryAccess(
    else if (mem_component == MemComponent::L1_DCACHE && m_dtlb)
       accessTLB(m_dtlb, address, false, modeled);
 
-   if(getCore()->getShEpocMngr()->IsEpocEnded(getCore()->getPerformanceModel()->getCycleCount())){
-      for(int i = MemComponent::FIRST_LEVEL_CACHE; i <= (UInt32)m_last_level_cache; ++i)
-      {
-         m_cache_cntlrs[(MemComponent::component_t)i]->logAndClear(getCore()->getShEpocMngr()->getEpoc());
-      }
-     // getCore()->getCBHelper().logAndClear(getCore()->getId(), getCore()->getShEpocMngr()->getEpoc());
-   }
-
    HitWhere::where_t result =  m_cache_cntlrs[mem_component]->processMemOpFromCore(
          lock_signal,
          mem_op_type,

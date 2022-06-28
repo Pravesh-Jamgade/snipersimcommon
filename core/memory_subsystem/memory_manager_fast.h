@@ -58,6 +58,8 @@ class MemoryManagerFast : public MemoryManagerBase
 
       SubsecondTime getL1HitLatency(void) { return SubsecondTime::Zero(); }
       void addL1Hits(bool icache, Core::mem_op_t mem_op_type, UInt64 hits) {}
+
+      void logAndClear(int coreid){}
 };
 
 #endif // __MEMORY_MANAGER_FAST_H

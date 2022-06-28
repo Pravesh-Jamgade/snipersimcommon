@@ -66,7 +66,6 @@ UInt64 Core::g_instructions_hpi_global = 0;
 UInt64 Core::g_instructions_hpi_global_callback = 0;
 
 Core::Core(SInt32 id, 
-   std::shared_ptr<DeadBlockAnalysisSpace::CacheBlockTracker> shCbTracker,
    std::shared_ptr<EpocManagerSpace::EpocManager> shEpocManager)
    : m_core_id(id)
    , m_dvfs_domain(Sim()->getDvfsManager()->getCoreDomain(id))
@@ -99,7 +98,6 @@ Core::Core(SInt32 id,
 
    m_shmem_perf_model = new ShmemPerfModel();
 
-   cbHelper = DeadBlockAnalysisSpace::CBHelper(shCbTracker);
    this->shEpocManager = shEpocManager;
 
    LOG_PRINT("instantiated memory manager model");

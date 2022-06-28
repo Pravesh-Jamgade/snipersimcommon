@@ -102,6 +102,8 @@ class MemoryManagerBase
             Core* core,
             Network* network,
             ShmemPerfModel* shmem_perf_model);
+      
+      virtual void logAndClear(int coreid) = 0;
 };
 
 #endif /* __MEMORY_MANAGER_BASE_H__ */

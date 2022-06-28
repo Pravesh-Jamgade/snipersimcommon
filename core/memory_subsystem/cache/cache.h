@@ -18,7 +18,7 @@
 // Define to enable the set usage histogram
 //#define ENABLE_SET_USAGE_HIST
 
-class Cache : public CacheBase
+class Cache : public CacheBase, DeadBlockAnalysisSpace::BlockInfo
 {
    private:
       bool m_enabled;
@@ -39,9 +39,9 @@ class Cache : public CacheBase
 
       //update
       UInt64 count_dead_blocks;
+      UInt64 totalBlocks, total_evicts;
       bool loggedByOtherCore;
       double avg_dead_blocks_per_set;
-      bool addFirstLine;
 
       #ifdef ENABLE_SET_USAGE_HIST
       UInt64* m_set_usage_hist;
@@ -100,11 +100,17 @@ class Cache : public CacheBase
             return shared;
       }
 
-      void logAndClear(UInt64 epoc, UInt64 numShCores);
+      void logAndClear(int coreid);
 
       // to avoid any duplicacy 
       bool isLoggedByOtherCore(){
            return loggedByOtherCore;
+      }
+
+      void beforeChecks(IntPtr addr){// access (r/w), insert (new insert)
+            if(allowed()){
+                  eraseEntryIffound(addr);
+            }
       }
 };
 

@@ -30,11 +30,12 @@ Cache::Cache(
    m_cache_type(cache_type),
    m_fault_injector(fault_injector)
 {
+   this->total_evicts = 0;
+   this->totalBlocks = 0;
    this->count_dead_blocks = 0;
    this->shared = shared;
    this->loggedByOtherCore = false;
    this->core_id = core_id;
-   this->addFirstLine = true;
    m_set_info = CacheSet::createCacheSetInfo(name, cfgname, core_id, replacement_policy, m_associativity);
    m_sets = new CacheSet*[m_num_sets];
    for (UInt32 i = 0; i < m_num_sets; i++)
@@ -42,9 +43,7 @@ Cache::Cache(
       m_sets[i] = CacheSet::createCacheSet(cfgname, core_id, replacement_policy, m_cache_type, m_associativity, m_blocksize, m_set_info);
    }
 
-   printf("**** core=%d, cache=%s, #blocks=%d, #associativity=%d ****\n", core_id, m_name.c_str(), associativity*num_sets, associativity);
-   avg_dead_blocks_per_set=0;
-
+   printf("[INFO] cache=%s, #blocks=%ld\n", m_name.c_str(), this->totalBlocks);
    #ifdef ENABLE_SET_USAGE_HIST
    m_set_usage_hist = new UInt64[m_num_sets];
    for (UInt32 i = 0; i < m_num_sets; i++)
@@ -129,10 +128,6 @@ Cache::accessSingleLine(IntPtr addr, access_t access_type,
 
    // Core* core = Sim()->getCoreManager()->getCurrentCore();
    // auto ptr = core->getCBHelper();
-
-   // if(allowed()){
-   //    ptr.addEntry(addr, pos, getCycle(), m_name, false, isShared());
-   // }
       
    if (access_type == LOAD)
    {
@@ -172,14 +167,15 @@ Cache::insertSingleLine(IntPtr addr, Byte* fill_buff,
    *evict_addr = tagToAddress(evict_block_info->getTag());
 
    Core* core = Sim()->getCoreManager()->getCurrentCore();
-   auto ptr = core->getCBHelper();
 
-   if(allowed()){
-      ptr.addEntry(addr, pos, getCycle(), m_name, false, isShared());
-      if(*eviction)
-         ptr.addEntry(*evict_addr, pos, getCycle(), m_name, true, isShared());
+   addToUniqueList(addr);
+
+   totalBlocks+=1;
+   if(*eviction){
+      addEvicted(*evict_addr);
+      total_evicts++;
    }
-      
+
    if (m_fault_injector) {
       // NOTE: no callback is generated for read of evicted data
       UInt32 line_index = -1;
@@ -231,36 +227,54 @@ Cache::updateHits(Core::mem_op_t mem_op_type, UInt64 hits)
 
 
 void
-Cache::logAndClear(UInt64 epoc, UInt64 numShCores){
+Cache::logAndClear(int coreid){
    if(!allowed())
       return;
-   for(int i=0; i< m_num_sets; i++){
-     CacheSet* cset = m_sets[i];
-     count_dead_blocks += cset->countDeadBlocks();
-   }
-   UInt64 totalBlocks = m_num_sets*m_associativity;
-   avg_dead_blocks_per_set = ((double)count_dead_blocks/(double)totalBlocks) * 100;
-
-   int coreid = Sim()->getCoreManager()->getCurrentCore()->getId();
+   
    int fileId = coreid;
 
-   if(numShCores>1){
+   if(shared){
       fileId=-1;
-      _LOG_CUSTOM_LOGGER(Log::Warning, Log::DBA, "%d=%d\n",numShCores,this->shared);
    }
 
-   if(addFirstLine){
-      addFirstLine=false;
-      _LOG_CUSTOM_LOGGER(Log::Warning, static_cast<Log::LogFileName>(fileId), "epoc,dbPerCache,avgDbPerSet,cache\n");
-   }
+   UInt64 deadBlocks = countEvictList();//never reused
+   UInt64 uniqueInserts = countUniqueList();
 
-   _LOG_CUSTOM_LOGGER(Log::Warning, static_cast<Log::LogFileName>(fileId), "%ld,%ld,%f,%s\n", 
-      epoc,
-      count_dead_blocks,
-      avg_dead_blocks_per_set,
-      m_name.c_str()
+   _LOG_CUSTOM_LOGGER(Log::Warning, static_cast<Log::LogFileName>(fileId), "%ld,%ld,%ld,%s,%d\n", 
+      deadBlocks,
+      total_evicts,
+      uniqueInserts,
+      m_name.c_str(),
+      coreid
    );
+
+   // for(int i=0; i< m_num_sets; i++){
+   //   CacheSet* cset = m_sets[i];
+   //   count_dead_blocks += cset->countDeadBlocks();
+   // }
+   // UInt64 totalBlocks = m_num_sets*m_associativity;
+   // avg_dead_blocks_per_set = ((double)count_dead_blocks/(double)totalBlocks) * 100;
+
+   // int coreid = Sim()->getCoreManager()->getCurrentCore()->getId();
+   // int fileId = coreid;
+
+   // if(numShCores>1){
+   //    fileId=-1;
+   //    _LOG_CUSTOM_LOGGER(Log::Warning, Log::DBA, "%d=%d\n",numShCores,this->shared);
+   // }
+
+   // if(addFirstLine){
+   //    addFirstLine=false;
+   //    _LOG_CUSTOM_LOGGER(Log::Warning, static_cast<Log::LogFileName>(fileId), "epoc,dbPerCache,avgDbPerSet,cache\n");
+   // }
+
+   // _LOG_CUSTOM_LOGGER(Log::Warning, static_cast<Log::LogFileName>(fileId), "%ld,%ld,%f,%s\n", 
+   //    epoc,
+   //    count_dead_blocks,
+   //    avg_dead_blocks_per_set,
+   //    m_name.c_str()
+   // );
    
-   count_dead_blocks=0;
-   avg_dead_blocks_per_set=0;
+   // count_dead_blocks=0;
+   // avg_dead_blocks_per_set=0;
 }

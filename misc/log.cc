@@ -418,11 +418,11 @@ void Log::log(Log::LogFileName logFileName, const char *format, ...)// Log::LogS
    p += vsprintf(p, format, args);
    va_end(args);
 
-   lock->acquire();
+   // lock->acquire();
    fputs(message, file);
    fflush(file);
 
-   lock->release();
+   // lock->release();
 
 }
 

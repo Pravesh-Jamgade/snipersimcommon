@@ -19,6 +19,7 @@
 #include "DeadBlockAnalysis.h"
 #include "simulator.h"
 #include "config.hpp"
+#include "memory_manager.h"
 
 CoreManager::CoreManager()
       : m_core_tls(TLS::create())
@@ -30,17 +31,23 @@ CoreManager::CoreManager()
    UInt64 epocLength = Sim()->getCfg()->getInt("param/epoc");
    printf("[XXXXXXXXXXX]epoc length=%ld\n", epocLength);
    sharedEpocManager = std::make_shared<EpocManagerSpace::EpocManager>(epocLength);
-   sharedCbTracker = std::make_shared<DeadBlockAnalysisSpace::CacheBlockTracker>();
    for (UInt32 i = 0; i < Config::getSingleton()->getTotalCores(); i++)
    {
-      m_cores.push_back(new Core(i, sharedCbTracker, sharedEpocManager));
+      _LOG_CUSTOM_LOGGER(Log::Warning, static_cast<Log::LogFileName>(i), "dead,evicts,inserts,cache,core\n");
+      m_cores.push_back(new Core(i, sharedEpocManager));
    }
+
+   _LOG_CUSTOM_LOGGER(Log::Warning, static_cast<Log::LogFileName>(-1), "dead,evicts,inserts,cache,core\n");
 
    LOG_PRINT("Finished CoreManager Constructor.");
 }
 
 CoreManager::~CoreManager()
 {
+   for (std::vector<Core *>::iterator i = m_cores.begin(); i != m_cores.end(); i++)
+   {
+      (*i)->getMemoryManager()->logAndClear((*i)->getId());
+   }
    for (std::vector<Core *>::iterator i = m_cores.begin(); i != m_cores.end(); i++)
       delete *i;
 

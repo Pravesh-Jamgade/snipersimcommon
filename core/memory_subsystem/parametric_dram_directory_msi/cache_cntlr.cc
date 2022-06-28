@@ -167,7 +167,7 @@ CacheCntlr::CacheCntlr(MemComponent::component_t mem_component,
    {
       /* Master cache */
       m_master = new CacheMasterCntlr(name, core_id, cache_params.outstanding_misses);
-      m_master->m_cache = new Cache(isShared(core_id), name,
+      m_master->m_cache = new Cache(isItSharedCache(), name,
             "perf_model/" + cache_params.configName,
             m_core_id,
             cache_params.num_sets,
@@ -449,6 +449,12 @@ MYLOG("L1 hit");
 
    } else {
       /* cache miss: either wrong coherency state or not present in the cache */
+
+      if(count){
+         //upon miss check evict list
+         m_master->m_cache->beforeChecks(ca_address);
+      }
+
 MYLOG("L1 miss");
       if (!m_passthrough)
          getMemoryManager()->incrElapsedTime(m_mem_component, CachePerfModel::ACCESS_CACHE_TAGS, ShmemPerfModel::_USER_THREAD);
@@ -924,6 +930,11 @@ CacheCntlr::processShmemReqFromPrevCache(CacheCntlr* requester, Core::mem_op_t m
    }
    else // !cache_hit: either data is not here, or operation on data is not permitted
    {
+      if(count){
+         //upon miss check evict list
+         m_master->m_cache->beforeChecks(address);
+      }
+      
       // Increment shared mem perf model cycle counts
       if (modeled)
          getMemoryManager()->incrElapsedTime(m_mem_component, CachePerfModel::ACCESS_CACHE_TAGS, ShmemPerfModel::_USER_THREAD);
@@ -2302,12 +2313,6 @@ Semaphore*
 CacheCntlr::getNetworkThreadSemaphore()
 {
    return m_network_thread_sem;
-}
-
-void
-CacheCntlr::logAndClear(UInt64 epoc){
-   ScopedLock sl(getLock());
-   getCache()->logAndClear(epoc, getNumSharedCores());
 }
 
 }

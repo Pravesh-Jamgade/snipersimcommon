@@ -88,7 +88,6 @@ class Core
       static const char * CoreStateString(State state);
 
       Core(SInt32 id, 
-      std::shared_ptr<DeadBlockAnalysisSpace::CacheBlockTracker> shCbTracker,
       std::shared_ptr<EpocManagerSpace::EpocManager> shEpocManager);
       ~Core();
 
@@ -144,9 +143,6 @@ class Core
 
       std::shared_ptr<EpocManagerSpace::EpocManager> shEpocManager;
       std::shared_ptr<EpocManagerSpace::EpocManager> getShEpocMngr(){return shEpocManager;}
-
-      DeadBlockAnalysisSpace::CBHelper cbHelper;// local and shared structure for deadblock statistics
-      DeadBlockAnalysisSpace::CBHelper getCBHelper(){return cbHelper;}
 
    private:
       core_id_t m_core_id;

@@ -68,7 +68,6 @@ namespace ParametricDramDirectoryMSI
 
          //update
          std::shared_ptr<EpocManagerSpace::EpocManager> epocManager;
-         DeadBlockAnalysisSpace::CBHelper cbHelper;
 
       public:
          MemoryManager(Core* core, Network* network, ShmemPerfModel* shmem_perf_model);
@@ -117,6 +116,12 @@ namespace ParametricDramDirectoryMSI
 
          UInt32 getModeledLength(const void* pkt_data)
          { return ((PrL1PrL2DramDirectoryMSI::ShmemMsg*) pkt_data)->getModeledLength(); }
+
+         void logAndClear(int coreid){
+            for(UInt32 i = MemComponent::FIRST_LEVEL_CACHE; i <= (UInt32)m_last_level_cache; ++i){
+               m_cache_cntlrs[i]->logAndClear(coreid);
+            }
+         }
 
          SubsecondTime getCost(MemComponent::component_t mem_component, CachePerfModel::CacheAccess_t access_type);
          void incrElapsedTime(SubsecondTime latency, ShmemPerfModel::Thread_t thread_num = ShmemPerfModel::NUM_CORE_THREADS);
