@@ -422,8 +422,20 @@ void Log::log(Log::LogDst logDst, const char *format, ...)// Log::LogState logSt
    FILE *file;
    Lock *lock;
 
-   // getFile(-1, sim_thread, &file, &lock);
    assert(core_id < _coreCount);
+
+   if(core_id==INVALID_CORE_ID){
+      lock = &_systemLock;
+   }
+   else{
+      if(sim_thread){
+         lock=&_simLocks[core_id];
+      }
+      else{
+         lock = &_coreLocks[core_id];
+      }
+   }
+
    char filename[256];
    
 
@@ -442,11 +454,11 @@ void Log::log(Log::LogDst logDst, const char *format, ...)// Log::LogState logSt
          break;
       }
    }
-   if(file==NULL and lock==NULL)
-   {
-      printf("break as object is NULL\n");
+   
+   if(lock==nullptr){
+      printf("[LOG] lock=nullptr\n");
    }
-    
+
    int tid = syscall(__NR_gettid);
 
 
@@ -455,14 +467,13 @@ void Log::log(Log::LogDst logDst, const char *format, ...)// Log::LogState logSt
 
    va_list args;
    va_start(args, format);
-   p += vsprintf(p, format, args);
+   vsprintf(p, format, args);
    va_end(args);
 
-   // lock->acquire();
+   lock->acquire();
    fputs(message, file);
-   fflush(file);
-
-   // lock->release();
+   // fflush(file);
+   lock->release();
 
 }
 
