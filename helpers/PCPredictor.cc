@@ -6,7 +6,7 @@ int LPHelper::lp_unlock=2;
 std::unordered_map<IntPtr, LevelPredictor> LPHelper::tmpAllLevelLP;
 
 void PCStatHelper::LPLookup(IntPtr pc){
-    if(LPHelper::isLockEnabled()!=1)
+    if(LPHelper::isLockEnabled()!=1 || LPHelper::tmpAllLevelLP.size()==0)
         return;
     // increase count if pc predicition found
     auto findPred = LPHelper::tmpAllLevelLP.find(pc);
@@ -86,6 +86,9 @@ void PCStatHelper::updateLPTable()
             processEndPerformanceAnalysis(pc.first, pc.second);
         }
     }
+
+    // erasing LPT(x-1) and calculate new one LPT(x)
+    LPHelper::clearLPTable();
 
     // using high access pc for LPT update 
     for(auto high: highpc){
@@ -175,7 +178,7 @@ void PCStatHelper::logLPvsTypeAccess(){
 
 void PCStatHelper::logInit(){
       
-    LPHelper::clearLPTable();
+    // LPHelper::clearLPTable();
     if(LPHelper::getLockStatus() !=1){
         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_LP_VS_TYPE_ACCESS, "epoc,lp,p,fs1,ts1,fns1,tns1,q,fs2,ts2,fns2,tns2,r,fs3,ts3,fns3,tns3,s,core\n");
         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_TOP_PC_ACCESS, "epoc,toppcaccess,toppccount,core\n");

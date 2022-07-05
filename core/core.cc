@@ -69,7 +69,6 @@ UInt64 Core::g_instructions_hpi_global_callback = 0;
 
 Core::Core(SInt32 id, 
    std::shared_ptr<cache_helper::CacheHelper> cacheHelper, 
-   std::shared_ptr<PCPredictorSpace::PCStatHelper> pcStatHelper, 
    std::shared_ptr<Helper::Counter> epocCounter
 )
    : m_core_id(id)
@@ -109,7 +108,7 @@ Core::Core(SInt32 id,
    this->cacheHelper = cacheHelper;
    this->cacheHelper->setOutputDir(Sim()->getConfig()->getOutputDirectory());
 
-   this->pcStatHelper = pcStatHelper;
+   this->pcStatHelper = std::make_shared<PCPredictorSpace::PCStatHelper>(id);
    this->epocCounter = epocCounter;
    
    LOG_PRINT("instantiated memory manager model");
