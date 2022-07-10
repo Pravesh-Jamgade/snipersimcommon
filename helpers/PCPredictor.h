@@ -276,23 +276,6 @@ namespace PCPredictorSpace
             perLevelUniqPC[level].insert(pc);           
         }
 
-        std::vector<MemComponent::component_t> LPPrediction(IntPtr pc){
-            std::vector<MemComponent::component_t> predicted_levels;
-            // LP prediction
-            if(LPHelper::getLockStatus()==1)
-            {
-                auto ptr = LPHelper::tmpAllLevelLP.find(pc);
-                if(ptr!=LPHelper::tmpAllLevelLP.end()){
-                    for(int i=MemComponent::component_t::L1_DCACHE;i<= llc; i++){// (5-3+1)=3 level's of cache
-                        if(ptr->second.canSkipLevel(static_cast<MemComponent::component_t>(i) )){
-                            predicted_levels.push_back(static_cast<MemComponent::component_t>(i));
-                        }
-                    }
-                }
-            }
-            return predicted_levels;
-        }
-
         void addPerEpocPerPCinfo(IntPtr pc, int level){
             if(level>3)// implicitly only caculating traffic at L1D for picking top pc
                 return;
@@ -376,12 +359,6 @@ namespace PCPredictorSpace
                     bool actSkip = lp.canSkipLevel(comp);
                     bool predSkip = prediction->canSkipLevel(comp);
 
-                    // if(comp == llc && predSkip==1){
-                    //     _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_TEMP, "%ld\n", counter);
-                    // }
-
-                    // _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogState::DISABLE, Log::LogDst::DEBUG_PER_EPOC_N_SKIP, "%ld,%d,%d\n", counter,predSkip,actSkip);
-
                     if(actSkip != predSkip){
                         perPCperLevelperEpocLPPerf[pc][i - MemComponent::component_t::L1_DCACHE].increaseMiss();// hazardous
                     }
@@ -395,11 +372,6 @@ namespace PCPredictorSpace
                     {
                         predMatch=true;
                     }
-
-                    // if(actSkip==0){
-                    //     // lets not count miss-match further as actual hit already occured
-                    //     return true;
-                    // }
                 }
                 
                 if(predMatch){
@@ -411,7 +383,6 @@ namespace PCPredictorSpace
         }
 
         void insert(std::unordered_map<IntPtr, LevelPCStat>& tmpAllLevelPCStat, int level, IntPtr pc, bool cache_hit){
-
             auto findPc = tmpAllLevelPCStat.find(pc);
             if(findPc!=tmpAllLevelPCStat.end()){
                
@@ -435,13 +406,9 @@ namespace PCPredictorSpace
         }
 
         void insert2EpocStat(int level, IntPtr pc, bool cache_hit){
-            // if(level<=2){
-            //     return;
-            // }
             countPerLevelAccess(level,cache_hit);
             countPerLevelUniqPC(level,pc);
             insert(tmpAllLevelPCStat, level,pc,cache_hit);            
-            // insert2EpocStat(level-1, pc, false);
         }
 
         void insertEntry(int level, IntPtr pc, bool cache_hit){
@@ -456,7 +423,6 @@ namespace PCPredictorSpace
 
         void updateLPTable();
 
-
         // comparing decision from x-1 and how effective those at x
         void processEndPerformanceAnalysis(IntPtr pc, LevelPredictor levelPred);
         bool interpretMMratio(double ratio);
@@ -466,48 +432,22 @@ namespace PCPredictorSpace
         // lp lookup
         void LPLookup(IntPtr pc);
         // LOGGERS
-
-        // log per epoc total accesses, threshold 
-        void logPerEpocTotalAccess();
-        // log all pc from epoc and their total count
-        void logPerPCTotalCountPerEpoc();
-        // log per level access per epoc
-        void logPerLevelAccessCountPerEpoc();
-        //log per pc per level per epoc access
-        void logPerPCPerLevelAccessCountperEpoc();
-        // dump LP table
-        void logLPTablePerEpoc();
-        // log per pc per level miss ratio for epoc
-        void logPerPCPerLevelMissratioPerEpoc();
-        // per level threshold
-        void logPerLevelPerEpocAccessThreshold();
         // per level unique pc count
         void logPerLevelPCCount();
         // collected at end of x and log at end as well// consider all levels
         void logPerEpocSkiporNotSkipStatus(std::vector<Helper::Message>&msg, IntPtr pc);
-        // collected during x epoc and logged at end of x epoc// donot consider to count the level above actual level where data found
-        void logPerEpocSkiporNotskipWhileEpoc();
-        void logLPPerfPerLevel();
         // top pc vs total pc count
         void logTopVsTotalPC();
         // per level LP access vs total access
         void logPerLevelLPVsTotalLPAccess();
-        // total LP access vs total precise prediction overlapping with actual level
-        void logLPTotalVsPreciseHitCount();
         void logLPTopPCTotalAccessCount();
         void logLPvsTypeAccess();
         // init logging
         void logInit();
 
         // will return epoc based pc stat to log, as well it adds skipable levels;
-        std::vector<Helper::Message> processEpocEndComputation(IntPtr pc, std::unordered_map<IntPtr, LevelPCStat>& mp, UInt64 counter)
+        void processEpocEndComputation(IntPtr pc, std::unordered_map<IntPtr, LevelPCStat>& mp, UInt64 counter)
         {
-            std::vector<Helper::Message> allMsg;
-            
-            // if per pc access is less than threshold then do not consider to add it into LP table as avg aacesses are less
-            // if( perEpocperPCStat[pc].getCount() < getThreshold())
-            //     return allMsg;
-            
             LPHelper::insert(pc);
 
             // insert into LP table per level skip status               
@@ -527,9 +467,7 @@ namespace PCPredictorSpace
                     msg.addLevelSkip();
                 }
 
-                allMsg.push_back(msg);// can be used for logging
             }
-            return allMsg;
         }
     };
 
