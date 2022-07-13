@@ -48,11 +48,11 @@ class MemoryManagerBase
             Core::mem_op_t mem_op_type,
             IntPtr address, UInt32 offset,
             Byte* data_buf, UInt32 data_length,
-            Core::MemModeled modeled) = 0;
+            Core::MemModeled modeled, IntPtr pc=-1) = 0;
       virtual SubsecondTime coreInitiateMemoryAccessFast(
             bool icache,
             Core::mem_op_t mem_op_type,
-            IntPtr address)
+            IntPtr address, IntPtr pc=-1)
       {
          // Emulate fast interface by calling into slow interface
          SubsecondTime initial_time = getCore()->getPerformanceModel()->getElapsedTime();

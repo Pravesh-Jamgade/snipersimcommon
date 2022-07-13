@@ -57,6 +57,8 @@ public:
       if (m_instruction_tracer)
          m_instruction_tracer->traceInstruction(uop, times);
    }
+   
+   UInt64 getCycleCount() { return m_elapsed_time.getCycleCount();}
 
    virtual void barrierEnter() { }
    virtual void barrierExit() { }

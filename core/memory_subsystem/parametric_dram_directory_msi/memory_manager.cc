@@ -14,6 +14,8 @@
 #include "topology_info.h"
 
 #include <algorithm>
+#include "EpocHelper.h"
+#include <memory.h>
 
 #if 0
    extern Lock iolock;
@@ -44,6 +46,8 @@ MemoryManager::MemoryManager(Core* core,
    m_dram_cntlr_present(false),
    m_enabled(false)
 {
+   epocHelper = std::make_shared<EpocHelper>(Sim()->getCfg()->getInt("param/epoc"));
+
    // Read Parameters from the Config file
    std::map<MemComponent::component_t, CacheParameters> cache_parameters;
    std::map<MemComponent::component_t, String> cache_names;
@@ -421,7 +425,7 @@ MemoryManager::coreInitiateMemoryAccess(
       Core::mem_op_t mem_op_type,
       IntPtr address, UInt32 offset,
       Byte* data_buf, UInt32 data_length,
-      Core::MemModeled modeled)
+      Core::MemModeled modeled, IntPtr pc)
 {
    LOG_ASSERT_ERROR(mem_component <= m_last_level_cache,
       "Error: invalid mem_component (%d) for coreInitiateMemoryAccess", mem_component);
@@ -431,13 +435,65 @@ MemoryManager::coreInitiateMemoryAccess(
    else if (mem_component == MemComponent::L1_DCACHE && m_dtlb)
       accessTLB(m_dtlb, address, false, modeled);
 
+   epocHelper->doStatusUpdate(getCore()->getPerformanceModel()->getCycleCount());
+   if(epocHelper->getEpocStatus()){
+
+      if(epocHelper->getEpocCounter()==0){
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_LEVEL_UNI_PC, "epoc,pc1,pc2,pc3,core\n");
+      }
+
+      UInt64 epoc = epocHelper->getEpocCounter();
+
+      String pccount,pcaccess,lpstat;
+      pccount=pcaccess=lpstat=String();
+      lpstat=pcaccess=pccount=itostr(epoc);
+
+      // at the end of epoc compute miss-ratio, set predicition, get top pc
+      std::shared_ptr<EpocData> data;
+      for(int i = MemComponent::FIRST_LEVEL_CACHE; i <= (UInt32)m_last_level_cache; ++i)
+      {
+         data = std::make_shared<EpocData>(epoc);
+         m_cache_cntlrs[(MemComponent::component_t)i]->processEnd(epoc,data);
+         pccount+=","+ itostr(data->top_pc_count);
+         pcaccess+=","+ itostr(data->top_pc_access);
+         lpstat+=","+itostr(data->total_access)+","+itostr(data->coverage)+","+itostr(data->accuracy);
+         data.reset();
+      }
+      pccount+=itostr(getCore()->getId())+"\n";
+      pcaccess+=itostr(getCore()->getId())+"\n";
+      lpstat+=itostr(getCore()->getId())+"\n";
+
+      printf("[X]%s\n[Y]%s\n[Z]%s\n", pccount.c_str(), pcaccess.c_str(), lpstat.c_str());
+
+   //    String pccount,pcaccess,lpstat;
+   //    pccount=pcaccess=lpstat="";
+   //    lpstat=pcaccess=pccount=itostr(epoc);
+
+   //    for(auto data: allLevels){
+   //       pccount+=","+ itostr(data->top_pc_count);
+   //       pcaccess+=","+ itostr(data->top_pc_access);
+   //       lpstat+=","+itostr(data->total_access)+","+itostr(data->coverage)+","+itostr(data->accuracy);
+   //    }
+   //    pccount+=itostr(getCore()->getId())+"\n";
+   //    pcaccess+=itostr(getCore()->getId())+"\n";
+   //    lpstat+=itostr(getCore()->getId())+"\n";
+
+   //    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_1, "%s\n", pccount.c_str());
+   //    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_2, "%s\n", pcaccess.c_str());
+   //    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_3, "%s\n", lpstat.c_str());
+
+   //    for(auto level: allLevels)
+   //       level.reset();
+      
+      epocHelper->reset();//turn off these code block as logging is done for these epoc
+   }
    return m_cache_cntlrs[mem_component]->processMemOpFromCore(
          lock_signal,
          mem_op_type,
          address, offset,
          data_buf, data_length,
          modeled == Core::MEM_MODELED_NONE || modeled == Core::MEM_MODELED_COUNT ? false : true,
-         modeled == Core::MEM_MODELED_NONE ? false : true);
+         modeled == Core::MEM_MODELED_NONE ? false : true, pc);
 }
 
 void

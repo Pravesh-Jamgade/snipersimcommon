@@ -26,12 +26,35 @@ class Log
          Error,
       };
 
+      enum LogState
+      {
+         DISABLE=0,
+         ENABLE=1,
+      };
+
+      enum LogDst
+      {
+         AddressAnalyzer=0,
+         DEBUG_LEVEL_UNI_PC,
+         LP_1,
+         LP_2,
+         LP_3,
+         LP_4,
+         DEBUG,
+         END,
+      };
+
       void log(ErrorState err, const char *source_file, SInt32 source_line, const char* format, ...);
+      void log( const char *format, ...);
+      void log(Log::LogDst logDst, const char *format, ...);//, Log::LogState logState
 
       bool isEnabled(const char* module);
       bool isLoggingEnabled() const { return _anyLoggingEnabled; }
 
       String getModule(const char *filename);
+
+      bool is_xlog_enabled(int x);
+      void set_xlog(int x);
 
    private:
       UInt64 getTimestamp();
@@ -56,6 +79,11 @@ class Log
       // when core is id unknown but process # is
       FILE* _systemFile;
       Lock _systemLock;
+
+      // [update]
+      FILE** _loggerFiles;
+      Lock** _loggerLocks;
+      UInt64 _is_xlog_enable;
 
       core_id_t _coreCount;
       UInt64 _startTime;
@@ -105,6 +133,18 @@ class Log
          }                                                              \
       }                                                                 \
    }                                                                    \
+
+
+// [UPDATE]
+#define _LOG_PRINT_CUSTOM(err, ...)                                            \
+   {                                                                    \
+      Log::getSingleton()->log( __VA_ARGS__); \
+   }   
+
+#define _LOG_CUSTOM_LOGGER(err, ty,  ...)                                            \
+   {                                                                    \
+      Log::getSingleton()->log( ty, __VA_ARGS__); \
+   }  
 
 #define _LOG_PRINT(err, ...)                                            \
    {                                                                    \
