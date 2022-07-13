@@ -6,7 +6,6 @@
 #include<unordered_map>
 #include<unordered_set>
 #include<map>
-#include "pqueue.h"
 #include "fixed_types.h"
 #include "mem_component.h"
 #include "log.h"
@@ -115,6 +114,7 @@ namespace PCPredictorSpace
                 case State::ts: return trueSkip.getCount(); break;
                 case State::fns: return falseNoSkip.getCount(); break;
                 case State::tns: return trueNoSkip.getCount(); break;
+                default: return 0;
             }
         }
 
@@ -125,6 +125,7 @@ namespace PCPredictorSpace
                 case State::ts: counter=&trueSkip; break;
                 case State::fns: counter=&falseNoSkip; break;
                 case State::tns: counter=&trueNoSkip; break;
+                default: return 0;
             }
             if(counter!=nullptr)
               return (double)counter->getCount()/(double)total.getCount();
@@ -137,7 +138,7 @@ namespace PCPredictorSpace
     {
         public:
         static int lp_unlock;
-        static std::unordered_map<IntPtr, LevelPredictor> tmpAllLevelLP;
+        static std::map<IntPtr, LevelPredictor> tmpAllLevelLP;
         static int getLockStatus(){return lp_unlock;}
         static void lockenable(){lp_unlock=1;}
         static int isLockEnabled(){return lp_unlock;}
@@ -459,14 +460,11 @@ namespace PCPredictorSpace
                  pcStat.getMissCount());
                 
                 // for per level filterrring
-                UInt64 thresh = getThresholdByLevel(msg.getLevel());
-                UInt64 pccount = uord.second.getTotalCount();
+                // UInt64 thresh = getThresholdByLevel(msg.getLevel());
                 
                 if(msg.getMissRatio()>0.5111){// && learnFromPrevEpoc(pc,msg.getLevel())
                     LPHelper::addSkip(pc, msg.getLevel());
-                    msg.addLevelSkip();
                 }
-
             }
         }
     };

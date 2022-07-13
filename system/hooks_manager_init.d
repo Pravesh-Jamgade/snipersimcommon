@@ -15,7 +15,6 @@
  /mnt/B/sniper/common/helpers/cache_helper.h \
  /mnt/B/sniper/common/misc/log.h \
  /mnt/B/sniper/common/helpers/PCPredictor.h \
- /mnt/B/sniper/common/helpers/libpqueue/src/pqueue.h \
  /mnt/B/sniper/common/helpers/helpers.h \
  /mnt/B/sniper/common/scripting/hooks_py.h \
  /mnt/B/sniper/python_kit/intel64/include/python2.7/Python.h \

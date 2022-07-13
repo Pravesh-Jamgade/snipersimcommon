@@ -20,6 +20,5 @@
  /mnt/B/sniper/common/core/bbv_count.h /mnt/B/sniper/common/misc/cpuid.h \
  /mnt/B/sniper/common/helpers/cache_helper.h \
  /mnt/B/sniper/common/helpers/PCPredictor.h \
- /mnt/B/sniper/common/helpers/libpqueue/src/pqueue.h \
  /mnt/B/sniper/common/helpers/helpers.h \
  /mnt/B/sniper/common/performance_model/mmu_perf_model.h)

@@ -15,7 +15,6 @@
  /mnt/B/sniper/common/helpers/cache_helper.h \
  /mnt/B/sniper/common/misc/log.h \
  /mnt/B/sniper/common/helpers/PCPredictor.h \
- /mnt/B/sniper/common/helpers/libpqueue/src/pqueue.h \
  /mnt/B/sniper/common/helpers/helpers.h /mnt/B/sniper/sift/sift_reader.h \
  /mnt/B/sniper/sift/sift.h /mnt/B/sniper/sift/sift_format.h \
  /mnt/B/sniper/common/performance_model/operand.h \

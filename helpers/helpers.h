@@ -5,7 +5,6 @@
 #include<vector>
 #include<unordered_map>
 #include<map>
-#include "pqueue.h"
 #include "fixed_types.h"
 #include "mem_component.h"
 #include "log.h"

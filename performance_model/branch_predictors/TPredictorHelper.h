@@ -25,6 +25,12 @@ class Counter
 };
 
 class Table{
+
+    private:
+    std::vector<Counter> history;
+    int upperLimit;
+    int lowerLimit=0;
+
     public:
     
     Table(int size):upperLimit(size), history(size, Counter(size)){
@@ -67,10 +73,6 @@ class Table{
         history[index].state=value;
     }
 
-    private:
-    std::vector<Counter> history;
-    int upperLimit;
-    int lowerLimit=0;
 };
 
 class Global:public Table{
@@ -91,6 +93,26 @@ class Local:public Table{
 
 class TPredictorHelper:virtual public BranchPredictor
 {
+
+    private:
+    // Needed:
+    // BTB: Branch Table Buffer
+    PentiumMBranchTargetBuffer btb;
+
+    // LHT: Local History Table
+    // LPT: Local Prediction Table
+    // GHT: Global History Buffer
+    // CPT: Choice Predicition Table
+    // GHR: Global History Register
+    Global cpt,gpt;
+    Local lht,lpt;
+    UInt32 ghr=511;
+    bool lpt_s;
+    bool gpt_s;
+    bool cpt_s;
+    UInt32 pc_index;
+    UInt32 lht_value_as_index;
+    
     public:
     TPredictorHelper(String name, core_id_t core_id):BranchPredictor(name, core_id),
     lht(512), cpt(512, 4), gpt(512, 4), lpt(512, 4)
@@ -161,25 +183,6 @@ class TPredictorHelper:virtual public BranchPredictor
             lht.shift_right(pc_index);
         }
     }
-
-    private:
-    // Needed:
-    // BTB: Branch Table Buffer
-    PentiumMBranchTargetBuffer btb;
-
-    // LHT: Local History Table
-    // LPT: Local Prediction Table
-    // GHT: Global History Buffer
-    // CPT: Choice Predicition Table
-    // GHR: Global History Register
-    Global cpt,gpt;
-    Local lht,lpt;
-    UInt32 ghr=511;
-    bool lpt_s;
-    bool gpt_s;
-    bool cpt_s;
-    UInt32 pc_index;
-    UInt32 lht_value_as_index;
 
 };
 #endif

@@ -310,7 +310,7 @@ void Log::log(ErrorState err, const char* source_file, SInt32 source_line, const
    Lock *lock;
 
    getFile(core_id, sim_thread, &file, &lock);
-   int tid = syscall(__NR_gettid);
+   // int tid = syscall(__NR_gettid);
 
 
    char message[512];
@@ -388,7 +388,7 @@ void Log::log(const char *format, ...)
    Lock *lock;
 
    getFile(-1, sim_thread, &file, &lock);
-   int tid = syscall(__NR_gettid);
+   // int tid = syscall(__NR_gettid);
 
 
    char message[512];
@@ -459,7 +459,7 @@ void Log::log(Log::LogDst logDst, const char *format, ...)// Log::LogState logSt
       printf("[LOG] lock=nullptr\n");
    }
 
-   int tid = syscall(__NR_gettid);
+   // int tid = syscall(__NR_gettid);
 
 
    char message[512];
@@ -472,7 +472,7 @@ void Log::log(Log::LogDst logDst, const char *format, ...)// Log::LogState logSt
 
    lock->acquire();
    fputs(message, file);
-   fflush(file);
+   // fflush(file);
    lock->release();
 
 }

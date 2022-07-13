@@ -3,7 +3,7 @@
 using namespace PCPredictorSpace;
 
 int LPHelper::lp_unlock=2;
-std::unordered_map<IntPtr, LevelPredictor> LPHelper::tmpAllLevelLP;
+std::map<IntPtr, LevelPredictor> LPHelper::tmpAllLevelLP;
 
 void PCStatHelper::LPLookup(IntPtr pc){
     if(LPHelper::isLockEnabled()!=1 || LPHelper::tmpAllLevelLP.size()==0)

@@ -60,7 +60,7 @@ class Storage
         LOG_ASSERT_ERROR(ret == SQLITE_OK, "Cannot create DB");
     }
     void createTables(){
-        for(int i=0;i< sizeof(sql_create_tables)/sizeof(sql_create_tables[0]); i++)
+        for(UInt64 i=0;i< sizeof(sql_create_tables)/sizeof(sql_create_tables[0]); i++)
         {
             int res; char* err;
             res = sqlite3_exec(db, sql_create_tables[i], NULL, NULL, &err);
@@ -193,7 +193,7 @@ class StrideCluster
     
     IntPtr getLastSeenAddr() { return this->lastSeenAddr;}
     void setStride(IntPtr newAddr, String haddr) { 
-        IntPtr diff = newAddr-lastSeenAddr;
+        int diff = newAddr-lastSeenAddr;
         if(diff<0)
             diff=-1*diff; 
         

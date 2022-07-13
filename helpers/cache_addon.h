@@ -7,7 +7,6 @@
 #include <unordered_set>
 #include <vector>
 #include <algorithm>
-#include "pqueue.h"
 #include "lock.h"
 #include "helpers.h"
 

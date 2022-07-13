@@ -19,7 +19,6 @@
  /mnt/B/sniper/common/performance_model/hit_where.h \
  /mnt/B/sniper/common/helpers/cache_helper.h \
  /mnt/B/sniper/common/helpers/PCPredictor.h \
- /mnt/B/sniper/common/helpers/libpqueue/src/pqueue.h \
  /mnt/B/sniper/common/helpers/helpers.h \
  /mnt/B/sniper/common/core/memory_subsystem/cache/pr_l1_cache_block_info.h \
  /mnt/B/sniper/common/misc/stats.h \

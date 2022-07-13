@@ -15,7 +15,6 @@ public:
     {
     
       UInt32 index = ip % current_state.size();
-      UInt32 state = current_state[index];
       bool temp = (current_state[index]>>(hl-1));
       //  _LOG_PRINT(Log::Warning,"hl %u current state %u %u %u %u", hl, index, current_state[index], state, temp);
 

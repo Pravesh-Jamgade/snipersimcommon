@@ -16,7 +16,6 @@
  /mnt/B/sniper/common/helpers/cache_helper.h \
  /mnt/B/sniper/common/misc/log.h \
  /mnt/B/sniper/common/helpers/PCPredictor.h \
- /mnt/B/sniper/common/helpers/libpqueue/src/pqueue.h \
  /mnt/B/sniper/common/helpers/helpers.h /mnt/B/sniper/common/misc/stats.h \
  /mnt/B/sniper/common/system/simulator.h \
  /mnt/B/sniper/common/misc/config.h \
