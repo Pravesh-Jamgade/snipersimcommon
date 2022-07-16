@@ -35,11 +35,11 @@ class Log
       enum LogDst
       {
          AddressAnalyzer=0,
-         DEBUG_LEVEL_UNI_PC,
          LP_1,
          LP_2,
          LP_3,
          LP_4,
+         LP_5,
          DEBUG,
          END,
       };

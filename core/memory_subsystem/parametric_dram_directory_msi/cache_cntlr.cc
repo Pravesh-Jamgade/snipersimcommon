@@ -337,11 +337,15 @@ CacheCntlr::processMemOpFromCore(
 
    int predictionFound=1;
    bool prediction=false;
-   if(count){
-      prediction = pcStat->LPLookup(pc,predictionFound);
-      if(predictionFound==1){
-         // use prediciton value
+   if(count && m_mem_component==MemComponent::component_t::L1_DCACHE){
+      pcStat->countAccess();
+      if(!EpocHelper::once){
+         prediction = pcStat->LPLookup(pc,predictionFound);
+         if(predictionFound==1){
+            // use prediciton value
+         }
       }
+      // printf("%d, %d, %s\n", EpocHelper::once, predictionFound, MemComponent::MemComponent2String(m_mem_component).c_str());
    }
 
    // Protect against concurrent access from sibling SMT threads
@@ -401,8 +405,12 @@ LOG_ASSERT_ERROR(offset + data_length <= getCacheBlockSize(), "access until %u >
    if (count)
    {
       ScopedLock sl(getLock());
-      pcStat->insertPC(pc,cache_hit);
-      pcStat->computeAccuracy(cache_hit,prediction,predictionFound);
+      if(MemComponent::component_t::L1_DCACHE == m_mem_component){
+         pcStat->insertPC(pc,cache_hit);
+         if(!EpocHelper::once && predictionFound==1)
+            pcStat->computeAccuracy(cache_hit,prediction,pc);
+      }
+      
       // Update the Cache Counters
       getCache()->updateCounters(cache_hit);
       updateCounters(mem_op_type, ca_address, cache_hit, getCacheState(cache_block_info), Prefetch::NONE);
@@ -792,10 +800,14 @@ CacheCntlr::processShmemReqFromPrevCache(CacheCntlr* requester, Core::mem_op_t m
 
    int predictionFound=1;
    bool prediction=false;
+
    if(count){
-      prediction = pcStat->LPLookup(pc,predictionFound);
-      if(predictionFound==1){
-         // use prediciton value
+      pcStat->countAccess();
+      if(!EpocHelper::once){
+         prediction = pcStat->LPLookup(pc,predictionFound);
+         if(predictionFound==1){
+            // use prediciton value
+         }
       }
    }
 
@@ -838,8 +850,8 @@ CacheCntlr::processShmemReqFromPrevCache(CacheCntlr* requester, Core::mem_op_t m
       ScopedLock sl(getLock());
       
       pcStat->insertPC(pc,cache_hit);
-      pcStat->computeAccuracy(cache_hit,prediction,predictionFound);
-
+      if(!EpocHelper::once)
+         pcStat->computeAccuracy(cache_hit,prediction,pc);
       if (isPrefetch == Prefetch::NONE)
          getCache()->updateCounters(cache_hit);
       updateCounters(mem_op_type, address, cache_hit, getCacheState(address), isPrefetch);

@@ -260,24 +260,29 @@ namespace ParametricDramDirectoryMSI
 
    class EpocData{
       public:
-      UInt64 epoc, top_pc_count, top_pc_access, coverage, accuracy, total_access;
+      UInt64 epoc, total_pc_count, total_pc_access, top_pc_count, top_pc_access, coverage, accuracy;
       UInt64 fs,ts,fns,tns;
+      UInt64 coverage_miss, coverage_hit, total_hit, total_miss; 
       bool pred;
       EpocData(UInt64 epoc){
          this->epoc=epoc;
-         total_access=top_pc_access=top_pc_count=coverage=accuracy=0;
+         total_pc_count=total_pc_access=top_pc_access=top_pc_count=coverage=accuracy=0;
          fs=fns=ts=tns=0;
+         coverage_hit=coverage_miss=0;
+         total_hit=total_miss=0;
       }
    };
 
    class PCBased{
       public:
-      UInt64 count,miss;
+      UInt64 count,miss,hit, coverage_miss, coverage_hit;
 
-      PCBased(bool hit=true){
+      PCBased(bool hitflag=true){
+         hit=miss=coverage_miss=coverage_hit=0;
          count=1;
-         if(!hit) 
-            miss=1;
+         if(hitflag) 
+            hit=1;
+         else miss=1;
       }      
    };
 
@@ -289,56 +294,64 @@ namespace ParametricDramDirectoryMSI
       UInt64 coverage, accuracy;// from epoc 1 onwards (epoc starts with 0)
       public:
       
-      UInt64 accesses;
+      UInt64 accesses, sum_till;
 
       PCStat(){
          lpperf=std::make_shared<LPPerf>();
-         coverage=accuracy=accesses=0;
+         sum_till=coverage=accuracy=accesses=0;
       }
       // checks if prediction is present for pc and cache-level, prediction value, 
-      // compute coverage if prediction exists
       bool LPLookup(IntPtr pc, int& foundPCEntry){
          bool pred = getPrediction(pc, foundPCEntry);
-         if(foundPCEntry){
-            coverage++;
-         }
          return pred;
       }
 
-      void computeAccuracy(bool res, bool pred, int foundPCEntry){
-         if(foundPCEntry==1){
-            if(res == pred){
-               accuracy++;
-            }
+      // count total access
+      void countAccess(){accesses++;}
 
-            if(pred){// prediction was skip
-               if(res){// actual is skip
-                     lpperf->inc(State::ts);//benefit
-               }
-               else{
-                     lpperf->inc(State::fs);//hazard
-               }
-            }
-            else{// prediction was no-skip
-               if(res){// actual is skip
-                     lpperf->inc(State::fns);//lost opp
-               }else{
-                     lpperf->inc(State::tns);//benefit
-               }
-            } 
+      // compute coverage, accuracy, coverage-miss (found predicition for PC entry but miss in cache), coverage-hit
+      void computeAccuracy(bool res, bool pred, IntPtr pc){
+         //       skip(miss)  *noskip(hit)
+         //pred   true        false
+         //res    false       true
+         if( (!res & pred) | (res & !pred) ){
+            accuracy++;
          }
+
+         if(res)
+            uniquePCCount[pc].coverage_hit++;
+         else uniquePCCount[pc].coverage_miss++;
+
+         coverage++;
+
+         if(pred){// prediction was skip
+            if(res){// actual is skip
+                  lpperf->inc(State::ts);//benefit
+            }
+            else{
+                  lpperf->inc(State::fs);//hazard
+            }
+         }
+         else{// prediction was no-skip
+            if(res){// actual is skip
+                  lpperf->inc(State::tns);//benefit
+            }else{
+                  lpperf->inc(State::fns);//lost opp
+            }
+         } 
       }
 
       // insert pc and compute count
       void insertPC(IntPtr pc, bool hit){
          auto findPC = uniquePCCount.find(pc);
          if(findPC == uniquePCCount.end())
-            uniquePCCount.insert({pc, PCBased(1)});
+            uniquePCCount.insert({pc, PCBased(hit)});
          else 
          {
             uniquePCCount[pc].count++;
-            if(!hit)
-               uniquePCCount[pc].miss++;
+            if(hit)
+               uniquePCCount[pc].hit++;
+            else uniquePCCount[pc].miss++;
          }
       }
 
@@ -352,9 +365,15 @@ namespace ParametricDramDirectoryMSI
          return false;
       }
 
-      void getCountPCPairs(std::vector<std::pair<UInt64,IntPtr>>& tmp){
-         for(auto pr: uniquePCCount){
-            tmp.push_back({pr.second.count, pr.first});
+      void getCountPCPairs(std::vector<std::pair<UInt64,IntPtr>>& tmp,UInt64& ch,UInt64& cm,UInt64& th,UInt64& tm){
+         ch=cm=0;
+         th=tm=0;
+         for(auto e: uniquePCCount){
+            ch+=e.second.coverage_hit;
+            cm+=e.second.coverage_miss;
+            tm+=e.second.miss;
+            th+=e.second.hit;
+            tmp.push_back({e.second.count, e.first});
          }
       }
 
@@ -368,7 +387,7 @@ namespace ParametricDramDirectoryMSI
 
       void clearBookkeeping(){
          uniquePCCount.clear();
-         coverage=accuracy=0;
+         accesses=coverage=accuracy=0;
          lpperf.reset();
          lpperf = std::make_shared<LPPerf>();
       }
@@ -608,23 +627,28 @@ namespace ParametricDramDirectoryMSI
 
          //per epoc number of accesses
          void setAccesses(){
-            int64_t i = pcStat->accesses - stats.loads - stats.stores;
+            pcStat->accesses=pcStat->sum_till;
+            pcStat->sum_till = stats.loads+stats.stores;
+            int64_t i = pcStat->accesses - pcStat->sum_till;
             pcStat->accesses=abs(i);
          }
 
+         // using top pc build predicition table for current level
+         // 
          void processEnd(UInt64 epoc, std::shared_ptr<EpocData> epocData){
-            setAccesses();
-            
-            pcStat->getCountPCPairs(bag);
+            // setAccesses();
+            UInt64 coverage_miss,coverage_hit,total_miss,total_hit;
+            coverage_miss=coverage_hit=total_miss=total_hit=0;
+            pcStat->getCountPCPairs(bag, coverage_hit, coverage_miss, total_hit, total_miss);
 
             sort(bag.begin(), bag.end());
 
-            // total access in epoc
-            UInt64 total_access = 0;
-            
-            UInt64 top_access = 0;
+            UInt64 top_pc_access, top_pc_count;
+            top_pc_access = top_pc_count = 0;
+
             // to get top pc, get pc for which per pc access is more than avg access
             double thresold = getThreshold();
+            
             for(auto it=bag.rbegin();it!=bag.rend();it++){
                if(it->first > thresold){
                   // for high PC, set prediciton for these level
@@ -636,20 +660,25 @@ namespace ParametricDramDirectoryMSI
                      pcStat->addPrediction(true,it->second);//skip
                   else 
                      pcStat->addPrediction(false,it->second);//no-skip
-                  top_access+=it->first;
+                  top_pc_access+=it->first;
+                  top_pc_count++;
                }
-               total_access+=it->first;
             }         
 
             epocData->accuracy=pcStat->getAccuracy();
             epocData->coverage=pcStat->getCoverage();
-            epocData->top_pc_access=top_access;
-            epocData->top_pc_count=pcStat->getTotalPCCount();
+            epocData->top_pc_access=top_pc_access;
+            epocData->top_pc_count=top_pc_count;
             epocData->fs=pcStat->getCount(State::fs);
             epocData->ts=pcStat->getCount(State::ts);
             epocData->fns=pcStat->getCount(State::fns);
             epocData->tns=pcStat->getCount(State::tns);
-            epocData->total_access=total_access;
+            epocData->total_pc_access=pcStat->getTotalAccess();
+            epocData->total_pc_count=pcStat->getTotalPCCount();
+            epocData->coverage_hit=coverage_hit;
+            epocData->coverage_miss=coverage_miss;
+            epocData->total_hit=total_hit;
+            epocData->total_miss=total_miss;
 
             // these is epoc end and we need to start bookkeping for next epoc hence clear previous bookkeeping
             pcStat->clearBookkeeping();

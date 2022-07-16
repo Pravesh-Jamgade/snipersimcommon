@@ -438,53 +438,29 @@ MemoryManager::coreInitiateMemoryAccess(
    epocHelper->doStatusUpdate(getCore()->getPerformanceModel()->getCycleCount());
    if(epocHelper->getEpocStatus()){
 
-      if(epocHelper->getEpocCounter()==0){
-         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG_LEVEL_UNI_PC, "epoc,pc1,pc2,pc3,core\n");
+      if(EpocHelper::head()){
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_4, "epoc,toppc,topaccess,totalaccess,th,tm,coverage,accuracy,ch,cm,fs,ts,fns,tns,core,cache\n");
       }
 
       UInt64 epoc = epocHelper->getEpocCounter();
-
-      String pccount,pcaccess,lpstat;
-      pccount=pcaccess=lpstat=String();
-      lpstat=pcaccess=pccount=itostr(epoc);
 
       // at the end of epoc compute miss-ratio, set predicition, get top pc
       std::shared_ptr<EpocData> data;
       for(int i = MemComponent::FIRST_LEVEL_CACHE; i <= (UInt32)m_last_level_cache; ++i)
       {
+         String name = MemComponent::MemComponent2String(static_cast<MemComponent::component_t>(i));
          data = std::make_shared<EpocData>(epoc);
          m_cache_cntlrs[(MemComponent::component_t)i]->processEnd(epoc,data);
-         pccount+=","+ itostr(data->top_pc_count);
-         pcaccess+=","+ itostr(data->top_pc_access);
-         lpstat+=","+itostr(data->total_access)+","+itostr(data->coverage)+","+itostr(data->accuracy);
+         
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_4, "%ld, %ld,%ld, %ld,%ld,%ld, %ld,%ld,%ld, %ld,%ld,%ld,%ld,%ld, %d,%s\n", 
+            epoc,
+            data->top_pc_count, data->top_pc_access, 
+            data->total_pc_access, data->total_hit, data->total_miss, 
+            data->coverage, data->accuracy, data->coverage_hit, data->coverage_miss,
+            data->fs, data->ts, data->fns, data->tns, 
+            getCore()->getId(), name.c_str());
          data.reset();
       }
-      pccount+=itostr(getCore()->getId())+"\n";
-      pcaccess+=itostr(getCore()->getId())+"\n";
-      lpstat+=itostr(getCore()->getId())+"\n";
-
-      printf("[X]%s\n[Y]%s\n[Z]%s\n", pccount.c_str(), pcaccess.c_str(), lpstat.c_str());
-
-   //    String pccount,pcaccess,lpstat;
-   //    pccount=pcaccess=lpstat="";
-   //    lpstat=pcaccess=pccount=itostr(epoc);
-
-   //    for(auto data: allLevels){
-   //       pccount+=","+ itostr(data->top_pc_count);
-   //       pcaccess+=","+ itostr(data->top_pc_access);
-   //       lpstat+=","+itostr(data->total_access)+","+itostr(data->coverage)+","+itostr(data->accuracy);
-   //    }
-   //    pccount+=itostr(getCore()->getId())+"\n";
-   //    pcaccess+=itostr(getCore()->getId())+"\n";
-   //    lpstat+=itostr(getCore()->getId())+"\n";
-
-   //    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_1, "%s\n", pccount.c_str());
-   //    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_2, "%s\n", pcaccess.c_str());
-   //    _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_3, "%s\n", lpstat.c_str());
-
-   //    for(auto level: allLevels)
-   //       level.reset();
-      
       epocHelper->reset();//turn off these code block as logging is done for these epoc
    }
    return m_cache_cntlrs[mem_component]->processMemOpFromCore(
