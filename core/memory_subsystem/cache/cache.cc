@@ -2,9 +2,12 @@
 #include "cache.h"
 #include "log.h"
 
+#include "config.hpp"
+
 // Cache class
 // constructors/destructors
 Cache::Cache(
+   bool shared,
    String name,
    String cfgname,
    core_id_t core_id,
@@ -15,15 +18,24 @@ Cache::Cache(
    cache_t cache_type,
    hash_t hash,
    FaultInjector *fault_injector,
-   AddressHomeLookup *ahl)
+   AddressHomeLookup *ahl,
+   bool master)
 :
    CacheBase(name, num_sets, associativity, cache_block_size, hash, ahl),
    m_enabled(false),
    m_num_accesses(0),
    m_num_hits(0),
    m_cache_type(cache_type),
-   m_fault_injector(fault_injector)
+   m_fault_injector(fault_injector),
+   master(master)
 {
+   this->total_evicts = 0;
+   this->totalBlocks = 0;
+   this->count_dead_blocks = 0;
+   this->shared = shared;
+   this->loggedByOtherCore = false;
+   this->core_id = core_id;
+
    m_set_info = CacheSet::createCacheSetInfo(name, cfgname, core_id, replacement_policy, m_associativity);
    m_sets = new CacheSet*[m_num_sets];
    for (UInt32 i = 0; i < m_num_sets; i++)
@@ -40,6 +52,8 @@ Cache::Cache(
 
 Cache::~Cache()
 {
+   // //only through master cntrl access cache
+   // printf("%d, %d, %s\n", master, core_id, m_name.c_str());
    #ifdef ENABLE_SET_USAGE_HIST
    printf("Cache %s set usage:", m_name.c_str());
    for (SInt32 i = 0; i < (SInt32) m_num_sets; i++)
@@ -136,6 +150,14 @@ Cache::insertSingleLine(IntPtr addr, Byte* fill_buff,
          eviction, evict_block_info, evict_buff, cntlr);
    *evict_addr = tagToAddress(evict_block_info->getTag());
 
+   addToUniqueList(addr);
+
+   totalBlocks+=1;
+   if(*eviction){
+      addEvicted(*evict_addr);
+      total_evicts++;
+   }
+   
    if (m_fault_injector) {
       // NOTE: no callback is generated for read of evicted data
       UInt32 line_index = -1;
@@ -183,4 +205,32 @@ Cache::updateHits(Core::mem_op_t mem_op_type, UInt64 hits)
       m_num_accesses += hits;
       m_num_hits += hits;
    }
+}
+
+void
+Cache::logAndClear(){
+   if(!allowed())
+      return;
+   
+   int fileId = core_id;
+
+   if(shared){
+      fileId=-1;
+   }
+
+   UInt64 deadBlocks = countEvictList();//never reused
+   UInt64 uniqueInserts = countUniqueList();
+
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DBA, "%ld,%ld,%ld,%s,%d\n", 
+      deadBlocks,
+      total_evicts,
+      uniqueInserts,
+      m_name.c_str(),
+      core_id
+   );
+}
+
+String Cache::logCache(){
+   String logCache = Sim()->getCfg()->getString("param/cache");
+   return logCache;
 }

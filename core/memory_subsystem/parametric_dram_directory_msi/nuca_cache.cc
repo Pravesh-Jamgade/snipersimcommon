@@ -21,7 +21,7 @@ NucaCache::NucaCache(MemoryManagerBase* memory_manager, ShmemPerfModel* shmem_pe
    , m_read_misses(0)
    , m_write_misses(0)
 {
-   m_cache = new Cache("nuca-cache",
+   m_cache = new Cache(false,"nuca-cache",
       "perf_model/nuca/cache",
       m_core_id,
       parameters.num_sets,

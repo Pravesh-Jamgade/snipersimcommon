@@ -152,6 +152,9 @@ namespace ParametricDramDirectoryMSI
    class CacheMasterCntlr
    {
       private:
+         //update
+         core_id_t coreid;
+
          Cache* m_cache;
          Lock m_cache_lock;
          Lock m_smt_lock; //< Only used in L1 cache, to protect against concurrent access from sibling SMT threads
@@ -195,6 +198,7 @@ namespace ParametricDramDirectoryMSI
             , m_atds()
             , m_prefetch_list()
             , m_prefetch_next(SubsecondTime::Zero())
+            ,coreid(core_id)
          {}
          ~CacheMasterCntlr();
 

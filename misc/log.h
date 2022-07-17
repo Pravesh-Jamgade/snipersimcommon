@@ -41,12 +41,37 @@ class Log
          LP_4,
          LP_5,
          DEBUG,
+         DBA,
          END,
       };
+
+      enum LogFileName{
+         S=-2,
+         Shared,
+         C0,C1,C2,C3,C4,C5,C6,C7,C8,
+         C9,C10,C11,C12,C13,C14,
+         C15,C16,C17,C18,C19,C20,
+         C21,C22,C23,C24,C25,C26,
+         C27,C28,C29,C30,
+         E,
+      };
+
+      const char* logFiles[40]={"shared", "c0", "c1", "c2", \
+         "c3", "c4", "c5","c6","c7","c8","c9","c10",\
+         "c11","c12","c13","c14","c15","c16","c17",\
+         "c18","c19","c20","c21","c22","c23","c24",\
+         "c25","c26","c27","c28","c29","c30"};
+
+      std::map<LogFileName, FILE*> logFileObject;
+
+      const char* getFileName(LogFileName lf){
+         return logFiles[lf+1];
+      }
 
       void log(ErrorState err, const char *source_file, SInt32 source_line, const char* format, ...);
       void log( const char *format, ...);
       void log(Log::LogDst logDst, const char *format, ...);//, Log::LogState logState
+      void log(Log::LogFileName logFileName, const char *format, ...);
 
       bool isEnabled(const char* module);
       bool isLoggingEnabled() const { return _anyLoggingEnabled; }

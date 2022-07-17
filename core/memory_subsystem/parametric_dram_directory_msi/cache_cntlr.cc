@@ -113,6 +113,7 @@ CacheMasterCntlr::accessATDs(Core::mem_op_t mem_op_type, bool hit, IntPtr addres
 
 CacheMasterCntlr::~CacheMasterCntlr()
 {
+   m_cache->logAndClear();
    delete m_cache;
    for(std::vector<ATD*>::iterator it = m_atds.begin(); it != m_atds.end(); ++it)
    {
@@ -167,7 +168,7 @@ CacheCntlr::CacheCntlr(MemComponent::component_t mem_component,
    {
       /* Master cache */
       m_master = new CacheMasterCntlr(name, core_id, cache_params.outstanding_misses);
-      m_master->m_cache = new Cache(name,
+      m_master->m_cache = new Cache(isShared(core_id),name,
             "perf_model/" + cache_params.configName,
             m_core_id,
             cache_params.num_sets,
@@ -178,7 +179,7 @@ CacheCntlr::CacheCntlr(MemComponent::component_t mem_component,
             CacheBase::parseAddressHash(cache_params.hash_function),
             Sim()->getFaultinjectionManager()
                ? Sim()->getFaultinjectionManager()->getFaultInjector(m_core_id_master, mem_component)
-               : NULL);
+               : NULL, NULL, true);
       m_master->m_prefetcher = Prefetcher::createPrefetcher(cache_params.prefetcher, cache_params.configName, m_core_id, m_shared_cores);
 
       if (Sim()->getCfg()->getBoolDefault("perf_model/" + cache_params.configName + "/atd/enabled", false))
@@ -467,6 +468,9 @@ MYLOG("L1 hit");
       }
 
    } else {
+      // remove from evictList of addresses as it will be requested again
+      getCache()->eraseEntryIffound(ca_address);
+
       /* cache miss: either wrong coherency state or not present in the cache */
 MYLOG("L1 miss");
       if (!m_passthrough)
@@ -961,6 +965,9 @@ CacheCntlr::processShmemReqFromPrevCache(CacheCntlr* requester, Core::mem_op_t m
    }
    else // !cache_hit: either data is not here, or operation on data is not permitted
    {
+      // remove evictList
+      getCache()->eraseEntryIffound(address);
+
       // Increment shared mem perf model cycle counts
       if (modeled)
          getMemoryManager()->incrElapsedTime(m_mem_component, CachePerfModel::ACCESS_CACHE_TAGS, ShmemPerfModel::_USER_THREAD);
