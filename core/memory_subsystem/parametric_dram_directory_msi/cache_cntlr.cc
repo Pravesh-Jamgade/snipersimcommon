@@ -469,7 +469,10 @@ MYLOG("L1 hit");
 
    } else {
       // remove from evictList of addresses as it will be requested again
-      getCache()->eraseEntryIffound(ca_address);
+      {
+         ScopedLock sl(getLock());
+         getCache()->eraseEntryIffound(ca_address);
+      }
 
       /* cache miss: either wrong coherency state or not present in the cache */
 MYLOG("L1 miss");
@@ -966,7 +969,10 @@ CacheCntlr::processShmemReqFromPrevCache(CacheCntlr* requester, Core::mem_op_t m
    else // !cache_hit: either data is not here, or operation on data is not permitted
    {
       // remove evictList
-      getCache()->eraseEntryIffound(address);
+      {
+         ScopedLock sl(getLock());
+         getCache()->eraseEntryIffound(address);
+      }
 
       // Increment shared mem perf model cycle counts
       if (modeled)
