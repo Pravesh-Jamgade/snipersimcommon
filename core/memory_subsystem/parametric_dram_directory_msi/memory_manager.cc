@@ -435,11 +435,12 @@ MemoryManager::coreInitiateMemoryAccess(
    else if (mem_component == MemComponent::L1_DCACHE && m_dtlb)
       accessTLB(m_dtlb, address, false, modeled);
 
-   epocHelper->doStatusUpdate(getCore()->getPerformanceModel()->getCycleCount());
+   UInt64 cycle = getCore()->getPerformanceModel()->getCycleCount();
+   epocHelper->doStatusUpdate(cycle);
    if(epocHelper->getEpocStatus()){
 
       if(EpocHelper::head()){
-         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_4, "epoc,toppc,topaccess,totalaccess,th,tm,coverage,accuracy,ch,cm,fs,ts,fns,tns,core,cache\n");
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_4, "cycle,epoc,toppc,topaccess,totalaccess,th,tm,coverage,accuracy,ch,cm,fs,ts,fns,tns,core,cache\n");
       }
 
       UInt64 epoc = epocHelper->getEpocCounter();
@@ -452,7 +453,8 @@ MemoryManager::coreInitiateMemoryAccess(
          data = std::make_shared<EpocData>(epoc);
          m_cache_cntlrs[(MemComponent::component_t)i]->processEnd(epoc,data);
          
-         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_4, "%ld, %ld,%ld, %ld,%ld,%ld, %ld,%ld,%ld, %ld,%ld,%ld,%ld,%ld, %d,%s\n", 
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_4, "%ld, %ld, %ld,%ld, %ld,%ld,%ld, %ld,%ld,%ld, %ld,%ld,%ld,%ld,%ld, %d,%s\n", 
+            cycle,
             epoc,
             data->top_pc_count, data->top_pc_access, 
             data->total_pc_access, data->total_hit, data->total_miss, 

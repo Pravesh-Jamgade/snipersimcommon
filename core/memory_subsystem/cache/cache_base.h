@@ -77,6 +77,9 @@ class CacheBase
       UInt32 m_log_blocksize;
       UInt32 m_log_num_sets;
 
+      // total cache blocks
+      UInt64 num_cache_blocks;
+
    public:
       // constructors/destructors
       CacheBase(String name, UInt32 num_sets, UInt32 associativity, UInt32 cache_block_size, CacheBase::hash_t hash, AddressHomeLookup *ahl = NULL);

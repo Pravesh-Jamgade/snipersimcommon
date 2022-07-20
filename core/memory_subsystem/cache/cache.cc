@@ -52,6 +52,7 @@ Cache::Cache(
 
 Cache::~Cache()
 {
+   printf("[*]%s = %ld blocks each of size = %ld\n", m_name.c_str(), num_cache_blocks, m_blocksize);
    // //only through master cntrl access cache
    // printf("%d, %d, %s\n", master, core_id, m_name.c_str());
    #ifdef ENABLE_SET_USAGE_HIST
@@ -221,10 +222,11 @@ Cache::logAndClear(){
    UInt64 deadBlocks = countEvictList();//never reused
    UInt64 uniqueInserts = countUniqueList();
 
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DBA, "%ld,%ld,%ld,%s,%d\n", 
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DBA, "%ld,%ld,%ld,%ld,%s,%d\n", 
       deadBlocks,
       total_evicts,
       uniqueInserts,
+      num_cache_blocks,
       m_name.c_str(),
       core_id
    );

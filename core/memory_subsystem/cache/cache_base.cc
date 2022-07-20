@@ -19,6 +19,8 @@ CacheBase::CacheBase(
    m_log_blocksize = floorLog2(m_blocksize);
    m_log_num_sets = floorLog2(m_num_sets);
 
+   num_cache_blocks = m_associativity * m_num_sets;
+
    LOG_ASSERT_ERROR((m_num_sets == (1UL << floorLog2(m_num_sets))) || (hash != CacheBase::HASH_MASK),
       "Caches of non-power of 2 size need funky hash function");
 }
