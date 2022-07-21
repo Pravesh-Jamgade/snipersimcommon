@@ -53,6 +53,7 @@ Cache::Cache(
 Cache::~Cache()
 {
    printf("[*]%s = %ld blocks each of size = %ld\n", m_name.c_str(), num_cache_blocks, m_blocksize);
+   logAndClear();
    // //only through master cntrl access cache
    // printf("%d, %d, %s\n", master, core_id, m_name.c_str());
    #ifdef ENABLE_SET_USAGE_HIST

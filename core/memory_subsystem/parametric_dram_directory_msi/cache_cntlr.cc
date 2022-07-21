@@ -113,7 +113,6 @@ CacheMasterCntlr::accessATDs(Core::mem_op_t mem_op_type, bool hit, IntPtr addres
 
 CacheMasterCntlr::~CacheMasterCntlr()
 {
-   m_cache->logAndClear();
    delete m_cache;
    for(std::vector<ATD*>::iterator it = m_atds.begin(); it != m_atds.end(); ++it)
    {
