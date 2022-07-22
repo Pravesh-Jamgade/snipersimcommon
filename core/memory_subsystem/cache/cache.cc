@@ -211,26 +211,26 @@ Cache::updateHits(Core::mem_op_t mem_op_type, UInt64 hits)
 
 void
 Cache::logAndClear(){
-   // if(!allowed())
-   //    return;
+   if(!allowed())
+      return;
    
-   // int fileId = core_id;
+   int fileId = core_id;
 
-   // if(shared){
-   //    fileId=-1;
-   // }
+   if(shared){
+      fileId=-1;
+   }
 
-   // UInt64 deadBlocks = countEvictList();//never reused
-   // UInt64 uniqueInserts = countUniqueList();
+   UInt64 deadBlocks = countEvictList();//never reused
+   UInt64 uniqueInserts = countUniqueList();
 
-   // _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DBA, "%ld,%ld,%ld,%ld,%s,%d\n", 
-   //    deadBlocks,
-   //    total_evicts,
-   //    uniqueInserts,
-   //    num_cache_blocks,
-   //    m_name.c_str(),
-   //    core_id
-   // );
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DBA, "%ld,%ld,%ld,%ld,%s,%d\n", 
+      deadBlocks,
+      total_evicts,
+      uniqueInserts,
+      num_cache_blocks,
+      m_name.c_str(),
+      core_id
+   );
 }
 
 String Cache::logCache(){
