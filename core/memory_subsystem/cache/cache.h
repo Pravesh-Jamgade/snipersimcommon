@@ -36,7 +36,7 @@ class BlockInfo{
       }
 
       // check if evictList already has entry of address
-      bool missFromPrevLevelFound(IntPtr addr){
+      bool alreadyInEvictList(IntPtr addr){
             auto findAddr = evictList.find(addr);
             if(findAddr!=evictList.end()){
                   return true;
@@ -58,7 +58,7 @@ class BlockInfo{
       // if previously evicted and it is miss on these cache level, then soon it will be requested again 
       // hence remove from "evictList"
       void eraseEntry(IntPtr addr){
-            if(missFromPrevLevelFound(addr)){
+            if(alreadyInEvictList(addr)){
                   evictList.erase(addr);
             }
       }
