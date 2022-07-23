@@ -232,8 +232,3 @@ Cache::logAndClear(){
       core_id
    );
 }
-
-String Cache::logCache(){
-   String logCache = Sim()->getCfg()->getString("param/cache");
-   return logCache;
-}

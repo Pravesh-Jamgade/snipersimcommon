@@ -125,7 +125,6 @@ class Cache : public CacheBase, BlockInfo
       void enable() { m_enabled = true; }
       void disable() { m_enabled = false; }
 
-      String logCache();
       void logAndClear();
 
       UInt64 count_dead_blocks;
@@ -144,12 +143,8 @@ class Cache : public CacheBase, BlockInfo
       }
 
       bool allowed(){
-            if(m_name == logCache())
+            if(m_name == "L1-D" || m_name == "L2" || m_name =="L3")
                   return true;
-            if(logCache() == "x"){
-                  if(m_name == "L1-D" || m_name == "L2" || m_name =="L3")
-                        return true;
-            }
             return false;
       }
 };
