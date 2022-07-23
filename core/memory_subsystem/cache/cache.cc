@@ -154,11 +154,11 @@ Cache::insertSingleLine(IntPtr addr, Byte* fill_buff,
 
    addToUniqueList(addr);
 
-   // totalBlocks+=1;
-   // if(*eviction){
-   //    addEvicted(*evict_addr);
-   //    total_evicts++;
-   // }
+   totalBlocks+=1;
+   if(*eviction){
+      addEvicted(*evict_addr);
+      total_evicts++;
+   }
    
    if (m_fault_injector) {
       // NOTE: no callback is generated for read of evicted data
