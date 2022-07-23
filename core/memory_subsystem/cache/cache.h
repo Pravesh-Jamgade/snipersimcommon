@@ -43,10 +43,7 @@ class BlockInfo{
 
       // add evicted addr, to evictList
       void addEvicted(IntPtr addr){
-            if(missFromPrevLevelFound(addr)){
-                  return;
-            }
-            else evictList.insert(addr);
+            evictList.insert(addr);
       }
 
       // if previously evicted and it is miss on these cache level, then soon it will be requested again 
