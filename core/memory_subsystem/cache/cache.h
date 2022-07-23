@@ -22,6 +22,9 @@ class BlockInfo{
 
       // add unique addr upon insert operation
       void addToUniqueList(IntPtr addr){
+            if(uniqueList.size()==uniqueList.max_size()){
+                  printf("[UniqueList] STOP here\n");
+            }
             auto findAddr = uniqueList.find(addr);
             if(findAddr==uniqueList.end()){
                   uniqueList.insert(addr);
@@ -43,7 +46,13 @@ class BlockInfo{
 
       // add evicted addr, to evictList
       void addEvicted(IntPtr addr){
-            evictList.insert(addr);
+            if(evictList.size()==evictList.max_size()){
+                  printf("[EvictList] STOP here\n");
+            }
+            auto findAddr = evictList.find(addr);
+            if(findAddr==evictList.end()){
+                  evictList.insert(addr);
+            }
       }
 
       // if previously evicted and it is miss on these cache level, then soon it will be requested again 
