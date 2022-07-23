@@ -405,10 +405,9 @@ namespace ParametricDramDirectoryMSI
       UInt64 getTotalAccess(){return accesses;}
    };
 
-   class CacheCntlr : ::CacheCntlr
+   class CacheCntlr : ::CacheCntlr, PCStat
    {
       private:
-         PCStat* pcStat;
          // Data Members
          MemComponent::component_t m_mem_component;
          MemoryManager* m_memory_manager;
@@ -626,15 +625,15 @@ namespace ParametricDramDirectoryMSI
 
          // per pc avg number of accesses
          double getThreshold(){
-            return (double)pcStat->getTotalAccess()/(double)pcStat->getTotalPCCount();
+            return (double)getTotalAccess()/(double)getTotalPCCount();
          }
 
          //per epoc number of accesses
          void setAccesses(){
-            pcStat->accesses=pcStat->sum_till;
-            pcStat->sum_till = stats.loads+stats.stores;
-            int64_t i = pcStat->accesses - pcStat->sum_till;
-            pcStat->accesses=abs(i);
+            accesses=sum_till;
+            sum_till = stats.loads+stats.stores;
+            int64_t i = accesses - sum_till;
+            accesses=abs(i);
          }
 
          // using top pc build predicition table for current level
@@ -643,7 +642,7 @@ namespace ParametricDramDirectoryMSI
             // setAccesses();
             UInt64 coverage_miss,coverage_hit,total_miss,total_hit;
             coverage_miss=coverage_hit=total_miss=total_hit=0;
-            pcStat->getCountPCPairs(bag, coverage_hit, coverage_miss, total_hit, total_miss);
+            getCountPCPairs(bag, coverage_hit, coverage_miss, total_hit, total_miss);
 
             sort(bag.begin(), bag.end());
 
@@ -657,35 +656,35 @@ namespace ParametricDramDirectoryMSI
                if(it->first > thresold){
                   // for high PC, set prediciton for these level
                   double missRatio = 0;
-                  double totalAccess = pcStat->getTotalAccess();
-                  double pcMissCount = (double)pcStat->getUniqePCMissCount(it->second);
+                  double totalAccess = getTotalAccess();
+                  double pcMissCount = (double)getUniqePCMissCount(it->second);
                   missRatio=pcMissCount/totalAccess;
                   if(missRatio>0.50000001)
-                     pcStat->addPrediction(true,it->second);//skip
+                     addPrediction(true,it->second);//skip
                   else 
-                     pcStat->addPrediction(false,it->second);//no-skip
+                     addPrediction(false,it->second);//no-skip
                   top_pc_access+=it->first;
                   top_pc_count++;
                }
             }         
 
-            epocData->accuracy=pcStat->getAccuracy();
-            epocData->coverage=pcStat->getCoverage();
+            epocData->accuracy=getAccuracy();
+            epocData->coverage=getCoverage();
             epocData->top_pc_access=top_pc_access;
             epocData->top_pc_count=top_pc_count;
-            epocData->fs=pcStat->getCount(State::fs);
-            epocData->ts=pcStat->getCount(State::ts);
-            epocData->fns=pcStat->getCount(State::fns);
-            epocData->tns=pcStat->getCount(State::tns);
-            epocData->total_pc_access=pcStat->getTotalAccess();
-            epocData->total_pc_count=pcStat->getTotalPCCount();
+            epocData->fs=getCount(State::fs);
+            epocData->ts=getCount(State::ts);
+            epocData->fns=getCount(State::fns);
+            epocData->tns=getCount(State::tns);
+            epocData->total_pc_access=getTotalAccess();
+            epocData->total_pc_count=getTotalPCCount();
             epocData->coverage_hit=coverage_hit;
             epocData->coverage_miss=coverage_miss;
             epocData->total_hit=total_hit;
             epocData->total_miss=total_miss;
 
             // these is epoc end and we need to start bookkeping for next epoc hence clear previous bookkeeping
-            pcStat->clearBookkeeping();
+            clearBookkeeping();
             bag.clear();
          }
    };

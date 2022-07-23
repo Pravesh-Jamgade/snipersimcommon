@@ -472,7 +472,6 @@ void Log::log(Log::LogDst logDst, const char *format, ...)// Log::LogState logSt
 
    lock->acquire();
    fputs(message, file);
-   fflush(file);
    lock->release();
 
 }

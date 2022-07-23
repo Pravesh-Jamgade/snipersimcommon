@@ -53,7 +53,11 @@ Cache::Cache(
 Cache::~Cache()
 {
    printf("[*]%s = %ld blocks each of size = %ld\n", m_name.c_str(), num_cache_blocks, m_blocksize);
-   logAndClear();
+   
+   if(allowed()){
+      logAndClear();
+   }
+   
    // //only through master cntrl access cache
    // printf("%d, %d, %s\n", master, core_id, m_name.c_str());
    #ifdef ENABLE_SET_USAGE_HIST
@@ -152,14 +156,15 @@ Cache::insertSingleLine(IntPtr addr, Byte* fill_buff,
          eviction, evict_block_info, evict_buff, cntlr);
    *evict_addr = tagToAddress(evict_block_info->getTag());
 
-   addToUniqueList(addr);
-
-   totalBlocks+=1;
-   if(*eviction){
-      addEvicted(*evict_addr);
-      total_evicts++;
+   if(allowed()){
+      addToUniqueList(addr);
+      totalBlocks+=1;
+      if(*eviction){
+         addEvicted(*evict_addr);
+         total_evicts++;
+      }
    }
-   
+
    if (m_fault_injector) {
       // NOTE: no callback is generated for read of evicted data
       UInt32 line_index = -1;
@@ -211,19 +216,11 @@ Cache::updateHits(Core::mem_op_t mem_op_type, UInt64 hits)
 
 void
 Cache::logAndClear(){
-   if(!allowed())
-      return;
-   
-   int fileId = core_id;
-
-   if(shared){
-      fileId=-1;
-   }
 
    UInt64 deadBlocks = countEvictList();//never reused
    UInt64 uniqueInserts = countUniqueList();
 
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DBA, "%ld,%ld,%ld,%ld,%s,%d\n", 
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DBA, "%i,%i,%i,%i,%s,%d\n", 
       deadBlocks,
       total_evicts,
       uniqueInserts,

@@ -154,7 +154,6 @@ CacheCntlr::CacheCntlr(MemComponent::component_t mem_component,
    m_shmem_perf_global(NULL),
    m_shmem_perf_model(shmem_perf_model)
 {
-   pcStat = new PCStat();
    m_core_id_master = m_core_id - m_core_id % m_shared_cores;
    Sim()->getStatsManager()->logTopology(name, core_id, m_core_id_master);
 
@@ -338,9 +337,9 @@ CacheCntlr::processMemOpFromCore(
    int predictionFound=1;
    bool prediction=false;
    if(count && m_mem_component==MemComponent::component_t::L1_DCACHE){
-      pcStat->countAccess();
+      countAccess();
       if(!EpocHelper::once){
-         prediction = pcStat->LPLookup(pc,predictionFound);
+         prediction = LPLookup(pc,predictionFound);
          if(predictionFound==1){
             // use prediciton value
          }
@@ -406,9 +405,9 @@ LOG_ASSERT_ERROR(offset + data_length <= getCacheBlockSize(), "access until %u >
    {
       ScopedLock sl(getLock());
       if(MemComponent::component_t::L1_DCACHE == m_mem_component){
-         pcStat->insertPC(pc,cache_hit);
+         insertPC(pc,cache_hit);
          if(!EpocHelper::once && predictionFound==1)
-            pcStat->computeAccuracy(cache_hit,prediction,pc);
+            computeAccuracy(cache_hit,prediction,pc);
       }
       
       // Update the Cache Counters
@@ -808,9 +807,9 @@ CacheCntlr::processShmemReqFromPrevCache(CacheCntlr* requester, Core::mem_op_t m
    bool prediction=false;
 
    if(count){
-      pcStat->countAccess();
+      countAccess();
       if(!EpocHelper::once){
-         prediction = pcStat->LPLookup(pc,predictionFound);
+         prediction = LPLookup(pc,predictionFound);
          if(predictionFound==1){
             // use prediciton value
          }
@@ -855,9 +854,9 @@ CacheCntlr::processShmemReqFromPrevCache(CacheCntlr* requester, Core::mem_op_t m
    {
       ScopedLock sl(getLock());
       
-      pcStat->insertPC(pc,cache_hit);
+      insertPC(pc,cache_hit);
       if(!EpocHelper::once)
-         pcStat->computeAccuracy(cache_hit,prediction,pc);
+         computeAccuracy(cache_hit,prediction,pc);
       if (isPrefetch == Prefetch::NONE)
          getCache()->updateCounters(cache_hit);
       updateCounters(mem_op_type, address, cache_hit, getCacheState(address), isPrefetch);
