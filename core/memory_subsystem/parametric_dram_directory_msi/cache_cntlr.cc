@@ -467,6 +467,7 @@ MYLOG("L1 hit");
 
    } else {
       // remove from evictList of addresses as it will be requested again
+      if(count)
       {
          ScopedLock sl(getLock());
          getCache()->eraseEntryIffound(ca_address);
@@ -967,6 +968,7 @@ CacheCntlr::processShmemReqFromPrevCache(CacheCntlr* requester, Core::mem_op_t m
    else // !cache_hit: either data is not here, or operation on data is not permitted
    {
       // remove evictList
+      if(count)
       {
          ScopedLock sl(getLock());
          getCache()->eraseEntryIffound(address);
