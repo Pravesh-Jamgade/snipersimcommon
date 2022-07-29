@@ -856,7 +856,7 @@ CacheCntlr::processShmemReqFromPrevCache(CacheCntlr* requester, Core::mem_op_t m
       ScopedLock sl(getLock());
       
       insertPC(pc,cache_hit);
-      if(!EpocHelper::once)
+      if(!EpocHelper::once && predictionFound)
          computeAccuracy(cache_hit,prediction,pc);
       if (isPrefetch == Prefetch::NONE)
          getCache()->updateCounters(cache_hit);
