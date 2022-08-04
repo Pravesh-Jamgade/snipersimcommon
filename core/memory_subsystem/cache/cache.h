@@ -17,6 +17,7 @@
 
 class BlockInfo{
       public:
+      UInt64 inserts=0, evicts=0;
       std::set<IntPtr> evictList;
       std::set<IntPtr> uniqueList;
 

@@ -557,6 +557,10 @@ namespace ParametricDramDirectoryMSI
 
          CacheCntlr* lastLevelCache(void);
 
+
+         //update
+         UInt64 misses, accesses;
+         
       public:
 
          CacheCntlr(MemComponent::component_t mem_component,

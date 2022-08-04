@@ -440,6 +440,7 @@ MemoryManager::coreInitiateMemoryAccess(
    if(epocHelper->getEpocStatus()){
 
       if(EpocHelper::head()){
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DBA, "deadblocks,total_evicts,unique_inserts,cache_blocks,cache,core\n");
          _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_4, "cycle,epoc,toppc,topaccess,totalaccess,th,tm,coverage,accuracy,ch,cm,fs,ts,fns,tns,core,cache\n");
       }
 

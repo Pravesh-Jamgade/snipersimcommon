@@ -3,6 +3,7 @@
 #include "log.h"
 
 #include "config.hpp"
+#include "stats.h"
 
 // Cache class
 // constructors/destructors
@@ -48,11 +49,15 @@ Cache::Cache(
    for (UInt32 i = 0; i < m_num_sets; i++)
       m_set_usage_hist[i] = 0;
    #endif
+
+   registerStatsMetric(name, core_id, "evicts", &evicts);
+   registerStatsMetric(name, core_id, "inserts", &inserts);
 }
 
 Cache::~Cache()
 {
-   printf("[*]%s = %ld blocks each of size = %ld\n", m_name.c_str(), num_cache_blocks, m_blocksize);
+   printf("[%s] %ld blocks each of size = %ld\n", m_name.c_str(), num_cache_blocks, m_blocksize);
+   printf("[%s] inserts=%ld, evicts=%ld\n", m_name.c_str(), inserts, evicts);
    
    if(allowed()){
       logAndClear();
@@ -157,11 +162,13 @@ Cache::insertSingleLine(IntPtr addr, Byte* fill_buff,
    *evict_addr = tagToAddress(evict_block_info->getTag());
 
    if(allowed()){
+      inserts++;
       addToUniqueList(addr);
       totalBlocks+=1;
       if(*eviction){
          addEvicted(*evict_addr);
          total_evicts++;
+         evicts++;
       }
    }
 
