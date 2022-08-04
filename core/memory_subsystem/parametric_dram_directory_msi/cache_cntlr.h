@@ -560,6 +560,7 @@ namespace ParametricDramDirectoryMSI
 
          //update
          UInt64 misses, accesses;
+         double threshold;
          
       public:
 
@@ -663,7 +664,7 @@ namespace ParametricDramDirectoryMSI
                   double totalAccess = getTotalAccess();
                   double pcMissCount = (double)getUniqePCMissCount(it->second);
                   missRatio=pcMissCount/totalAccess;
-                  if(missRatio>0.50000001)
+                  if(missRatio>threshold)
                      addPrediction(true,it->second);//skip
                   else 
                      addPrediction(false,it->second);//no-skip
