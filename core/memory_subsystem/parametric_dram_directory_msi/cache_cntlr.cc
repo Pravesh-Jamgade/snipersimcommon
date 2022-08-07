@@ -155,10 +155,10 @@ CacheCntlr::CacheCntlr(MemComponent::component_t mem_component,
    m_shmem_perf_model(shmem_perf_model),
    misses(0),
    accesses(0),
-   threshold(0)
+   skipThreshold(0)
 {
    if(Sim()->getCfg()->hasKey("debug/threshold")){
-      threshold=Sim()->getCfg()->getFloat("debug/threshold");
+      skipThreshold=Sim()->getCfg()->getFloat("debug/threshold");
    }
 
    m_core_id_master = m_core_id - m_core_id % m_shared_cores;
