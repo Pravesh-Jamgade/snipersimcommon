@@ -403,6 +403,8 @@ namespace ParametricDramDirectoryMSI
       UInt64 getCount(State state){return lpperf->getCount(state);}
 
       UInt64 getTotalAccess(){return accesses;}
+
+      void clearLPTable(){LPTable.clear();}
    };
 
    class CacheCntlr : ::CacheCntlr, PCStat
@@ -645,6 +647,8 @@ namespace ParametricDramDirectoryMSI
          // 
          void processEnd(UInt64 epoc, std::shared_ptr<EpocData> epocData){
             // setAccesses();
+            // first clear existing LPTable then add new prediction
+            clearLPTable();
             UInt64 coverage_miss,coverage_hit,total_miss,total_hit;
             coverage_miss=coverage_hit=total_miss=total_hit=0;
             getCountPCPairs(bag, coverage_hit, coverage_miss, total_hit, total_miss);
