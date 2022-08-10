@@ -338,9 +338,9 @@ namespace ParametricDramDirectoryMSI
          }
          else{// prediction was no-skip
             if(res){// actual is skip
-                  lpperf->inc(State::tns);//benefit
+                  lpperf->inc(State::fns);//loss opp
             }else{
-                  lpperf->inc(State::fns);//lost opp
+                  lpperf->inc(State::tns);//benefit
             }
          } 
       }
