@@ -316,31 +316,31 @@ namespace ParametricDramDirectoryMSI
       // compute coverage, accuracy, coverage-miss (found predicition for PC entry but miss in cache), coverage-hit
       void computeAccuracy(bool res, bool pred, IntPtr pc){
          //       skip(miss)  *noskip(hit)
-         //pred   true        false
+         //pred   false       true
          //res    false       true
-         if( (!res & pred) | (res & !pred) ){
+         if( (!res & !pred) || (res & pred) ){
             accuracy++;
          }
 
-         if(res)
+         if(pred)
             uniquePCCount[pc].coverage_hit++;
          else uniquePCCount[pc].coverage_miss++;
 
          coverage++;
 
-         if(pred){// prediction was skip
-            if(res){// actual is skip
-                  lpperf->inc(State::ts);//benefit
+         if(pred){// prediction was hit (noskip)
+            if(res){// actual is hit (noskip)
+                  lpperf->inc(State::tns);// benefit
             }
-            else{
-                  lpperf->inc(State::fs);//hazard
+            else{//actual is miss (skip)
+                  lpperf->inc(State::fns);// lost opportunity
             }
          }
-         else{// prediction was no-skip
-            if(res){// actual is skip
-                  lpperf->inc(State::fns);//loss opp
-            }else{
-                  lpperf->inc(State::tns);//benefit
+         else{// prediction was miss (skip)
+            if(res){// actual is hit (noskip)
+                  lpperf->inc(State::fs);// hazard
+            }else{// actual is miss (skip)
+                  lpperf->inc(State::ts);//benefit
             }
          } 
       }
@@ -669,9 +669,9 @@ namespace ParametricDramDirectoryMSI
                   double pcMissCount = (double)getUniqePCMissCount(it->second);
                   missRatio=pcMissCount/totalAccess;
                   if(missRatio>skipThreshold)
-                     addPrediction(true,it->second);//skip
+                     addPrediction(false,it->second);//skip=miss
                   else 
-                     addPrediction(false,it->second);//no-skip
+                     addPrediction(true,it->second);//no-skip=hit
                   top_pc_access+=it->first;
                   top_pc_count++;
                }
