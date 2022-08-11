@@ -373,13 +373,13 @@ namespace ParametricDramDirectoryMSI
          return false;
       }
 
-      void getCountPCPairs(std::vector<std::pair<UInt64,IntPtr>>& tmp,UInt64& ch,UInt64& cm,UInt64& th,UInt64& tm, UInt64& chr, UInt64& cmr){
-         ch=cm=0;
+      void getCountPCPairs(std::vector<std::pair<UInt64,IntPtr>>& tmp,UInt64& chp,UInt64& cmp,UInt64& th,UInt64& tm, UInt64& chr, UInt64& cmr){
+         chp=cmp=0;
          th=tm=0;
          chr=cmr=0;
          for(auto e: uniquePCCount){
-            ch+=e.second.coverage_hit_pre;
-            cm+=e.second.coverage_miss_pre;
+            chp+=e.second.coverage_hit_pre;
+            cmp+=e.second.coverage_miss_pre;
             tm+=e.second.miss;
             th+=e.second.hit;
             chr+=e.second.coverage_hit_res;
@@ -705,7 +705,7 @@ namespace ParametricDramDirectoryMSI
 
             epocData->coverage_hit_res=coverage_hit_res;
             epocData->coverage_miss_res=coverage_miss_res;
-            
+
             epocData->total_hit=total_hit;
             epocData->total_miss=total_miss;
 
