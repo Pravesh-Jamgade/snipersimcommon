@@ -266,23 +266,23 @@ namespace ParametricDramDirectoryMSI
       public:
       UInt64 epoc, total_pc_count, total_pc_access, top_pc_count, top_pc_access, coverage, accuracy;
       UInt64 fs,ts,fns,tns;
-      UInt64 coverage_miss, coverage_hit, total_hit, total_miss; 
+      UInt64 coverage_miss_pre, coverage_hit_pre, coverage_hit_res, coverage_miss_res, total_hit, total_miss; 
       bool pred;
       EpocData(UInt64 epoc){
          this->epoc=epoc;
          total_pc_count=total_pc_access=top_pc_access=top_pc_count=coverage=accuracy=0;
          fs=fns=ts=tns=0;
-         coverage_hit=coverage_miss=0;
+         coverage_hit_pre=coverage_miss_pre=coverage_hit_pre=coverage_miss_res=0;
          total_hit=total_miss=0;
       }
    };
 
    class PCBased{
       public:
-      UInt64 count,miss,hit, coverage_miss, coverage_hit;
+      UInt64 count,miss,hit, coverage_miss_pre, coverage_hit_pre, coverage_hit_res, coverage_miss_res;
 
       PCBased(bool hitflag=true){
-         hit=miss=coverage_miss=coverage_hit=0;
+         hit=miss=coverage_miss_pre=coverage_hit_pre=coverage_miss_res=coverage_hit_res=0;
          count=1;
          if(hitflag) 
             hit=1;
@@ -323,8 +323,12 @@ namespace ParametricDramDirectoryMSI
          }
 
          if(pred)
-            uniquePCCount[pc].coverage_hit++;
-         else uniquePCCount[pc].coverage_miss++;
+            uniquePCCount[pc].coverage_hit_pre++;
+         else uniquePCCount[pc].coverage_miss_pre++;
+
+         if(res)
+            uniquePCCount[pc].coverage_hit_res++;
+         else uniquePCCount[pc].coverage_miss_res++;
 
          coverage++;
 
@@ -369,14 +373,17 @@ namespace ParametricDramDirectoryMSI
          return false;
       }
 
-      void getCountPCPairs(std::vector<std::pair<UInt64,IntPtr>>& tmp,UInt64& ch,UInt64& cm,UInt64& th,UInt64& tm){
+      void getCountPCPairs(std::vector<std::pair<UInt64,IntPtr>>& tmp,UInt64& ch,UInt64& cm,UInt64& th,UInt64& tm, UInt64& chr, UInt64& cmr){
          ch=cm=0;
          th=tm=0;
+         chr=cmr=0;
          for(auto e: uniquePCCount){
-            ch+=e.second.coverage_hit;
-            cm+=e.second.coverage_miss;
+            ch+=e.second.coverage_hit_pre;
+            cm+=e.second.coverage_miss_pre;
             tm+=e.second.miss;
             th+=e.second.hit;
+            chr+=e.second.coverage_hit_res;
+            cmr+=e.second.coverage_miss_res;
             tmp.push_back({e.second.count, e.first});
          }
       }
@@ -649,9 +656,9 @@ namespace ParametricDramDirectoryMSI
             // setAccesses();
             // first clear existing LPTable then add new prediction
             clearLPTable();
-            UInt64 coverage_miss,coverage_hit,total_miss,total_hit;
-            coverage_miss=coverage_hit=total_miss=total_hit=0;
-            getCountPCPairs(bag, coverage_hit, coverage_miss, total_hit, total_miss);
+            UInt64 coverage_miss_pre,coverage_hit_pre,total_miss,total_hit, coverage_miss_res, coverage_hit_res;
+            coverage_miss_pre=coverage_hit_pre=total_miss=total_hit=0;
+            getCountPCPairs(bag, coverage_hit_pre, coverage_miss_pre, total_hit, total_miss, coverage_hit_res, coverage_miss_res);
 
             sort(bag.begin(), bag.end());
 
@@ -659,10 +666,11 @@ namespace ParametricDramDirectoryMSI
             top_pc_access = top_pc_count = 0;
 
             // to get top pc, get pc for which per pc access is more than avg access
-            double thresold = getThreshold();
+            // double thresold = getThreshold();
+            int top10=10;
             
-            for(auto it=bag.rbegin();it!=bag.rend();it++){
-               if(it->first > thresold){
+            for(auto it=bag.rbegin();it!=bag.rend() && top10;it++){
+               // if(it->first > thresold){
                   // for high PC, set prediciton for these level
                   double missRatio = 0;
                   double totalAccess = getTotalAccess();
@@ -674,21 +682,30 @@ namespace ParametricDramDirectoryMSI
                      addPrediction(true,it->second);//no-skip=hit
                   top_pc_access+=it->first;
                   top_pc_count++;
-               }
+               // }
+               top10--;
             }         
 
             epocData->accuracy=getAccuracy();
             epocData->coverage=getCoverage();
+
             epocData->top_pc_access=top_pc_access;
             epocData->top_pc_count=top_pc_count;
+
             epocData->fs=getCount(State::fs);
             epocData->ts=getCount(State::ts);
             epocData->fns=getCount(State::fns);
             epocData->tns=getCount(State::tns);
+
             epocData->total_pc_access=getTotalAccess();
             epocData->total_pc_count=getTotalPCCount();
-            epocData->coverage_hit=coverage_hit;
-            epocData->coverage_miss=coverage_miss;
+
+            epocData->coverage_hit_pre=coverage_hit_pre;
+            epocData->coverage_miss_pre=coverage_miss_pre;
+
+            epocData->coverage_hit_res=coverage_hit_res;
+            epocData->coverage_miss_res=coverage_miss_res;
+            
             epocData->total_hit=total_hit;
             epocData->total_miss=total_miss;
 
