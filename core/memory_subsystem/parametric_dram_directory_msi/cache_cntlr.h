@@ -20,6 +20,8 @@
 
 #include "boost/tuple/tuple.hpp"
 
+#include "log.h"
+
 class DramCntlrInterface;
 class ATD;
 
