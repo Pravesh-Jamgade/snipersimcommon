@@ -15,7 +15,61 @@
 // Define to enable the set usage histogram
 //#define ENABLE_SET_USAGE_HIST
 
-class Cache : public CacheBase
+class BlockInfo{
+      public:
+      UInt64 inserts=0, evicts=0;
+      std::set<IntPtr> evictList;
+      std::set<IntPtr> uniqueList;
+
+      // add unique addr upon insert operation
+      void addToUniqueList(IntPtr addr){
+            if(uniqueList.size()==uniqueList.max_size()){
+                  printf("[UniqueList] STOP here\n");
+            }
+            auto findAddr = uniqueList.find(addr);
+            if(findAddr==uniqueList.end()){
+                  uniqueList.insert(addr);
+            }
+      }
+
+      UInt64 countUniqueList(){
+            return uniqueList.size();
+      }
+
+      // check if evictList already has entry of address
+      bool alreadyInEvictList(IntPtr addr){
+            auto findAddr = evictList.find(addr);
+            if(findAddr!=evictList.end()){
+                  return true;
+            }
+            return false;
+      }
+
+      // add evicted addr, to evictList
+      void addEvicted(IntPtr addr){
+            if(evictList.size()==evictList.max_size()){
+                  printf("[EvictList] STOP here\n");
+            }
+            auto findAddr = evictList.find(addr);
+            if(findAddr==evictList.end()){
+                  evictList.insert(addr);
+            }
+      }
+
+      // if previously evicted and it is miss on these cache level, then soon it will be requested again 
+      // hence remove from "evictList"
+      void eraseEntry(IntPtr addr){
+            if(alreadyInEvictList(addr)){
+                  evictList.erase(addr);
+            }
+      }
+
+      UInt64 countEvictList(){
+            return evictList.size();
+      }
+};
+
+class Cache : public CacheBase, BlockInfo
 {
    private:
       bool m_enabled;
@@ -68,6 +122,30 @@ class Cache : public CacheBase
 
       void enable() { m_enabled = true; }
       void disable() { m_enabled = false; }
+
+      void eraseEntryIffound(IntPtr addr){
+            if(allowed()){
+                  eraseEntry(addr);
+            }
+      }
+
+      bool allowed(){
+            if(m_name == "L1-D" || m_name == "L2" || m_name =="L3")
+                  return true;
+            return false;
+      }
+
+      UInt64 getDeadBlocks(){
+            return countEvictList();
+      }
+
+      UInt64 totalEvicts(){return evicts;}
+
+      void clear(){
+            inserts=evicts=0;
+            evictList.clear();
+            uniqueList.clear();
+      }
 };
 
 template <class T>

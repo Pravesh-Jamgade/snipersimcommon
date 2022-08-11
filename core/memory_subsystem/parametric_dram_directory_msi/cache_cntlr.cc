@@ -394,6 +394,14 @@ LOG_ASSERT_ERROR(offset + data_length <= getCacheBlockSize(), "access until %u >
       // Update the Cache Counters
       getCache()->updateCounters(cache_hit);
       updateCounters(mem_op_type, ca_address, cache_hit, getCacheState(cache_block_info), Prefetch::NONE);
+
+      if(MemComponent::L1_DCACHE == m_mem_component){
+         if(cache_hit){
+            hits++;
+         }
+         else misses++;
+         access++;
+      }
    }
 
    if (cache_hit)
@@ -447,6 +455,12 @@ MYLOG("L1 hit");
       }
 
    } else {
+      
+         if(count)
+         {
+            ScopedLock sl(getLock());
+            getCache()->eraseEntryIffound(ca_address);
+         }
       /* cache miss: either wrong coherency state or not present in the cache */
 MYLOG("L1 miss");
       if (!m_passthrough)
@@ -817,6 +831,13 @@ CacheCntlr::processShmemReqFromPrevCache(CacheCntlr* requester, Core::mem_op_t m
       if (isPrefetch == Prefetch::NONE)
          getCache()->updateCounters(cache_hit);
       updateCounters(mem_op_type, address, cache_hit, getCacheState(address), isPrefetch);
+
+      if(MemComponent::L2_CACHE==m_mem_component || MemComponent::L3_CACHE==m_mem_component){
+         if(cache_hit)
+            hits++;
+         else misses++;
+         access++;
+      }
    }
 
    if (cache_hit)
@@ -923,6 +944,12 @@ CacheCntlr::processShmemReqFromPrevCache(CacheCntlr* requester, Core::mem_op_t m
    }
    else // !cache_hit: either data is not here, or operation on data is not permitted
    {
+       if(count)
+      {
+         ScopedLock sl(getLock());
+         getCache()->eraseEntryIffound(address);
+      }
+
       // Increment shared mem perf model cycle counts
       if (modeled)
          getMemoryManager()->incrElapsedTime(m_mem_component, CachePerfModel::ACCESS_CACHE_TAGS, ShmemPerfModel::_USER_THREAD);

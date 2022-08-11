@@ -24,6 +24,7 @@ Cache::Cache(
    m_cache_type(cache_type),
    m_fault_injector(fault_injector)
 {
+
    m_set_info = CacheSet::createCacheSetInfo(name, cfgname, core_id, replacement_policy, m_associativity);
    m_sets = new CacheSet*[m_num_sets];
    for (UInt32 i = 0; i < m_num_sets; i++)
@@ -135,6 +136,14 @@ Cache::insertSingleLine(IntPtr addr, Byte* fill_buff,
    m_sets[set_index]->insert(cache_block_info, fill_buff,
          eviction, evict_block_info, evict_buff, cntlr);
    *evict_addr = tagToAddress(evict_block_info->getTag());
+
+   if(allowed()){
+      addToUniqueList(addr);
+      if(*eviction){
+         addEvicted(*evict_addr);
+         evicts++;
+      }
+   }
 
    if (m_fault_injector) {
       // NOTE: no callback is generated for read of evicted data

@@ -21,6 +21,7 @@
 #include "boost/tuple/tuple.hpp"
 
 #include "log.h"
+#include "cache_cntrl_info.h"
 
 class DramCntlrInterface;
 class ATD;
@@ -200,7 +201,7 @@ namespace ParametricDramDirectoryMSI
          friend class CacheCntlr;
    };
 
-   class CacheCntlr : ::CacheCntlr
+   class CacheCntlr : ::CacheCntlr, public CCI
    {
       private:
          // Data Members
@@ -407,6 +408,11 @@ namespace ParametricDramDirectoryMSI
 
          void enable() { m_master->m_cache->enable(); }
          void disable() { m_master->m_cache->disable(); }
+
+         void processEnd(UInt64 epoc, String name){
+            log(epoc, name, getCache()->getDeadBlocks(), getCache()->totalEvicts());
+            getCache()->clear();
+         }
 
          friend class CacheCntlrList;
          friend class MemoryManager;

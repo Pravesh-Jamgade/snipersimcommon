@@ -15,8 +15,7 @@
 #include "subsecond_time.h"
 
 #include <map>
-
-#include "EpocManager.h"
+#include "EpocHelper.h"
 #include <memory>
 
 class DramCache;
@@ -66,7 +65,7 @@ namespace ParametricDramDirectoryMSI
          void accessTLB(TLB * tlb, IntPtr address, bool isIfetch, Core::MemModeled modeled);
 
          //update
-         std::shared_ptr<EpocManagerSpace::EpocManager> epocManager;
+         std::shared_ptr<EpocHelper> epocHelper;
 
       public:
          MemoryManager(Core* core, Network* network, ShmemPerfModel* shmem_perf_model);

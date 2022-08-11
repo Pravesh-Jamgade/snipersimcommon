@@ -15,6 +15,7 @@
 
 #include <algorithm>
 
+#include "EpocHelper.h"
 #if 0
    extern Lock iolock;
 #  include "core_manager.h"
@@ -46,7 +47,7 @@ MemoryManager::MemoryManager(Core* core,
 {
    //update
    UInt64 epocLength = Sim()->getCfg()->getInt("param/epoc");
-   epocManager = std::make_shared<EpocManagerSpace::EpocManager>(epocLength, getCore()->getPerformanceModel()->getCycleCount());
+   epocHelper = std::make_shared<EpocHelper>(epocLength);
 
    // Read Parameters from the Config file
    std::map<MemComponent::component_t, CacheParameters> cache_parameters;
@@ -442,10 +443,23 @@ MemoryManager::coreInitiateMemoryAccess(
          data_buf, data_length,
          modeled == Core::MEM_MODELED_NONE || modeled == Core::MEM_MODELED_COUNT ? false : true,
          modeled == Core::MEM_MODELED_NONE ? false : true);
-
-   // epoc end process
-   if(epocManager->IsEpocEnded(getCore()->getPerformanceModel()->getCycleCount())){
       
+   UInt64 cycle = getCore()->getPerformanceModel()->getCycleCount();
+   epocHelper->doStatusUpdate(cycle);
+   if(epocHelper->getEpocStatus()){
+      if(EpocHelper::head()){
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::DEBUG, "epoc, access, hits, misses, miss_ratio, deadblocks, evicts, name\n");
+      }
+      UInt64 epoc = epocHelper->getEpocCounter();
+
+      // at the end of epoc compute miss-ratio, set predicition, get top pc
+      for(int i = 3; i <= (UInt32)m_last_level_cache; ++i)
+      {
+         String name = MemComponent::MemComponent2String(static_cast<MemComponent::component_t>(i));
+         m_cache_cntlrs[(MemComponent::component_t)i]->processEnd(epoc,name);
+         m_cache_cntlrs[(MemComponent::component_t)i]->clear();
+      }
+      epocHelper->reset();//turn off these code block as logging is done for these epoc
    }
 
    return result;
