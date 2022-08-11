@@ -23,6 +23,8 @@
 #include "counter.h"
 #include <vector>
 
+#include "log.h"
+
 class DramCntlrInterface;
 class ATD;
 
@@ -676,6 +678,12 @@ namespace ParametricDramDirectoryMSI
                   double totalAccess = getTotalAccess();
                   double pcMissCount = (double)getUniqePCMissCount(it->second);
                   missRatio=pcMissCount/totalAccess;
+                  if(missRatio>skipThreshold){
+                     _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG, "[skip]%lf,%lf\n", missRatio, skipThreshold);
+                  }
+                  else{
+                     _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG, "[noskip]%lf,%lf\n", missRatio, skipThreshold);
+                  }
                   if(missRatio>skipThreshold)
                      addPrediction(false,it->second);//skip=miss
                   else 
