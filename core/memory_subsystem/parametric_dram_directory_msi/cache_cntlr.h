@@ -678,12 +678,11 @@ namespace ParametricDramDirectoryMSI
                   double totalAccess = getTotalAccess();
                   double pcMissCount = (double)getUniqePCMissCount(it->second);
                   missRatio=pcMissCount/totalAccess;
-                  if(missRatio>skipThreshold){
-                     _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG, "[skip]%lf,%lf\n", missRatio, skipThreshold);
-                  }
-                  else{
-                     _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DEBUG, "[noskip]%lf,%lf\n", missRatio, skipThreshold);
-                  }
+
+                  bool flag = missRatio > skipThreshold;
+                  _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_3, "%ld,%lf,%lf,%d,%s,%d\n", 
+                     epoc, missRatio, skipThreshold, flag, getCache()->m_name, getCache()->core_id);
+                 
                   if(missRatio>skipThreshold)
                      addPrediction(false,it->second);//skip=miss
                   else 

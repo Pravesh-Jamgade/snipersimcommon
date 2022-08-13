@@ -1,6 +1,7 @@
 #ifndef EPOC_H
 #define EPOC_H
 #include "fixed_types.h"
+#include "log.h"
 
 class EpocHelper
 {   
@@ -22,6 +23,7 @@ class EpocHelper
     void doStatusUpdate(UInt64 cycle){
         UInt64 modCycle=cycle%epocLength;
         if(modCycle<prevCycle){
+            _LOG_CUSTOM_LOGGER(Log::Warning,Log::LP_1,"%ld,%ld,%ld\n", modCycle, prevCycle, cycle);
             epocEnded=true;
             epocCounter++;
         }
