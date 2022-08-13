@@ -681,7 +681,7 @@ namespace ParametricDramDirectoryMSI
 
                   bool flag = missRatio > skipThreshold;
                   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_3, "%ld,%lf,%lf,%d,%s,%d\n", 
-                     epoc, missRatio, skipThreshold, flag, getCache()->m_name, getCache()->core_id);
+                     epoc, missRatio, skipThreshold, flag, getCache()->getName(), getCache()->core_id);
                  
                   if(missRatio>skipThreshold)
                      addPrediction(false,it->second);//skip=miss
