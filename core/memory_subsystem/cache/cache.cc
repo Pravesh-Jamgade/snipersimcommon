@@ -56,8 +56,12 @@ Cache::Cache(
 
 Cache::~Cache()
 {
-   printf("[%s] %ld blocks each of size = %ld\n", m_name.c_str(), num_cache_blocks, m_blocksize);
-   printf("[%s] inserts=%ld, evicts=%ld\n", m_name.c_str(), inserts, evicts);
+   printf("[cache.cc %s] %ld blocks each of size = %ld\n", m_name.c_str(), num_cache_blocks, m_blocksize);
+   printf("[cache.cc %s] reads=%ld, inserts=%ld, evicts=%ld\n", m_name.c_str(),reads,inserts,evicts);
+
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::DBA, "***** %s *****\n", m_name.c_str());
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::DBA, "[cache.cc] %ld blocks each of size = %ld\n", num_cache_blocks, m_blocksize);
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::DBA, "[cache.cc] reads=%ld, inserts=%ld, evicts=%ld\n\n", reads,inserts,evicts);
    
    if(allowed()){
       logAndClear();
@@ -123,6 +127,10 @@ Cache::accessSingleLine(IntPtr addr, access_t access_type,
 
    if (cache_block_info == NULL)
       return NULL;
+
+   if(allowed()){
+      reads++;
+   }
 
    if (access_type == LOAD)
    {
@@ -227,7 +235,9 @@ Cache::logAndClear(){
    UInt64 deadBlocks = countEvictList();//never reused
    UInt64 uniqueInserts = countUniqueList();
 
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DBA, "%i,%i,%i,%i,%s,%d\n", 
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DBA, "[DeadBlocks]deadblocks,total_evicts,unique_inserts,cache_blocks,cache,core\n");
+
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DBA, "[DeadBlocks]%i,%i,%i,%i,%s,%d\n\n", 
       deadBlocks,
       total_evicts,
       uniqueInserts,

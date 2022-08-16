@@ -152,11 +152,12 @@ CacheCntlr::CacheCntlr(MemComponent::component_t mem_component,
    m_last_remote_hit_where(HitWhere::UNKNOWN),
    m_shmem_perf(new ShmemPerf()),
    m_shmem_perf_global(NULL),
-   m_shmem_perf_model(shmem_perf_model),
-   misses(0),
-   accesses(0),
-   skipThreshold(0)
+   m_shmem_perf_model(shmem_perf_model)
 {
+   misses=hits=accesses=0;
+   skipThreshold=0;
+   reads=writes=0;
+
    if(Sim()->getCfg()->hasKey("debug/threshold")){
       skipThreshold=Sim()->getCfg()->getFloat("debug/threshold");
    }
@@ -291,7 +292,16 @@ CacheCntlr::CacheCntlr(MemComponent::component_t mem_component,
 
 CacheCntlr::~CacheCntlr()
 {
-   printf("[%s] access=%ld, miss=%ld\n", getCache()->getName().c_str(), accesses, misses);
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::DBA, "***** %s @core=%d *****\n", getCache()->getName().c_str(), m_core_id);
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::DBA, "[cache_cntlr.cc] access=%ld, hit=%ld, miss=%ld\n", accesses,hits,misses);
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::DBA, "[cache_cntlr.cc] reads=%ld, writes=%ld\n\n", reads, writes);
+
+   for(auto pc : info){
+      Dump dump = pc.second;
+      _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_1, "%s,%s,%d,%d,%ld,%lf\n",
+         getCache()->getName().c_str(), dump.hexpc.c_str(), dump.access, dump.hit, dump.miss, dump.missratio());
+   }
+   
    if (isMasterCache())
    {
       delete m_master;
@@ -426,6 +436,14 @@ LOG_ASSERT_ERROR(offset + data_length <= getCacheBlockSize(), "access until %u >
       accesses++;
       if(!cache_hit)
          misses++;
+      else hits++;
+
+      insert(pc, cache_hit);
+
+      if(Core::READ==mem_op_type)
+         reads++;
+      if(Core::READ_EX==mem_op_type || Core::WRITE==mem_op_type)
+         writes++;
    }
 
    if (cache_hit)
@@ -592,6 +610,8 @@ MYLOG("processMemOpFromCore l%d after next fill", m_mem_component);
          m_next_cache_cntlr->updateUsageBits(ca_address, cache_block_info->getUsage());
       }
    }
+
+   m_master->m_cache->setCountFlag(count);
 
    accessCache(mem_op_type, ca_address, offset, data_buf, data_length, hit_where == HitWhere::where_t(m_mem_component) && count);
 MYLOG("access done");
@@ -878,6 +898,14 @@ CacheCntlr::processShmemReqFromPrevCache(CacheCntlr* requester, Core::mem_op_t m
       accesses++;
       if(!cache_hit)
          misses++;
+      else hits++;
+
+      insert(pc, cache_hit);
+
+      if(Core::READ==mem_op_type)
+         reads++;
+      if(Core::READ_EX==mem_op_type || Core::WRITE==mem_op_type)
+         writes++;
    }
 
    if (cache_hit)
@@ -1185,14 +1213,18 @@ CacheCntlr::accessDRAM(Core::mem_op_t mem_op_type, IntPtr address, bool isPrefet
    SubsecondTime dram_latency;
    HitWhere::where_t hit_where;
 
+   m_master->m_dram_cntlr->access++;
+
    switch (mem_op_type)
    {
       case Core::READ:
+         m_master->m_dram_cntlr->reads++;
          boost::tie(dram_latency, hit_where) = m_master->m_dram_cntlr->getDataFromDram(address, m_core_id_master, data_buf, t_issue, m_shmem_perf);
          break;
 
       case Core::READ_EX:
       case Core::WRITE:
+         m_master->m_dram_cntlr->writes++;
          boost::tie(dram_latency, hit_where) = m_master->m_dram_cntlr->putDataToDram(address, m_core_id_master, data_buf, t_issue);
          break;
 

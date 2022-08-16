@@ -25,6 +25,8 @@
 
 #include "log.h"
 
+#include "PCDump.h"
+
 class DramCntlrInterface;
 class ATD;
 
@@ -416,7 +418,7 @@ namespace ParametricDramDirectoryMSI
       void clearLPTable(){LPTable.clear();}
    };
 
-   class CacheCntlr : ::CacheCntlr, PCStat
+   class CacheCntlr : ::CacheCntlr, PCStat, PCDump
    {
       private:
          // Data Members
@@ -570,7 +572,7 @@ namespace ParametricDramDirectoryMSI
 
 
          //update
-         UInt64 misses, accesses;
+         UInt64 misses, hits, accesses, reads, writes;
          double skipThreshold;
          
       public:
@@ -659,7 +661,9 @@ namespace ParametricDramDirectoryMSI
             // first clear existing LPTable then add new prediction
             clearLPTable();
             UInt64 coverage_miss_pre,coverage_hit_pre,total_miss,total_hit, coverage_miss_res, coverage_hit_res;
-            coverage_miss_pre=coverage_hit_pre=total_miss=total_hit=0;
+
+            coverage_miss_pre=coverage_hit_pre=total_miss=total_hit=coverage_miss_res=coverage_hit_res=0;
+
             getCountPCPairs(bag, coverage_hit_pre, coverage_miss_pre, total_hit, total_miss, coverage_hit_res, coverage_miss_res);
 
             sort(bag.begin(), bag.end());
@@ -680,8 +684,8 @@ namespace ParametricDramDirectoryMSI
                   missRatio=pcMissCount/totalAccess;
 
                   bool flag = missRatio > skipThreshold;
-                  _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_3, "%ld,%lf,%lf,%d,%s,%d\n", 
-                     epoc, missRatio, skipThreshold, flag, getCache()->getName(), getCache()->core_id);
+                  _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_3, "%ld,%s,%lf,%lf,%d,%s,%d\n", 
+                     epoc, itostr(it->second).c_str(), missRatio, skipThreshold, flag, getCache()->getName().c_str(), getCache()->core_id);
                  
                   if(missRatio>skipThreshold)
                      addPrediction(false,it->second);//skip=miss

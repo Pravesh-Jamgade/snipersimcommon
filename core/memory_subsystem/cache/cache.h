@@ -17,7 +17,7 @@
 
 class BlockInfo{
       public:
-      UInt64 inserts=0, evicts=0;
+      UInt64 inserts=0, evicts=0, reads=0;
       std::set<IntPtr> evictList;
       std::set<IntPtr> uniqueList;
 
@@ -137,6 +137,8 @@ class Cache : public CacheBase, BlockInfo
       bool shared;
       bool master;
 
+      bool countFlag;
+
       void eraseEntryIffound(IntPtr addr){
             if(allowed()){
                   eraseEntry(addr);
@@ -148,6 +150,12 @@ class Cache : public CacheBase, BlockInfo
                   return true;
             return false;
       }
+
+      void setCountFlag(bool count){
+            countFlag=count;
+      }
+
+      bool isCountEnabled(){return countFlag;}
 };
 
 template <class T>
