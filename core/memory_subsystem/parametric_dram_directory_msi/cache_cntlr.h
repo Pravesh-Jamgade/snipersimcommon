@@ -668,6 +668,21 @@ namespace ParametricDramDirectoryMSI
 
             sort(bag.begin(), bag.end());
 
+            // average miss ratio of top pc
+            double top_miss_ratio=0;
+            int i=10;
+            int j=10;
+            for(auto it=bag.rbegin(); it!=bag.rend() && i; it++, i--){
+               double totalAccess = getTotalAccess();
+               double pcMissCount = (double)getUniqePCMissCount(it->second);
+               double missRatio = pcMissCount/totalAccess;
+               top_miss_ratio += missRatio;
+            }
+            top_miss_ratio=top_miss_ratio/10.0;
+
+            //use average miss ratio of top pc as skipThreshold
+            skipThreshold=top_miss_ratio;
+
             UInt64 top_pc_access, top_pc_count;
             top_pc_access = top_pc_count = 0;
 
@@ -686,8 +701,9 @@ namespace ParametricDramDirectoryMSI
                   bool flag = missRatio > skipThreshold;
                   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_3, "%ld,%s,%lf,%lf,%d,%s,%d\n", 
                      epoc, itostr(it->second).c_str(), missRatio, skipThreshold, flag, getCache()->getName().c_str(), getCache()->core_id);
-                 
-                  if(missRatio>skipThreshold)
+
+                  // if missration of pc is more than skipThreshold then skip(=miss) the level
+                  if(flag)
                      addPrediction(false,it->second);//skip=miss
                   else 
                      addPrediction(true,it->second);//no-skip=hit
