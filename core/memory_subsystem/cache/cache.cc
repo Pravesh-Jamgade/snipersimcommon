@@ -130,6 +130,7 @@ Cache::accessSingleLine(IntPtr addr, access_t access_type,
 
    if(allowed()){
       reads++;
+      countFlag=false;
    }
 
    if (access_type == LOAD)
@@ -178,6 +179,7 @@ Cache::insertSingleLine(IntPtr addr, Byte* fill_buff,
          total_evicts++;
          evicts++;
       }
+      countFlag=false;
    }
 
    if (m_fault_injector) {
