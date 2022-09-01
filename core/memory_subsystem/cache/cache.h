@@ -20,6 +20,16 @@ class BlockInfo{
       UInt64 inserts=0, evicts=0, reads=0;
       std::set<IntPtr> evictList;
       std::set<IntPtr> uniqueList;
+      std::map<IntPtr, IntPtr> deadlist;
+
+      void addrInsert(IntPtr addr, IntPtr epoc){
+            auto findAddr = deadlist.find(addr);
+            if(findAddr==deadlist.end()){
+                  deadlist.insert({addr, epoc});
+            }else{
+                  //already exists, not
+            }
+      }
 
       // add unique addr upon insert operation
       void addToUniqueList(IntPtr addr){

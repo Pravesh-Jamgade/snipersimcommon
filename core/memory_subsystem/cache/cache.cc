@@ -179,7 +179,6 @@ Cache::insertSingleLine(IntPtr addr, Byte* fill_buff,
          total_evicts++;
          evicts++;
       }
-      countFlag=false;
    }
 
    if (m_fault_injector) {

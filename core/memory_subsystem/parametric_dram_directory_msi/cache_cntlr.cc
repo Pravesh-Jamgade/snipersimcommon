@@ -350,6 +350,9 @@ CacheCntlr::processMemOpFromCore(
       bool modeled,
       bool count, IntPtr pc)
 {
+   //update
+   m_master->m_cache->setCountFlag(count);
+
    HitWhere::where_t hit_where = HitWhere::MISS;
 
    int predictionFound=1;
@@ -610,8 +613,6 @@ MYLOG("processMemOpFromCore l%d after next fill", m_mem_component);
          m_next_cache_cntlr->updateUsageBits(ca_address, cache_block_info->getUsage());
       }
    }
-
-   m_master->m_cache->setCountFlag(count);
 
    accessCache(mem_op_type, ca_address, offset, data_buf, data_length, hit_where == HitWhere::where_t(m_mem_component) && count);
 MYLOG("access done");
