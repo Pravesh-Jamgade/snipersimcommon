@@ -157,7 +157,7 @@ class Cache : public CacheBase, BlockInfo
 
       bool allowed(){
             if(m_name == "L1-D" || m_name == "L2" || m_name =="L3")
-                  return countFlag;
+                  return true;
             return false;
       }
 

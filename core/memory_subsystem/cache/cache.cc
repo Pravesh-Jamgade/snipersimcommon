@@ -128,9 +128,8 @@ Cache::accessSingleLine(IntPtr addr, access_t access_type,
    if (cache_block_info == NULL)
       return NULL;
 
-   if(allowed()){
+   if(allowed() && countFlag){
       reads++;
-      countFlag=false;
    }
 
    if (access_type == LOAD)
@@ -170,7 +169,7 @@ Cache::insertSingleLine(IntPtr addr, Byte* fill_buff,
          eviction, evict_block_info, evict_buff, cntlr);
    *evict_addr = tagToAddress(evict_block_info->getTag());
 
-   if(allowed()){
+   if(allowed() && countFlag){
       inserts++;
       addToUniqueList(addr);
       totalBlocks+=1;
