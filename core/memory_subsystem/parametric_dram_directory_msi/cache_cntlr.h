@@ -377,7 +377,7 @@ namespace ParametricDramDirectoryMSI
          return false;
       }
 
-      void getCountPCPairs(std::vector<std::pair<UInt64,IntPtr>>& tmp,UInt64& chp,UInt64& cmp,UInt64& th,UInt64& tm, UInt64& chr, UInt64& cmr){
+      void getCountPCPairs(std::vector<std::pair<UInt64, IntPtr>>& critiPC, std::vector<std::pair<UInt64,IntPtr>>& tmp,UInt64& chp,UInt64& cmp,UInt64& th,UInt64& tm, UInt64& chr, UInt64& cmr){
          chp=cmp=0;
          th=tm=0;
          chr=cmr=0;
@@ -389,6 +389,7 @@ namespace ParametricDramDirectoryMSI
             chr+=e.second.coverage_hit_res;
             cmr+=e.second.coverage_miss_res;
             tmp.push_back({e.second.count, e.first});
+            critiPC.push_back({e.second.hit, e.first});
          }
       }
 
@@ -414,6 +415,10 @@ namespace ParametricDramDirectoryMSI
       UInt64 getCount(State state){return lpperf->getCount(state);}
 
       UInt64 getTotalAccess(){return accesses;}
+
+      UInt64 PCAccess(IntPtr pc){return uniquePCCount[pc].count;}
+      UInt64 PCHit(IntPtr pc){return uniquePCCount[pc].hit;}
+      UInt64 PCMiss(IntPtr pc){return uniquePCCount[pc].miss;}
 
       void clearLPTable(){LPTable.clear();}
    };
@@ -664,19 +669,33 @@ namespace ParametricDramDirectoryMSI
 
             coverage_miss_pre=coverage_hit_pre=total_miss=total_hit=coverage_miss_res=coverage_hit_res=0;
 
-            getCountPCPairs(bag, coverage_hit_pre, coverage_miss_pre, total_hit, total_miss, coverage_hit_res, coverage_miss_res);
+            std::vector<std::pair<UInt64, IntPtr>> critiPC;
 
+            getCountPCPairs(critiPC, bag, coverage_hit_pre, coverage_miss_pre, total_hit, total_miss, coverage_hit_res, coverage_miss_res);
+
+            sort(critiPC.begin(), critiPC.end());
             sort(bag.begin(), bag.end());
 
             // average miss ratio of top pc
             double top_miss_ratio=0;
             int i=10;
             int j=10;
-            for(auto it=bag.rbegin(); it!=bag.rend() && i; it++, i--){
+            for(
+                  auto it=bag.rbegin(), ipc=critiPC.rbegin(); 
+                     it!=bag.rend() && i && ipc!=critiPC.rend(); 
+                           it++, i--, ipc++
+               ){
                double totalAccess = getTotalAccess();
                double pcMissCount = (double)getUniqePCMissCount(it->second);
                double missRatio = pcMissCount/totalAccess;
                top_miss_ratio += missRatio;
+
+               _LOG_CUSTOM_LOGGER(Log::Warning, Log::C0, "%ld, %ld, %ld, %ld, %ld, %ld, %ld, %ld, %ld, %d\n", 
+                     epoc,
+                     it->second, PCAccess(it->second), PCHit(it->second), PCMiss(it->second),
+                     ipc->second, PCAccess(ipc->second), PCHit(ipc->second), PCMiss(ipc->second),
+                     getCache()->core_id
+               );
             }
             top_miss_ratio=top_miss_ratio/10.0;
 
