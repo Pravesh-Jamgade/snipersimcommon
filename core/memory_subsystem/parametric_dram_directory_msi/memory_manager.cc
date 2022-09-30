@@ -440,7 +440,7 @@ MemoryManager::coreInitiateMemoryAccess(
    if(epocHelper->getEpocStatus()){
 
       if(EpocHelper::head()){
-         _LOG_CUSTOM_LOGGER(Log::Warning, Log::C0, "epoc, pc1, access1, hit1, miss1 ,pc2, access2, hit2, miss2, core, cache\n");
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::C0, "epoc, byAccess, byHit, byBoth, cache\n");
          _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_1, "cache,pc,access,hit,miss,missratio\n");
          _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_3, "epoc,pc,missratio,skipthreshold,status[skip=1],cache,core\n");
          _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_4, "cycle,epoc,toppc,topaccess,totalaccess,th,tm,coverage,accuracy,chr,cmr,chp,cmp,fs,ts,fns,tns,core,cache\n");

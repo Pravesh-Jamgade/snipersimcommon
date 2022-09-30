@@ -659,79 +659,104 @@ namespace ParametricDramDirectoryMSI
             accesses=abs(i);
          }
 
+         // avg miss ratio for top pc. top pc could be equal to 10 or less
+         double computeAvgThresh(std::vector<std::pair<UInt64, IntPtr>>& vec, std::vector<IntPtr>& collect, std::map<IntPtr, double> missmap){
+            int i=10;
+            int count = 0;
+            double total_threshold = 0;
+
+            for(auto it = vec.rbegin(); it!=vec.rend() && i; it++, i--){
+               count++;
+               total_threshold += missmap[it->second];
+               collect.push_back(it->second);
+            }
+            return total_threshold/(double)count;
+         }
+
+      
          // using top pc build predicition table for current level
-         // 
          void processEnd(UInt64 epoc, std::shared_ptr<EpocData> epocData){
-            // setAccesses();
-            // first clear existing LPTable then add new prediction
+            
             clearLPTable();
+
             UInt64 coverage_miss_pre,coverage_hit_pre,total_miss,total_hit, coverage_miss_res, coverage_hit_res;
+            std::vector<std::pair<UInt64, IntPtr>> critiPCBag, bothBag;
 
             coverage_miss_pre=coverage_hit_pre=total_miss=total_hit=coverage_miss_res=coverage_hit_res=0;
+            
+            getCountPCPairs(critiPCBag, bag, coverage_hit_pre, coverage_miss_pre, total_hit, total_miss, coverage_hit_res, coverage_miss_res);
+            sort(critiPCBag.begin(), critiPCBag.end());//top pc by hit only
+            sort(bag.begin(), bag.end());// top pc by accesses only
 
-            std::vector<std::pair<UInt64, IntPtr>> critiPC;
+            std::map<IntPtr, double> pcMissMap;
 
-            getCountPCPairs(critiPC, bag, coverage_hit_pre, coverage_miss_pre, total_hit, total_miss, coverage_hit_res, coverage_miss_res);
-
-            sort(critiPC.begin(), critiPC.end());
-            sort(bag.begin(), bag.end());
-
-            // average miss ratio of top pc
-            double top_miss_ratio=0;
+            // keeping miss ration of top pc
             int i=10;
-            double totalAccess = getTotalAccess();
 
-            for(
-                  auto it=bag.rbegin(), ipc=critiPC.rbegin(); 
-                     it!=bag.rend() && i && ipc!=critiPC.rend(); 
-                           it++, i--, ipc++
-               ){
-               
-               double pcMissCount = (double)getUniqePCMissCount(it->second);
-               double missRatio = pcMissCount/totalAccess;
-               top_miss_ratio += missRatio;
-
-               _LOG_CUSTOM_LOGGER(Log::Warning, Log::C0, "%ld, %ld, %ld, %ld, %ld, %ld, %ld, %ld, %ld, %d, %s\n", 
-                     epoc,
-                     it->second, PCAccess(it->second), PCHit(it->second), PCMiss(it->second),
-                     ipc->second, PCAccess(ipc->second), PCHit(ipc->second), PCMiss(ipc->second),
-                     getCache()->core_id, getCache()->getName().c_str()
-               );
+            for(auto it= bag.begin(); it!=bag.end(); it++){
+               double missratio = (double) PCMiss(it->second)/ (double) PCAccess(it->second);
+               auto found = pcMissMap.find(it->second);
+               if(found!=pcMissMap.end()){
+                  pcMissMap.insert({it->second, missratio});
+               }
             }
-            top_miss_ratio=top_miss_ratio/10.0;
+
+            i=10;
+            for(auto it= critiPCBag.begin(); it!=critiPCBag.end(); it++){
+               double missratio = (double) PCMiss(it->second)/ (double) PCAccess(it->second);
+               auto found = pcMissMap.find(it->second);
+               if(found!=pcMissMap.end()){
+                  pcMissMap.insert({it->second, missratio});
+               }
+            }
+
+            // if pc exists in both list use them as final fitered 
+            std::vector<IntPtr> accessPC, criticalPC, bothPC;
+
+            double thByAccess = computeAvgThresh(bag, accessPC, pcMissMap);
+            double thByHit = computeAvgThresh(critiPCBag, criticalPC, pcMissMap);
+            double thByBoth = 0;
+            int countMatching = 0;
+            
+            for(IntPtr it : accessPC){// top 10 PC by access
+               auto findPC = std::find(criticalPC.begin(), criticalPC.end(), it);// adding criticality, top PC by hit count
+               if(findPC!=criticalPC.end()){
+                  bothBag.push_back({PCHit(it), it});
+               }
+            }
+
+            std::sort(bothBag.begin(), bothBag.end());
+            thByBoth = computeAvgThresh(bothBag, bothPC, pcMissMap);
 
             //use average miss ratio of top pc as skipThreshold
-            skipThreshold=top_miss_ratio;
+            skipThreshold=thByBoth;
 
+            _LOG_CUSTOM_LOGGER(Log::Warning, Log::C0, "%ld, %f, %f, %f, %s\n", epoc, thByAccess, thByHit, thByBoth, getCache()->getName().c_str());
+            
+
+            // to get top pc, get pc for which per pc access is more than avg access
+            
             UInt64 top_pc_access, top_pc_count;
             top_pc_access = top_pc_count = 0;
 
-            // to get top pc, get pc for which per pc access is more than avg access
-            // double thresold = getThreshold();
-            int top10=10;
-            double totalAccess = getTotalAccess();
-
-            for(auto it=bag.rbegin();it!=bag.rend() && top10;it++){
-               // if(it->first > thresold){
-                  // for high PC, set prediciton for these level
-                  double missRatio = 0;
+            for(auto it=bothPC.begin(); it!=bothPC.end(); it++){
                   
-                  double pcMissCount = (double)getUniqePCMissCount(it->second);
-                  missRatio=pcMissCount/totalAccess;
+                  double pcMissCount = (double)PCMiss(*it);
+                  UInt64 access = PCAccess(*it);
+                  double missRatio=pcMissCount/(double)access;
 
                   bool flag = missRatio > skipThreshold;
                   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_3, "%ld,%s,%lf,%lf,%d,%s,%d\n", 
-                     epoc, itostr(it->second).c_str(), missRatio, skipThreshold, flag, getCache()->getName().c_str(), getCache()->core_id);
+                     epoc, itostr(*it).c_str(), missRatio, skipThreshold, flag, getCache()->getName().c_str(), getCache()->core_id);
 
                   // if missration of pc is more than skipThreshold then skip(=miss) the level
                   if(flag)
-                     addPrediction(false,it->second);//skip=miss
+                     addPrediction(false,*it);//skip=miss
                   else 
-                     addPrediction(true,it->second);//no-skip=hit
-                  top_pc_access+=it->first;
-                  top_pc_count++;
-               // }
-               top10--;
+                     addPrediction(true,*it);//no-skip=hit
+                  
+               top_pc_access+=access;
+               top_pc_count++;
             }         
 
             epocData->accuracy=getAccuracy();
