@@ -378,9 +378,9 @@ namespace ParametricDramDirectoryMSI
       }
 
       void getCountPCPairs(std::vector<std::pair<UInt64, IntPtr>>& critiPC, std::vector<std::pair<UInt64,IntPtr>>& tmp,UInt64& chp,UInt64& cmp,UInt64& th,UInt64& tm, UInt64& chr, UInt64& cmr){
-         chp=cmp=0;
-         th=tm=0;
-         chr=cmr=0;
+         chp=cmp=0;// prediction hit, miss
+         th=tm=0;// total hit, miss
+         chr=cmr=0;// result hit, miss
          for(auto e: uniquePCCount){
             chp+=e.second.coverage_hit_pre;
             cmp+=e.second.coverage_miss_pre;
@@ -679,22 +679,23 @@ namespace ParametricDramDirectoryMSI
             // average miss ratio of top pc
             double top_miss_ratio=0;
             int i=10;
-            int j=10;
+            double totalAccess = getTotalAccess();
+
             for(
                   auto it=bag.rbegin(), ipc=critiPC.rbegin(); 
                      it!=bag.rend() && i && ipc!=critiPC.rend(); 
                            it++, i--, ipc++
                ){
-               double totalAccess = getTotalAccess();
+               
                double pcMissCount = (double)getUniqePCMissCount(it->second);
                double missRatio = pcMissCount/totalAccess;
                top_miss_ratio += missRatio;
 
-               _LOG_CUSTOM_LOGGER(Log::Warning, Log::C0, "%ld, %ld, %ld, %ld, %ld, %ld, %ld, %ld, %ld, %d\n", 
+               _LOG_CUSTOM_LOGGER(Log::Warning, Log::C0, "%ld, %ld, %ld, %ld, %ld, %ld, %ld, %ld, %ld, %d, %s\n", 
                      epoc,
                      it->second, PCAccess(it->second), PCHit(it->second), PCMiss(it->second),
                      ipc->second, PCAccess(ipc->second), PCHit(ipc->second), PCMiss(ipc->second),
-                     getCache()->core_id
+                     getCache()->core_id, getCache()->getName().c_str()
                );
             }
             top_miss_ratio=top_miss_ratio/10.0;
@@ -708,12 +709,13 @@ namespace ParametricDramDirectoryMSI
             // to get top pc, get pc for which per pc access is more than avg access
             // double thresold = getThreshold();
             int top10=10;
-            
+            double totalAccess = getTotalAccess();
+
             for(auto it=bag.rbegin();it!=bag.rend() && top10;it++){
                // if(it->first > thresold){
                   // for high PC, set prediciton for these level
                   double missRatio = 0;
-                  double totalAccess = getTotalAccess();
+                  
                   double pcMissCount = (double)getUniqePCMissCount(it->second);
                   missRatio=pcMissCount/totalAccess;
 
