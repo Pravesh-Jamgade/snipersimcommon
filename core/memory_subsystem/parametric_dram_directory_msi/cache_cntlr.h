@@ -660,17 +660,17 @@ namespace ParametricDramDirectoryMSI
          }
 
          // avg miss ratio for top pc. top pc could be equal to 10 or less
-         double computeAvgThresh(std::vector<std::pair<UInt64, IntPtr>>& vec, std::vector<IntPtr>& collect, std::map<IntPtr, double> missmap){
+         double computeAvgThresh(std::vector<std::pair<UInt64, IntPtr>>& vec, std::vector<IntPtr>& collect){
             int i=10;
-            int count = 0;
+            double count = 0;
             double total_threshold = 0;
 
-            for(auto it = vec.rbegin(); it!=vec.rend() && i; it++, i--){
-               count++;
-               total_threshold += missmap[it->second];
+            for(auto it = vec.rbegin(); it != vec.rend() && i; it++, i--){
+               count = count + 1;
+               total_threshold =  total_threshold + (double)PCMiss(it->second)/(double)PCAccess(it->second);
                collect.push_back(it->second);
             }
-            return total_threshold/(double)count;
+            return total_threshold/count;
          }
 
       
@@ -688,35 +688,12 @@ namespace ParametricDramDirectoryMSI
             sort(critiPCBag.begin(), critiPCBag.end());//top pc by hit only
             sort(bag.begin(), bag.end());// top pc by accesses only
 
-            std::map<IntPtr, double> pcMissMap;
-
-            // keeping miss ration of top pc
-            int i=10;
-
-            for(auto it= bag.begin(); it!=bag.end(); it++){
-               double missratio = (double) PCMiss(it->second)/ (double) PCAccess(it->second);
-               auto found = pcMissMap.find(it->second);
-               if(found!=pcMissMap.end()){
-                  pcMissMap.insert({it->second, missratio});
-               }
-            }
-
-            i=10;
-            for(auto it= critiPCBag.begin(); it!=critiPCBag.end(); it++){
-               double missratio = (double) PCMiss(it->second)/ (double) PCAccess(it->second);
-               auto found = pcMissMap.find(it->second);
-               if(found!=pcMissMap.end()){
-                  pcMissMap.insert({it->second, missratio});
-               }
-            }
-
             // if pc exists in both list use them as final fitered 
             std::vector<IntPtr> accessPC, criticalPC, bothPC;
 
-            double thByAccess = computeAvgThresh(bag, accessPC, pcMissMap);
-            double thByHit = computeAvgThresh(critiPCBag, criticalPC, pcMissMap);
+            double thByAccess = computeAvgThresh(bag, accessPC);
+            double thByHit = computeAvgThresh(critiPCBag, criticalPC);
             double thByBoth = 0;
-            int countMatching = 0;
             
             for(IntPtr it : accessPC){// top 10 PC by access
                auto findPC = std::find(criticalPC.begin(), criticalPC.end(), it);// adding criticality, top PC by hit count
@@ -725,13 +702,13 @@ namespace ParametricDramDirectoryMSI
                }
             }
 
-            std::sort(bothBag.begin(), bothBag.end());
-            thByBoth = computeAvgThresh(bothBag, bothPC, pcMissMap);
+            thByBoth = computeAvgThresh(bothBag, bothPC);
 
             //use average miss ratio of top pc as skipThreshold
             skipThreshold=thByBoth;
 
             _LOG_CUSTOM_LOGGER(Log::Warning, Log::C0, "%ld, %f, %f, %f, %s\n", epoc, thByAccess, thByHit, thByBoth, getCache()->getName().c_str());
+            printf("%ld, %f, %f, %f, %s\n", epoc, thByAccess, thByHit, thByBoth, getCache()->getName().c_str());
             
 
             // to get top pc, get pc for which per pc access is more than avg access
