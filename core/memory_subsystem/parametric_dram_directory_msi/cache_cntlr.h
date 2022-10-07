@@ -705,7 +705,7 @@ namespace ParametricDramDirectoryMSI
             thByBoth = computeAvgThresh(bothBag, bothPC);
 
             //use average miss ratio of top pc as skipThreshold
-            skipThreshold=thByBoth;
+            skipThreshold=thByAccess;
 
             _LOG_CUSTOM_LOGGER(Log::Warning, Log::C0, "%ld, %f, %f, %f, %s\n", epoc, thByAccess, thByHit, thByBoth, getCache()->getName().c_str());
             printf("%ld, %f, %f, %f, %s\n", epoc, thByAccess, thByHit, thByBoth, getCache()->getName().c_str());
@@ -723,8 +723,8 @@ namespace ParametricDramDirectoryMSI
                   double missRatio=pcMissCount/(double)access;
 
                   bool flag = missRatio > skipThreshold;
-                  _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_3, "%ld,%s,%lf,%lf,%d,%s,%d\n", 
-                     epoc, itostr(*it).c_str(), missRatio, skipThreshold, flag, getCache()->getName().c_str(), getCache()->core_id);
+                  _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_3, "%ld,0x%x,%lf,%lf,%d,%s,%d\n", 
+                     epoc, *it, missRatio, skipThreshold, flag, getCache()->getName().c_str(), getCache()->core_id);
 
                   // if missration of pc is more than skipThreshold then skip(=miss) the level
                   if(flag)
