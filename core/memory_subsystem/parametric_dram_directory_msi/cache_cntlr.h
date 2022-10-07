@@ -716,7 +716,7 @@ namespace ParametricDramDirectoryMSI
             UInt64 top_pc_access, top_pc_count;
             top_pc_access = top_pc_count = 0;
 
-            for(auto it=bothPC.begin(); it!=bothPC.end(); it++){
+            for(auto it=accessPC.begin(); it!=accessPC.end(); it++){
                   
                   double pcMissCount = (double)PCMiss(*it);
                   UInt64 access = PCAccess(*it);
