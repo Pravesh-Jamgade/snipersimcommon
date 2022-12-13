@@ -2,13 +2,9 @@
 #include "cache.h"
 #include "log.h"
 
-#include "config.hpp"
-#include "stats.h"
-
 // Cache class
 // constructors/destructors
 Cache::Cache(
-   bool shared,
    String name,
    String cfgname,
    core_id_t core_id,
@@ -19,24 +15,15 @@ Cache::Cache(
    cache_t cache_type,
    hash_t hash,
    FaultInjector *fault_injector,
-   AddressHomeLookup *ahl,
-   bool master)
+   AddressHomeLookup *ahl)
 :
    CacheBase(name, num_sets, associativity, cache_block_size, hash, ahl),
    m_enabled(false),
    m_num_accesses(0),
    m_num_hits(0),
    m_cache_type(cache_type),
-   m_fault_injector(fault_injector),
-   master(master)
+   m_fault_injector(fault_injector)
 {
-   this->total_evicts = 0;
-   this->totalBlocks = 0;
-   this->count_dead_blocks = 0;
-   this->shared = shared;
-   this->loggedByOtherCore = false;
-   this->core_id = core_id;
-
    m_set_info = CacheSet::createCacheSetInfo(name, cfgname, core_id, replacement_policy, m_associativity);
    m_sets = new CacheSet*[m_num_sets];
    for (UInt32 i = 0; i < m_num_sets; i++)
@@ -49,26 +36,10 @@ Cache::Cache(
    for (UInt32 i = 0; i < m_num_sets; i++)
       m_set_usage_hist[i] = 0;
    #endif
-
-   registerStatsMetric(name, core_id, "evicts", &evicts);
-   registerStatsMetric(name, core_id, "inserts", &inserts);
 }
 
 Cache::~Cache()
 {
-   printf("[cache.cc %s] %ld blocks each of size = %ld\n", m_name.c_str(), num_cache_blocks, m_blocksize);
-   printf("[cache.cc %s] reads=%ld, inserts=%ld, evicts=%ld\n", m_name.c_str(),reads,inserts,evicts);
-
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::DBA, "***** %s *****\n", m_name.c_str());
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::DBA, "[cache.cc] %ld blocks each of size = %ld\n", num_cache_blocks, m_blocksize);
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::DBA, "[cache.cc] reads=%ld, inserts=%ld, evicts=%ld\n\n", reads,inserts,evicts);
-   
-   if(allowed()){
-      logAndClear();
-   }
-   
-   // //only through master cntrl access cache
-   // printf("%d, %d, %s\n", master, core_id, m_name.c_str());
    #ifdef ENABLE_SET_USAGE_HIST
    printf("Cache %s set usage:", m_name.c_str());
    for (SInt32 i = 0; i < (SInt32) m_num_sets; i++)
@@ -128,10 +99,6 @@ Cache::accessSingleLine(IntPtr addr, access_t access_type,
    if (cache_block_info == NULL)
       return NULL;
 
-   if(allowed() && countFlag){
-      reads++;
-   }
-
    if (access_type == LOAD)
    {
       // NOTE: assumes error occurs in memory. If we want to model bus errors, insert the error into buff instead
@@ -168,17 +135,6 @@ Cache::insertSingleLine(IntPtr addr, Byte* fill_buff,
    m_sets[set_index]->insert(cache_block_info, fill_buff,
          eviction, evict_block_info, evict_buff, cntlr);
    *evict_addr = tagToAddress(evict_block_info->getTag());
-
-   if(allowed() && countFlag){
-      inserts++;
-      addToUniqueList(addr);
-      totalBlocks+=1;
-      if(*eviction){
-         addEvicted(*evict_addr);
-         total_evicts++;
-         evicts++;
-      }
-   }
 
    if (m_fault_injector) {
       // NOTE: no callback is generated for read of evicted data
@@ -227,22 +183,4 @@ Cache::updateHits(Core::mem_op_t mem_op_type, UInt64 hits)
       m_num_accesses += hits;
       m_num_hits += hits;
    }
-}
-
-void
-Cache::logAndClear(){
-
-   UInt64 deadBlocks = countEvictList();//never reused
-   UInt64 uniqueInserts = countUniqueList();
-
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DBA, "[DeadBlocks]deadblocks,total_evicts,unique_inserts,cache_blocks,cache,core\n");
-
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::DBA, "[DeadBlocks]%i,%i,%i,%i,%s,%d\n\n", 
-      deadBlocks,
-      total_evicts,
-      uniqueInserts,
-      num_cache_blocks,
-      m_name.c_str(),
-      core_id
-   );
 }

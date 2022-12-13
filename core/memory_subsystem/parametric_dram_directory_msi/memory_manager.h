@@ -16,9 +16,6 @@
 
 #include <map>
 
-#include "EpocHelper.h"
-#include<memory>
-
 class DramCache;
 class ShmemPerf;
 
@@ -91,7 +88,7 @@ namespace ParametricDramDirectoryMSI
                Core::mem_op_t mem_op_type,
                IntPtr address, UInt32 offset,
                Byte* data_buf, UInt32 data_length,
-               Core::MemModeled modeled, IntPtr pc=-1);
+               Core::MemModeled modeled);
 
          void handleMsgFromNetwork(NetPacket& packet);
 
@@ -116,7 +113,5 @@ namespace ParametricDramDirectoryMSI
          SubsecondTime getCost(MemComponent::component_t mem_component, CachePerfModel::CacheAccess_t access_type);
          void incrElapsedTime(SubsecondTime latency, ShmemPerfModel::Thread_t thread_num = ShmemPerfModel::NUM_CORE_THREADS);
          void incrElapsedTime(MemComponent::component_t mem_component, CachePerfModel::CacheAccess_t access_type, ShmemPerfModel::Thread_t thread_num = ShmemPerfModel::NUM_CORE_THREADS);
-
-         std::shared_ptr<EpocHelper> epocHelper;
    };
 }

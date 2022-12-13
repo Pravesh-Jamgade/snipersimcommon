@@ -19,13 +19,6 @@
 #include "shmem_perf.h"
 
 #include "boost/tuple/tuple.hpp"
-#include<memory>
-#include "counter.h"
-#include <vector>
-
-#include "log.h"
-
-#include "PCDump.h"
 
 class DramCntlrInterface;
 class ATD;
@@ -156,9 +149,6 @@ namespace ParametricDramDirectoryMSI
    class CacheMasterCntlr
    {
       private:
-         //update
-         core_id_t coreid;
-
          Cache* m_cache;
          Lock m_cache_lock;
          Lock m_smt_lock; //< Only used in L1 cache, to protect against concurrent access from sibling SMT threads
@@ -202,228 +192,13 @@ namespace ParametricDramDirectoryMSI
             , m_atds()
             , m_prefetch_list()
             , m_prefetch_next(SubsecondTime::Zero())
-            ,coreid(core_id)
          {}
          ~CacheMasterCntlr();
 
          friend class CacheCntlr;
    };
 
-   enum State{
-         fs=0,
-         ts,
-         fns,
-         tns,
-      };
-
-   class LPPerf
-   {
-      Counter trueSkip,trueNoSkip,falseSkip, falseNoSkip, total;
-      public:
-
-      LPPerf(){
-         trueSkip=trueNoSkip=falseSkip=falseNoSkip=total=Counter(0);
-      }
-      Counter getTrueSkip(){return trueSkip;}
-      Counter getTrueNoSkip(){return trueNoSkip;}
-      Counter getFalseSkip(){return falseSkip;}
-      Counter getFalseNoSkip(){return falseNoSkip;}
-      UInt64 getTotalCount(){return trueSkip.getCount()+trueNoSkip.getCount()+falseSkip.getCount()+falseNoSkip.getCount();}
-
-      void inc(State state, int times=1){
-         switch(state){
-               case State::fs: falseSkip.increase(times); break;
-               case State::ts: trueSkip.increase(times); break;
-               case State::fns: falseNoSkip.increase(times); break;
-               case State::tns: trueNoSkip.increase(times); break;
-         }
-         total.increase();
-      }
-
-      UInt64 getCount(State state){
-         switch(state){
-               case State::fs: return falseSkip.getCount(); break;
-               case State::ts: return trueSkip.getCount(); break;
-               case State::fns: return falseNoSkip.getCount(); break;
-               case State::tns: return trueNoSkip.getCount(); break;
-               default: return INT32_MAX;
-         }
-      }
-
-      double getRatio(State state){
-         Counter *counter=nullptr;
-         switch(state){
-               case State::fs: counter=&falseSkip; break;
-               case State::ts: counter=&trueSkip; break;
-               case State::fns: counter=&falseNoSkip; break;
-               case State::tns: counter=&trueNoSkip; break;
-               default: return 0;
-         }
-         if(counter!=nullptr)
-            return (double)counter->getCount()/(double)total.getCount();
-         else
-               exit(0);
-      }
-   };
-
-   class EpocData{
-      public:
-      UInt64 epoc, total_pc_count, total_pc_access, top_pc_count, top_pc_access, coverage, accuracy;
-      UInt64 fs,ts,fns,tns;
-      UInt64 coverage_miss_pre, coverage_hit_pre, coverage_hit_res, coverage_miss_res, total_hit, total_miss; 
-      bool pred;
-      EpocData(UInt64 epoc){
-         this->epoc=epoc;
-         total_pc_count=total_pc_access=top_pc_access=top_pc_count=coverage=accuracy=0;
-         fs=fns=ts=tns=0;
-         coverage_hit_pre=coverage_miss_pre=coverage_hit_pre=coverage_miss_res=0;
-         total_hit=total_miss=0;
-      }
-   };
-
-   class PCBased{
-      public:
-      UInt64 count,miss,hit, coverage_miss_pre, coverage_hit_pre, coverage_hit_res, coverage_miss_res;
-
-      PCBased(bool hitflag=true){
-         hit=miss=coverage_miss_pre=coverage_hit_pre=coverage_miss_res=coverage_hit_res=0;
-         count=1;
-         if(hitflag) 
-            hit=1;
-         else miss=1;
-      }      
-   };
-
-   class PCStat{
-      std::map<IntPtr, PCBased> uniquePCCount;
-      std::map<IntPtr, bool> LPTable;
-      std::shared_ptr<LPPerf> lpperf;
-
-      UInt64 coverage, accuracy;// from epoc 1 onwards (epoc starts with 0)
-      public:
-      
-      UInt64 accesses, sum_till;
-
-      PCStat(){
-         lpperf=std::make_shared<LPPerf>();
-         sum_till=coverage=accuracy=accesses=0;
-      }
-      // checks if prediction is present for pc and cache-level, prediction value, 
-      bool LPLookup(IntPtr pc, int& foundPCEntry){
-         bool pred = getPrediction(pc, foundPCEntry);
-         return pred;
-      }
-
-      // count total access
-      void countAccess(){accesses++;}
-
-      // compute coverage, accuracy, coverage-miss (found predicition for PC entry but miss in cache), coverage-hit
-      void computeAccuracy(bool res, bool pred, IntPtr pc){
-         //       skip(miss)  *noskip(hit)
-         //pred   false       true
-         //res    false       true
-         if( (!res & !pred) || (res & pred) ){
-            accuracy++;
-         }
-
-         if(pred)
-            uniquePCCount[pc].coverage_hit_pre++;
-         else uniquePCCount[pc].coverage_miss_pre++;
-
-         if(res)
-            uniquePCCount[pc].coverage_hit_res++;
-         else uniquePCCount[pc].coverage_miss_res++;
-
-         coverage++;
-
-         if(pred){// prediction was hit (noskip)
-            if(res){// actual is hit (noskip)
-                  lpperf->inc(State::tns);// benefit
-            }
-            else{//actual is miss (skip)
-                  lpperf->inc(State::fns);// lost opportunity
-            }
-         }
-         else{// prediction was miss (skip)
-            if(res){// actual is hit (noskip)
-                  lpperf->inc(State::fs);// hazard
-            }else{// actual is miss (skip)
-                  lpperf->inc(State::ts);//benefit
-            }
-         } 
-      }
-
-      // insert pc and compute count
-      void insertPC(IntPtr pc, bool hit){
-         auto findPC = uniquePCCount.find(pc);
-         if(findPC == uniquePCCount.end())
-            uniquePCCount.insert({pc, PCBased(hit)});
-         else 
-         {
-            uniquePCCount[pc].count++;
-            if(hit)
-               uniquePCCount[pc].hit++;
-            else uniquePCCount[pc].miss++;
-         }
-      }
-
-      void addPrediction(bool pred, IntPtr pc){LPTable[pc]=pred;}
-
-      bool getPrediction(IntPtr pc, int& foundPCEntry){
-         auto findPC = LPTable.find(pc);
-         if(findPC!=LPTable.end())
-            return LPTable[pc];
-         foundPCEntry=0;
-         return false;
-      }
-
-      void getCountPCPairs(std::vector<std::pair<UInt64, IntPtr>>& critiPC, std::vector<std::pair<UInt64,IntPtr>>& tmp,UInt64& chp,UInt64& cmp,UInt64& th,UInt64& tm, UInt64& chr, UInt64& cmr){
-         chp=cmp=0;// prediction hit, miss
-         th=tm=0;// total hit, miss
-         chr=cmr=0;// result hit, miss
-         for(auto e: uniquePCCount){
-            chp+=e.second.coverage_hit_pre;
-            cmp+=e.second.coverage_miss_pre;
-            tm+=e.second.miss;
-            th+=e.second.hit;
-            chr+=e.second.coverage_hit_res;
-            cmr+=e.second.coverage_miss_res;
-            tmp.push_back({e.second.count, e.first});
-            critiPC.push_back({e.second.hit, e.first});
-         }
-      }
-
-      //get unique pc miss count
-      UInt64 getUniqePCMissCount(IntPtr pc)
-      {return uniquePCCount[pc].miss;}
-
-      //total pc in current epoc
-      int getTotalPCCount()
-      {return uniquePCCount.size();}
-
-      void clearBookkeeping(){
-         uniquePCCount.clear();
-         accesses=coverage=accuracy=0;
-         lpperf.reset();
-         lpperf = std::make_shared<LPPerf>();
-      }
-
-      UInt64 getAccuracy(){return accuracy;}
-
-      UInt64 getCoverage(){return coverage;}
-
-      UInt64 getCount(State state){return lpperf->getCount(state);}
-
-      UInt64 getTotalAccess(){return accesses;}
-
-      UInt64 PCAccess(IntPtr pc){return uniquePCCount[pc].count;}
-      UInt64 PCHit(IntPtr pc){return uniquePCCount[pc].hit;}
-      UInt64 PCMiss(IntPtr pc){return uniquePCCount[pc].miss;}
-
-      void clearLPTable(){LPTable.clear();}
-   };
-
-   class CacheCntlr : ::CacheCntlr, PCStat, PCDump
+   class CacheCntlr : ::CacheCntlr
    {
       private:
          // Data Members
@@ -531,7 +306,7 @@ namespace ParametricDramDirectoryMSI
          void writeCacheBlock(IntPtr address, UInt32 offset, Byte* data_buf, UInt32 data_length, ShmemPerfModel::Thread_t thread_num);
 
          // Handle Request from previous level cache
-         HitWhere::where_t processShmemReqFromPrevCache(CacheCntlr* requester, Core::mem_op_t mem_op_type, IntPtr address, bool modeled, bool count, Prefetch::prefetch_type_t isPrefetch, SubsecondTime t_issue, bool have_write_lock, IntPtr pc=-1);
+         HitWhere::where_t processShmemReqFromPrevCache(CacheCntlr* requester, Core::mem_op_t mem_op_type, IntPtr address, bool modeled, bool count, Prefetch::prefetch_type_t isPrefetch, SubsecondTime t_issue, bool have_write_lock);
 
          // Process Request from L1 Cache
          boost::tuple<HitWhere::where_t, SubsecondTime> accessDRAM(Core::mem_op_t mem_op_type, IntPtr address, bool isPrefetch, Byte* data_buf);
@@ -575,11 +350,6 @@ namespace ParametricDramDirectoryMSI
 
          CacheCntlr* lastLevelCache(void);
 
-
-         //update
-         UInt64 misses, hits, accesses, reads, writes;
-         double skipThreshold;
-         
       public:
 
          CacheCntlr(MemComponent::component_t mem_component,
@@ -610,7 +380,7 @@ namespace ParametricDramDirectoryMSI
                IntPtr ca_address, UInt32 offset,
                Byte* data_buf, UInt32 data_length,
                bool modeled,
-               bool count, IntPtr pc);
+               bool count);
          void updateHits(Core::mem_op_t mem_op_type, UInt64 hits);
 
          // Notify next level cache of so it can update its sharing set
@@ -638,131 +408,6 @@ namespace ParametricDramDirectoryMSI
 
          friend class CacheCntlrList;
          friend class MemoryManager;
-
-         void getData(UInt64 epoc){
-
-         }
-
-         // get top pc
-         std::vector<std::pair<UInt64, IntPtr>> bag;
-
-         // per pc avg number of accesses
-         double getThreshold(){
-            return (double)getTotalAccess()/(double)getTotalPCCount();
-         }
-
-         //per epoc number of accesses
-         void setAccesses(){
-            accesses=sum_till;
-            sum_till = stats.loads+stats.stores;
-            int64_t i = accesses - sum_till;
-            accesses=abs(i);
-         }
-
-         // avg miss ratio for top pc. top pc could be equal to 10 or less
-         double computeAvgThresh(std::vector<std::pair<UInt64, IntPtr>>& vec, std::vector<IntPtr>& collect){
-            int i=10;
-            double count = 0;
-            double total_threshold = 0;
-
-            for(auto it = vec.rbegin(); it != vec.rend() && i; it++, i--){
-               count = count + 1;
-               total_threshold =  total_threshold + (double)PCMiss(it->second)/(double)PCAccess(it->second);
-               collect.push_back(it->second);
-            }
-            return total_threshold/count;
-         }
-
-      
-         // using top pc build predicition table for current level
-         void processEnd(UInt64 epoc, std::shared_ptr<EpocData> epocData){
-            
-            clearLPTable();
-
-            UInt64 coverage_miss_pre,coverage_hit_pre,total_miss,total_hit, coverage_miss_res, coverage_hit_res;
-            std::vector<std::pair<UInt64, IntPtr>> critiPCBag, bothBag;
-
-            coverage_miss_pre=coverage_hit_pre=total_miss=total_hit=coverage_miss_res=coverage_hit_res=0;
-            
-            getCountPCPairs(critiPCBag, bag, coverage_hit_pre, coverage_miss_pre, total_hit, total_miss, coverage_hit_res, coverage_miss_res);
-            sort(critiPCBag.begin(), critiPCBag.end());//top pc by hit only
-            sort(bag.begin(), bag.end());// top pc by accesses only
-
-            // if pc exists in both list use them as final fitered 
-            std::vector<IntPtr> accessPC, criticalPC, bothPC;
-
-            double thByAccess = computeAvgThresh(bag, accessPC);
-            double thByHit = computeAvgThresh(critiPCBag, criticalPC);
-            double thByBoth = 0;
-            
-            for(IntPtr it : accessPC){// top 10 PC by access
-               auto findPC = std::find(criticalPC.begin(), criticalPC.end(), it);// adding criticality, top PC by hit count
-               if(findPC!=criticalPC.end()){
-                  bothBag.push_back({PCHit(it), it});
-               }
-            }
-
-            thByBoth = computeAvgThresh(bothBag, bothPC);
-
-            //use average miss ratio of top pc as skipThreshold
-            skipThreshold=thByAccess;
-
-            _LOG_CUSTOM_LOGGER(Log::Warning, Log::C0, "%ld, %f, %f, %f, %s\n", epoc, thByAccess, thByHit, thByBoth, getCache()->getName().c_str());
-            printf("%ld, %f, %f, %f, %s\n", epoc, thByAccess, thByHit, thByBoth, getCache()->getName().c_str());
-            
-
-            // to get top pc, get pc for which per pc access is more than avg access
-            
-            UInt64 top_pc_access, top_pc_count;
-            top_pc_access = top_pc_count = 0;
-
-            for(auto it=accessPC.begin(); it!=accessPC.end(); it++){
-                  
-                  double pcMissCount = (double)PCMiss(*it);
-                  UInt64 access = PCAccess(*it);
-                  double missRatio=pcMissCount/(double)access;
-
-                  bool flag = missRatio > skipThreshold;
-                  _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_3, "%ld,0x%x,%lf,%lf,%d,%s,%d\n", 
-                     epoc, *it, missRatio, skipThreshold, flag, getCache()->getName().c_str(), getCache()->core_id);
-
-                  // if missration of pc is more than skipThreshold then skip(=miss) the level
-                  if(flag)
-                     addPrediction(false,*it);//skip=miss
-                  else 
-                     addPrediction(true,*it);//no-skip=hit
-                  
-               top_pc_access+=access;
-               top_pc_count++;
-            }         
-
-            epocData->accuracy=getAccuracy();
-            epocData->coverage=getCoverage();
-
-            epocData->top_pc_access=top_pc_access;
-            epocData->top_pc_count=top_pc_count;
-
-            epocData->fs=getCount(State::fs);
-            epocData->ts=getCount(State::ts);
-            epocData->fns=getCount(State::fns);
-            epocData->tns=getCount(State::tns);
-
-            epocData->total_pc_access=getTotalAccess();
-            epocData->total_pc_count=getTotalPCCount();
-
-            epocData->coverage_hit_pre=coverage_hit_pre;
-            epocData->coverage_miss_pre=coverage_miss_pre;
-
-            epocData->coverage_hit_res=coverage_hit_res;
-            epocData->coverage_miss_res=coverage_miss_res;
-
-            epocData->total_hit=total_hit;
-            epocData->total_miss=total_miss;
-
-            // these is epoc end and we need to start bookkeping for next epoc hence clear previous bookkeeping
-            clearBookkeeping();
-            bag.clear();
-         }
    };
 
 }

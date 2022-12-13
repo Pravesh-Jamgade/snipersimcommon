@@ -28,8 +28,6 @@ DramCntlr::DramCntlr(MemoryManagerBase* memory_manager,
    , m_reads(0)
    , m_writes(0)
 {
-   access=reads=writes=0;
-
    m_dram_perf_model = DramPerfModel::createDramPerfModel(
          memory_manager->getCore()->getId(),
          cache_block_size);
@@ -45,9 +43,6 @@ DramCntlr::DramCntlr(MemoryManagerBase* memory_manager,
 
 DramCntlr::~DramCntlr()
 {
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::DBA, "***** dram *****\n");
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::DBA, "access=%d, reads=%d, writes=%d\n", access,reads,writes);
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::DBA, "**********\n");
    printDramAccessCount();
    delete [] m_dram_access_count;
 

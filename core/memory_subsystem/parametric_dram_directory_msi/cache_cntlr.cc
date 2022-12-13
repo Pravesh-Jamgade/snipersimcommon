@@ -154,14 +154,6 @@ CacheCntlr::CacheCntlr(MemComponent::component_t mem_component,
    m_shmem_perf_global(NULL),
    m_shmem_perf_model(shmem_perf_model)
 {
-   misses=hits=accesses=0;
-   skipThreshold=0;
-   reads=writes=0;
-
-   if(Sim()->getCfg()->hasKey("debug/threshold")){
-      skipThreshold=Sim()->getCfg()->getFloat("debug/threshold");
-   }
-
    m_core_id_master = m_core_id - m_core_id % m_shared_cores;
    Sim()->getStatsManager()->logTopology(name, core_id, m_core_id_master);
 
@@ -174,7 +166,7 @@ CacheCntlr::CacheCntlr(MemComponent::component_t mem_component,
    {
       /* Master cache */
       m_master = new CacheMasterCntlr(name, core_id, cache_params.outstanding_misses);
-      m_master->m_cache = new Cache(isShared(core_id),name,
+      m_master->m_cache = new Cache(name,
             "perf_model/" + cache_params.configName,
             m_core_id,
             cache_params.num_sets,
@@ -185,7 +177,7 @@ CacheCntlr::CacheCntlr(MemComponent::component_t mem_component,
             CacheBase::parseAddressHash(cache_params.hash_function),
             Sim()->getFaultinjectionManager()
                ? Sim()->getFaultinjectionManager()->getFaultInjector(m_core_id_master, mem_component)
-               : NULL, NULL, true);
+               : NULL);
       m_master->m_prefetcher = Prefetcher::createPrefetcher(cache_params.prefetcher, cache_params.configName, m_core_id, m_shared_cores);
 
       if (Sim()->getCfg()->getBoolDefault("perf_model/" + cache_params.configName + "/atd/enabled", false))
@@ -292,16 +284,6 @@ CacheCntlr::CacheCntlr(MemComponent::component_t mem_component,
 
 CacheCntlr::~CacheCntlr()
 {
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::DBA, "***** %s @core=%d *****\n", getCache()->getName().c_str(), m_core_id);
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::DBA, "[cache_cntlr.cc] access=%ld, hit=%ld, miss=%ld\n", accesses,hits,misses);
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::DBA, "[cache_cntlr.cc] reads=%ld, writes=%ld\n\n", reads, writes);
-
-   for(auto pc : info){
-      Dump dump = pc.second;
-      _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_1, "%s,%s,%d,%d,%ld,%lf\n",
-         getCache()->getName().c_str(), dump.hexpc.c_str(), dump.access, dump.hit, dump.miss, dump.missratio());
-   }
-   
    if (isMasterCache())
    {
       delete m_master;
@@ -348,25 +330,9 @@ CacheCntlr::processMemOpFromCore(
       IntPtr ca_address, UInt32 offset,
       Byte* data_buf, UInt32 data_length,
       bool modeled,
-      bool count, IntPtr pc)
+      bool count)
 {
-   //update
-   m_master->m_cache->setCountFlag(count);
-
    HitWhere::where_t hit_where = HitWhere::MISS;
-
-   int predictionFound=1;
-   bool prediction=false;
-   if(count && m_mem_component==MemComponent::component_t::L1_DCACHE){
-      countAccess();
-      if(!EpocHelper::once){
-         prediction = LPLookup(pc,predictionFound);
-         if(predictionFound==1){
-            // use prediciton value
-         }
-      }
-      // printf("%d, %d, %s\n", EpocHelper::once, predictionFound, MemComponent::MemComponent2String(m_mem_component).c_str());
-   }
 
    // Protect against concurrent access from sibling SMT threads
    ScopedLock sl_smt(m_master->m_smt_lock);
@@ -425,28 +391,9 @@ LOG_ASSERT_ERROR(offset + data_length <= getCacheBlockSize(), "access until %u >
    if (count)
    {
       ScopedLock sl(getLock());
-      if(MemComponent::component_t::L1_DCACHE == m_mem_component){
-         insertPC(pc,cache_hit);
-         if(!EpocHelper::once && predictionFound==1)
-            computeAccuracy(cache_hit,prediction,pc);
-      }
-      
       // Update the Cache Counters
       getCache()->updateCounters(cache_hit);
       updateCounters(mem_op_type, ca_address, cache_hit, getCacheState(cache_block_info), Prefetch::NONE);
-
-      // first level total access count
-      accesses++;
-      if(!cache_hit)
-         misses++;
-      else hits++;
-
-      insert(pc, cache_hit);
-
-      if(Core::READ==mem_op_type)
-         reads++;
-      if(Core::READ_EX==mem_op_type || Core::WRITE==mem_op_type)
-         writes++;
    }
 
    if (cache_hit)
@@ -500,13 +447,6 @@ MYLOG("L1 hit");
       }
 
    } else {
-      // remove from evictList of addresses as it will be requested again
-      if(count)
-      {
-         ScopedLock sl(getLock());
-         getCache()->eraseEntryIffound(ca_address);
-      }
-
       /* cache miss: either wrong coherency state or not present in the cache */
 MYLOG("L1 miss");
       if (!m_passthrough)
@@ -542,7 +482,7 @@ MYLOG("L1 miss");
       }
 
 MYLOG("processMemOpFromCore l%d before next", m_mem_component);
-      hit_where = m_next_cache_cntlr->processShmemReqFromPrevCache(this, mem_op_type, ca_address, modeled, count, Prefetch::NONE, t_start, false, pc);
+      hit_where = m_next_cache_cntlr->processShmemReqFromPrevCache(this, mem_op_type, ca_address, modeled, count, Prefetch::NONE, t_start, false);
       bool next_cache_hit = hit_where != HitWhere::MISS;
 MYLOG("processMemOpFromCore l%d next hit = %d", m_mem_component, next_cache_hit);
 
@@ -569,7 +509,7 @@ MYLOG("processMemOpFromCore l%d got message reply", m_mem_component);
 
          /* have the next cache levels fill themselves with the new data */
 MYLOG("processMemOpFromCore l%d before next fill", m_mem_component);
-         hit_where = m_next_cache_cntlr->processShmemReqFromPrevCache(this, mem_op_type, ca_address, false, false, Prefetch::NONE, t_start, true, pc);
+         hit_where = m_next_cache_cntlr->processShmemReqFromPrevCache(this, mem_op_type, ca_address, false, false, Prefetch::NONE, t_start, true);
 MYLOG("processMemOpFromCore l%d after next fill", m_mem_component);
          LOG_ASSERT_ERROR(hit_where != HitWhere::MISS,
             "Tried to read in next-level cache, but data is already gone");
@@ -835,22 +775,8 @@ CacheCntlr::doPrefetch(IntPtr prefetch_address, SubsecondTime t_start)
  *****************************************************************************/
 
 HitWhere::where_t
-CacheCntlr::processShmemReqFromPrevCache(CacheCntlr* requester, Core::mem_op_t mem_op_type, IntPtr address, bool modeled, bool count, Prefetch::prefetch_type_t isPrefetch, SubsecondTime t_issue, bool have_write_lock, IntPtr pc)
+CacheCntlr::processShmemReqFromPrevCache(CacheCntlr* requester, Core::mem_op_t mem_op_type, IntPtr address, bool modeled, bool count, Prefetch::prefetch_type_t isPrefetch, SubsecondTime t_issue, bool have_write_lock)
 {
-
-   int predictionFound=1;
-   bool prediction=false;
-
-   if(count){
-      countAccess();
-      if(!EpocHelper::once){
-         prediction = LPLookup(pc,predictionFound);
-         if(predictionFound==1){
-            // use prediciton value
-         }
-      }
-   }
-
    #ifdef PRIVATE_L2_OPTIMIZATION
    bool have_write_lock_internal = have_write_lock;
    if (! have_write_lock && m_shared_cores > 1)
@@ -888,25 +814,9 @@ CacheCntlr::processShmemReqFromPrevCache(CacheCntlr* requester, Core::mem_op_t m
    if (count)
    {
       ScopedLock sl(getLock());
-      
-      insertPC(pc,cache_hit);
-      if(!EpocHelper::once && predictionFound)
-         computeAccuracy(cache_hit,prediction,pc);
       if (isPrefetch == Prefetch::NONE)
          getCache()->updateCounters(cache_hit);
       updateCounters(mem_op_type, address, cache_hit, getCacheState(address), isPrefetch);
-
-      accesses++;
-      if(!cache_hit)
-         misses++;
-      else hits++;
-
-      insert(pc, cache_hit);
-
-      if(Core::READ==mem_op_type)
-         reads++;
-      if(Core::READ_EX==mem_op_type || Core::WRITE==mem_op_type)
-         writes++;
    }
 
    if (cache_hit)
@@ -1013,13 +923,6 @@ CacheCntlr::processShmemReqFromPrevCache(CacheCntlr* requester, Core::mem_op_t m
    }
    else // !cache_hit: either data is not here, or operation on data is not permitted
    {
-      // remove evictList
-      if(count)
-      {
-         ScopedLock sl(getLock());
-         getCache()->eraseEntryIffound(address);
-      }
-
       // Increment shared mem perf model cycle counts
       if (modeled)
          getMemoryManager()->incrElapsedTime(m_mem_component, CachePerfModel::ACCESS_CACHE_TAGS, ShmemPerfModel::_USER_THREAD);
@@ -1214,18 +1117,14 @@ CacheCntlr::accessDRAM(Core::mem_op_t mem_op_type, IntPtr address, bool isPrefet
    SubsecondTime dram_latency;
    HitWhere::where_t hit_where;
 
-   m_master->m_dram_cntlr->access++;
-
    switch (mem_op_type)
    {
       case Core::READ:
-         m_master->m_dram_cntlr->reads++;
          boost::tie(dram_latency, hit_where) = m_master->m_dram_cntlr->getDataFromDram(address, m_core_id_master, data_buf, t_issue, m_shmem_perf);
          break;
 
       case Core::READ_EX:
       case Core::WRITE:
-         m_master->m_dram_cntlr->writes++;
          boost::tie(dram_latency, hit_where) = m_master->m_dram_cntlr->putDataToDram(address, m_core_id_master, data_buf, t_issue);
          break;
 

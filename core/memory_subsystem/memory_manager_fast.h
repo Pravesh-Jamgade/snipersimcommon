@@ -24,11 +24,11 @@ class MemoryManagerFast : public MemoryManagerBase
             Core::mem_op_t mem_op_type,
             IntPtr address, UInt32 offset,
             Byte* data_buf, UInt32 data_length,
-            Core::MemModeled modeled, IntPtr pc)
+            Core::MemModeled modeled)
       {
          // Emulate slow interface by calling into fast interface
          assert(data_buf == NULL);
-         SubsecondTime latency = coreInitiateMemoryAccessFast(mem_component == MemComponent::L1_ICACHE ? true : false, mem_op_type, address, pc);
+         SubsecondTime latency = coreInitiateMemoryAccessFast(mem_component == MemComponent::L1_ICACHE ? true : false, mem_op_type, address);
          getShmemPerfModel()->incrElapsedTime(latency,  ShmemPerfModel::_USER_THREAD);
          if (latency > SubsecondTime::Zero())
             return HitWhere::MISS;
@@ -39,7 +39,7 @@ class MemoryManagerFast : public MemoryManagerBase
       virtual SubsecondTime coreInitiateMemoryAccessFast(
             bool icache,
             Core::mem_op_t mem_op_type,
-            IntPtr address, IntPtr pc=-1) = 0;
+            IntPtr address) = 0;
 
       void handleMsgFromNetwork(NetPacket& packet) { assert(false); }
 

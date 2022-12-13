@@ -27,7 +27,7 @@ static String formatFileName(const char* s)
 
 Log::Log(Config &config)
    : _coreCount(config.getTotalCores())
-   , _startTime(0), _is_xlog_enable(0)
+   , _startTime(0)
 {
    initFileDescriptors();
    getEnabledModules();
@@ -86,14 +86,6 @@ void Log::initFileDescriptors()
 {
    _coreFiles = new FILE* [_coreCount];
    _simFiles = new FILE* [_coreCount];
-
-   int size=LogDst::END - LogDst::AddressAnalyzer + 1;
-   _loggerFiles = new FILE*[size];
-   _loggerLocks = new Lock*[size];
-   for(int i=0;i<size;i++){
-      _loggerFiles[i]=NULL;
-      _loggerLocks[i]= new Lock[i];
-   }
 
    for (core_id_t i = 0; i < _coreCount; i++)
    {
@@ -317,10 +309,10 @@ void Log::log(ErrorState err, const char* source_file, SInt32 source_line, const
    char *p = message;
 
    // This is ugly, but it just prints the time stamp, core number, source file/line
-   // if (core_id != INVALID_CORE_ID) // valid core id
-   //    p += sprintf(p, "%-10llu [%5d]  [%2i]%s[%s:%4d]  ", (long long unsigned int) getTimestamp(), tid, core_id, (sim_thread ? "* " : "  "), source_file, source_line);
-   // else // who knows
-   //    p += sprintf(p, "%-10llu [%5d]  [  ]  [%s:%4d]  ", (long long unsigned int) getTimestamp(), tid, source_file, source_line);
+   if (core_id != INVALID_CORE_ID) // valid core id
+      p += sprintf(p, "%-10llu [%5d]  [%2i]%s[%s:%4d]  ", (long long unsigned int) getTimestamp(), tid, core_id, (sim_thread ? "* " : "  "), source_file, source_line);
+   else // who knows
+      p += sprintf(p, "%-10llu [%5d]  [  ]  [%s:%4d]  ", (long long unsigned int) getTimestamp(), tid, source_file, source_line);
 
    switch (err)
    {
@@ -375,152 +367,4 @@ void Log::log(ErrorState err, const char* source_file, SInt32 source_line, const
    default:
       break;
    }
-}
-
-
-void Log::log(const char *format, ...)
-{
-   core_id_t core_id;
-   bool sim_thread;
-   discoverCore(&core_id, &sim_thread);
-
-   FILE *file;
-   Lock *lock;
-
-   getFile(-1, sim_thread, &file, &lock);
-   int tid = syscall(__NR_gettid);
-
-
-   char message[512];
-   char *p = message;
-
-   va_list args;
-   va_start(args, format);
-   p += vsprintf(p, format, args);
-   va_end(args);
-
-   // p += sprintf(p, "\n");
-
-   lock->acquire();
-
-   fputs(message, file);
-   fflush(file);
-
-   lock->release();
-
-}
-
-
-void Log::log(Log::LogDst logDst, const char *format, ...)// Log::LogState logState,
-{
-   // if(logState == LogState::DISABLE)
-   //    return ;
-   core_id_t core_id;
-   bool sim_thread;
-   discoverCore(&core_id, &sim_thread);
-
-   FILE *file;
-   Lock *lock;
-
-   assert(core_id < _coreCount);
-
-   if(core_id==INVALID_CORE_ID){
-      lock = &_systemLock;
-   }
-   else{
-      if(sim_thread){
-         lock=&_simLocks[core_id];
-      }
-      else{
-         lock = &_coreLocks[core_id];
-      }
-   }
-
-   char filename[256];
-   
-
-   for (int logtype=LogDst::AddressAnalyzer; logtype<= LogDst::END; logtype++)
-   {
-      if(logtype==logDst)
-      {
-         
-         if(_loggerFiles[logDst]==NULL)
-         {
-            sprintf(filename, "customLog_%u.log", logDst);
-            _loggerFiles[logDst]=fopen(formatFileName(filename).c_str(), "w");
-         }
-         file=_loggerFiles[logDst];
-         lock=_loggerLocks[logDst];
-         break;
-      }
-   }
-   
-   if(lock==nullptr){
-      printf("[LOG] lock=nullptr\n");
-   }
-
-   int tid = syscall(__NR_gettid);
-
-
-   char message[512];
-   char *p = message;
-
-   va_list args;
-   va_start(args, format);
-   vsprintf(p, format, args);
-   va_end(args);
-
-   lock->acquire();
-   fputs(message, file);
-   lock->release();
-
-}
-
-void Log::log(Log::LogFileName logFileName, const char *format, ...)// Log::LogState logState,
-{
-   // if(logState == LogState::DISABLE)
-   //    return ;
-   core_id_t core_id;
-   bool sim_thread;
-   discoverCore(&core_id, &sim_thread);
-
-   FILE *file;
-   Lock* lock = nullptr;
-   lock = &_coreLocks[core_id];
-
-   // getFile(-1, sim_thread, &file, &lock);
-   assert(core_id < _coreCount);
-   char filename[256];
-   
-   
-   auto findObj = logFileObject.find(logFileName);
-   if(findObj==logFileObject.end())
-   {
-      sprintf(filename, "customLog_%s.log", getFileName(logFileName));
-      printf("[+]%s, %d\n", filename, logFileName);
-      file=fopen(formatFileName(filename).c_str(), "w");
-      logFileObject[logFileName]=file;
-   }
-   else 
-   {
-      file=logFileObject[logFileName];
-   }
-
-   int tid = syscall(__NR_gettid);
-
-
-   char message[512];
-   char *p = message;
-
-   va_list args;
-   va_start(args, format);
-   p += vsprintf(p, format, args);
-   va_end(args);
-
-   // lock->acquire();
-   fputs(message, file);
-   fflush(file);
-
-   // lock->release();
-
 }

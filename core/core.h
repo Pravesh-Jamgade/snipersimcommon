@@ -20,9 +20,6 @@ class CheetahManager;
 #include "bbv_count.h"
 #include "cpuid.h"
 #include "hit_where.h"
-#include "EpocHelper.h"
-#include "performance_model.h"
-#include<memory>
 
 struct MemoryResult {
    HitWhere::where_t hit_where;
@@ -136,9 +133,6 @@ class Core
          m_spin_elapsed_time += elapsed_time;
       }
 
-      UInt64 getCycleCount(){return getPerformanceModel()->getCycleCount();}
-      std::shared_ptr<EpocHelper> epocHelper;
-
    private:
       core_id_t m_core_id;
       const ComponentPeriod* m_dvfs_domain;
@@ -156,9 +150,6 @@ class Core
       State m_core_state;
 
       static Lock m_global_core_lock;
-
-      //[update]
-      SubsecondTimeCycleConverter* subSecTimeCycleConv;
 
       MemoryResult initiateMemoryAccess(
             MemComponent::component_t mem_component,

@@ -14,8 +14,6 @@
 #include "topology_info.h"
 
 #include <algorithm>
-#include "EpocHelper.h"
-#include <memory.h>
 
 #if 0
    extern Lock iolock;
@@ -46,8 +44,6 @@ MemoryManager::MemoryManager(Core* core,
    m_dram_cntlr_present(false),
    m_enabled(false)
 {
-   epocHelper = std::make_shared<EpocHelper>(Sim()->getCfg()->getInt("param/epoc"));
-
    // Read Parameters from the Config file
    std::map<MemComponent::component_t, CacheParameters> cache_parameters;
    std::map<MemComponent::component_t, String> cache_names;
@@ -425,7 +421,7 @@ MemoryManager::coreInitiateMemoryAccess(
       Core::mem_op_t mem_op_type,
       IntPtr address, UInt32 offset,
       Byte* data_buf, UInt32 data_length,
-      Core::MemModeled modeled, IntPtr pc)
+      Core::MemModeled modeled)
 {
    LOG_ASSERT_ERROR(mem_component <= m_last_level_cache,
       "Error: invalid mem_component (%d) for coreInitiateMemoryAccess", mem_component);
@@ -435,48 +431,13 @@ MemoryManager::coreInitiateMemoryAccess(
    else if (mem_component == MemComponent::L1_DCACHE && m_dtlb)
       accessTLB(m_dtlb, address, false, modeled);
 
-   UInt64 cycle = getCore()->getPerformanceModel()->getCycleCount();
-   epocHelper->doStatusUpdate(cycle);
-   if(epocHelper->getEpocStatus()){
-
-      if(EpocHelper::head()){
-         _LOG_CUSTOM_LOGGER(Log::Warning, Log::C0, "epoc, byAccess, byHit, byBoth, cache\n");
-         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_1, "cache,pc,access,hit,miss,missratio\n");
-         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_3, "epoc,pc,missratio,skipthreshold,status[skip=1],cache,core\n");
-         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_4, "cycle,epoc,toppc,topaccess,totalaccess,th,tm,coverage,accuracy,chr,cmr,chp,cmp,fs,ts,fns,tns,core,cache\n");
-      }
-
-      UInt64 epoc = epocHelper->getEpocCounter();
-
-      // at the end of epoc compute miss-ratio, set predicition, get top pc
-      std::shared_ptr<EpocData> data;
-      for(int i = MemComponent::FIRST_LEVEL_CACHE; i <= (UInt32)m_last_level_cache; ++i)
-      {
-         String name = MemComponent::MemComponent2String(static_cast<MemComponent::component_t>(i));
-         data = std::make_shared<EpocData>(epoc);
-         m_cache_cntlrs[(MemComponent::component_t)i]->processEnd(epoc,data);
-         
-         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_4, "%ld, %ld, %ld,%ld, %ld,%ld,%ld, %ld,%ld, %ld,%ld, %ld,%ld, %ld,%ld,%ld,%ld,  %d,%s\n", 
-            cycle,
-            epoc,
-            data->top_pc_count, data->top_pc_access, 
-            data->total_pc_access, data->total_hit, data->total_miss, 
-            data->coverage, data->accuracy, 
-            data->coverage_hit_res, data->coverage_miss_res,
-            data->coverage_hit_pre, data->coverage_miss_pre,
-            data->fs, data->ts, data->fns, data->tns, 
-            getCore()->getId(), name.c_str());
-         data.reset();
-      }
-      epocHelper->reset();//turn off these code block as logging is done for these epoc
-   }
    return m_cache_cntlrs[mem_component]->processMemOpFromCore(
          lock_signal,
          mem_op_type,
          address, offset,
          data_buf, data_length,
          modeled == Core::MEM_MODELED_NONE || modeled == Core::MEM_MODELED_COUNT ? false : true,
-         modeled == Core::MEM_MODELED_NONE ? false : true, pc);
+         modeled == Core::MEM_MODELED_NONE ? false : true);
 }
 
 void

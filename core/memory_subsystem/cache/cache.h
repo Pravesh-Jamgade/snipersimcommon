@@ -15,71 +15,7 @@
 // Define to enable the set usage histogram
 //#define ENABLE_SET_USAGE_HIST
 
-class BlockInfo{
-      public:
-      UInt64 inserts=0, evicts=0, reads=0;
-      std::set<IntPtr> evictList;
-      std::set<IntPtr> uniqueList;
-      std::map<IntPtr, IntPtr> deadlist;
-
-      void addrInsert(IntPtr addr, IntPtr epoc){
-            auto findAddr = deadlist.find(addr);
-            if(findAddr==deadlist.end()){
-                  deadlist.insert({addr, epoc});
-            }else{
-                  //already exists, not
-            }
-      }
-
-      // add unique addr upon insert operation
-      void addToUniqueList(IntPtr addr){
-            if(uniqueList.size()==uniqueList.max_size()){
-                  printf("[UniqueList] STOP here\n");
-            }
-            auto findAddr = uniqueList.find(addr);
-            if(findAddr==uniqueList.end()){
-                  uniqueList.insert(addr);
-            }
-      }
-
-      UInt64 countUniqueList(){
-            return uniqueList.size();
-      }
-
-      // check if evictList already has entry of address
-      bool alreadyInEvictList(IntPtr addr){
-            auto findAddr = evictList.find(addr);
-            if(findAddr!=evictList.end()){
-                  return true;
-            }
-            return false;
-      }
-
-      // add evicted addr, to evictList
-      void addEvicted(IntPtr addr){
-            if(evictList.size()==evictList.max_size()){
-                  printf("[EvictList] STOP here\n");
-            }
-            auto findAddr = evictList.find(addr);
-            if(findAddr==evictList.end()){
-                  evictList.insert(addr);
-            }
-      }
-
-      // if previously evicted and it is miss on these cache level, then soon it will be requested again 
-      // hence remove from "evictList"
-      void eraseEntry(IntPtr addr){
-            if(alreadyInEvictList(addr)){
-                  evictList.erase(addr);
-            }
-      }
-
-      UInt64 countEvictList(){
-            return evictList.size();
-      }
-};
-
-class Cache : public CacheBase, BlockInfo
+class Cache : public CacheBase
 {
    private:
       bool m_enabled;
@@ -102,9 +38,7 @@ class Cache : public CacheBase, BlockInfo
    public:
 
       // constructors/destructors
-      Cache(
-            bool shared,
-            String name,
+      Cache(String name,
             String cfgname,
             core_id_t core_id,
             UInt32 num_sets,
@@ -113,8 +47,7 @@ class Cache : public CacheBase, BlockInfo
             cache_t cache_type,
             hash_t hash = CacheBase::HASH_MASK,
             FaultInjector *fault_injector = NULL,
-            AddressHomeLookup *ahl = NULL,
-            bool master=false);
+            AddressHomeLookup *ahl = NULL);
       ~Cache();
 
       Lock& getSetLock(IntPtr addr);
@@ -135,37 +68,6 @@ class Cache : public CacheBase, BlockInfo
 
       void enable() { m_enabled = true; }
       void disable() { m_enabled = false; }
-
-      void logAndClear();
-
-      UInt64 count_dead_blocks;
-      UInt64 totalBlocks, total_evicts;
-      bool loggedByOtherCore;
-      double avg_dead_blocks_per_set;
-
-      core_id_t core_id;
-      bool shared;
-      bool master;
-
-      bool countFlag;
-
-      void eraseEntryIffound(IntPtr addr){
-            if(allowed()){
-                  eraseEntry(addr);
-            }
-      }
-
-      bool allowed(){
-            if(m_name == "L1-D" || m_name == "L2" || m_name =="L3")
-                  return true;
-            return false;
-      }
-
-      void setCountFlag(bool count){
-            countFlag=count;
-      }
-
-      bool isCountEnabled(){return countFlag;}
 };
 
 template <class T>

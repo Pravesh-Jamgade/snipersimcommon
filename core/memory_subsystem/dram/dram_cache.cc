@@ -34,7 +34,7 @@ DramCache::DramCache(MemoryManagerBase* memory_manager, ShmemPerfModel* shmem_pe
    UInt32 num_sets = k_KILO * cache_size / (associativity * m_cache_block_size);
    LOG_ASSERT_ERROR(k_KILO * cache_size == num_sets * associativity * m_cache_block_size, "Invalid cache configuration: size(%d Kb) != sets(%d) * associativity(%d) * block_size(%d)", cache_size, num_sets, associativity, m_cache_block_size);
 
-   m_cache = new Cache(false, "dram-cache",
+   m_cache = new Cache("dram-cache",
       "perf_model/dram/cache",
       m_core_id,
       num_sets,
