@@ -44,6 +44,13 @@ class DramCntlrInterface
       void handleMsgFromTagDirectory(core_id_t sender, PrL1PrL2DramDirectoryMSI::ShmemMsg* shmem_msg);
 
       int access, reads, writes;
+      public:
+      FILE* fptr;
+
+      void message(){
+         printf("[DRAM]+++\n");
+      }
+
 };
 
 #endif // __DRAM_CNTLR_INTERFACE_H

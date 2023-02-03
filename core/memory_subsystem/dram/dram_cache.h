@@ -6,6 +6,8 @@
 #include "cache.h"
 #include "contention_model.h"
 
+#include <fstream>
+
 class QueueModel;
 class Prefetcher;
 

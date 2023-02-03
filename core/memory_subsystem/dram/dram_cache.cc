@@ -63,6 +63,8 @@ DramCache::DramCache(MemoryManagerBase* memory_manager, ShmemPerfModel* shmem_pe
    registerStatsMetric("dram-cache", m_core_id, "hits-prefetch", &m_hits_prefetch);
    registerStatsMetric("dram-cache", m_core_id, "prefetches", &m_prefetches);
    registerStatsMetric("dram-cache", m_core_id, "prefetch-mshr-delay", &m_prefetch_mshr_delay);
+
+   fptr = fopen("trace.out", "w");
 }
 
 DramCache::~DramCache()
@@ -75,6 +77,13 @@ DramCache::~DramCache()
 boost::tuple<SubsecondTime, HitWhere::where_t>
 DramCache::getDataFromDram(IntPtr address, core_id_t requester, Byte* data_buf, SubsecondTime now, ShmemPerf *perf)
 {
+   // fs << std::hex << address << "R\n";
+   if(fptr!=NULL){
+      fwrite(&address, sizeof(address), 1, fptr);
+      fprintf(fptr,"W");
+   }
+   printf("[++] %ld", address);
+
    std::pair<bool, SubsecondTime> res = doAccess(Cache::LOAD, address, requester, data_buf, now, perf);
 
    if (!res.first)
@@ -87,6 +96,14 @@ DramCache::getDataFromDram(IntPtr address, core_id_t requester, Byte* data_buf, 
 boost::tuple<SubsecondTime, HitWhere::where_t>
 DramCache::putDataToDram(IntPtr address, core_id_t requester, Byte* data_buf, SubsecondTime now)
 {
+   //  fs << std::hex << address << "W\n";
+   if(fptr!=NULL){
+      fwrite(&address, sizeof(address), 1, fptr);
+      fprintf(fptr,"R");
+   }
+
+   printf("[++] %ld", address);
+
    std::pair<bool, SubsecondTime> res = doAccess(Cache::STORE, address, requester, data_buf, now, NULL);
 
    if (!res.first)
