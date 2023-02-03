@@ -1208,7 +1208,7 @@ CacheCntlr::walkUsageBits()
 boost::tuple<HitWhere::where_t, SubsecondTime>
 CacheCntlr::accessDRAM(Core::mem_op_t mem_op_type, IntPtr address, bool isPrefetch, Byte* data_buf)
 {
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::C0, "%d X", address);
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::C10, "%d X", address);
 
    ScopedLock sl(getLock()); // DRAM is shared and owned by m_master
 
