@@ -7,6 +7,7 @@
 #include "fault_injection.h"
 #include "shmem_perf.h"
 
+#define MAX 100000000
 #if 0
    extern Lock iolock;
 #  include "core_manager.h"
@@ -57,7 +58,11 @@ DramCntlr::~DramCntlr()
 boost::tuple<SubsecondTime, HitWhere::where_t>
 DramCntlr::getDataFromDram(IntPtr address, core_id_t requester, Byte* data_buf, SubsecondTime now, ShmemPerf *perf)
 {
+   bool ifexit = m_dram_perf_model->getTotalAccesses() > MAX;
+   if(ifexit)
+    exit(0);
    _LOG_CUSTOM_LOGGER(Log::Warning,Log::C11,"%ld R\n", address);
+
    if (Sim()->getFaultinjectionManager())
    {
       if (m_data_map.count(address) == 0)
@@ -87,6 +92,10 @@ DramCntlr::getDataFromDram(IntPtr address, core_id_t requester, Byte* data_buf, 
 boost::tuple<SubsecondTime, HitWhere::where_t>
 DramCntlr::putDataToDram(IntPtr address, core_id_t requester, Byte* data_buf, SubsecondTime now)
 {
+   bool ifexit = m_dram_perf_model->getTotalAccesses() > MAX;
+   if(ifexit)
+    exit(0);
+   
    _LOG_CUSTOM_LOGGER(Log::Warning,Log::C11,"%ld W\n", address);
    if (Sim()->getFaultinjectionManager())
    {
