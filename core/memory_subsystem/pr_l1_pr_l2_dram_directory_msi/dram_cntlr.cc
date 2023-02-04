@@ -57,6 +57,7 @@ DramCntlr::~DramCntlr()
 boost::tuple<SubsecondTime, HitWhere::where_t>
 DramCntlr::getDataFromDram(IntPtr address, core_id_t requester, Byte* data_buf, SubsecondTime now, ShmemPerf *perf)
 {
+   _LOG_CUSTOM_LOGGER(Log::Warning,Log::C11,"%ld R\n", address);
    if (Sim()->getFaultinjectionManager())
    {
       if (m_data_map.count(address) == 0)
@@ -86,6 +87,7 @@ DramCntlr::getDataFromDram(IntPtr address, core_id_t requester, Byte* data_buf, 
 boost::tuple<SubsecondTime, HitWhere::where_t>
 DramCntlr::putDataToDram(IntPtr address, core_id_t requester, Byte* data_buf, SubsecondTime now)
 {
+   _LOG_CUSTOM_LOGGER(Log::Warning,Log::C11,"%ld W\n", address);
    if (Sim()->getFaultinjectionManager())
    {
       if (m_data_map[address] == NULL)
