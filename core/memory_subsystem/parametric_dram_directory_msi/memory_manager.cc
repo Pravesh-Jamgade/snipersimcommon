@@ -442,7 +442,7 @@ MemoryManager::coreInitiateMemoryAccess(
       if(EpocHelper::head()){
          _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_1, "cache,pc,access,hit,miss,missratio\n");
          _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_3, "epoc,pc,missratio,skipthreshold,status[skip=1],cache,core\n");
-         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_4, "cycle,epoc,toppc,topaccess,totalaccess,th,tm,coverage,accuracy,chr,cmr,chp,cmp,fs,ts,fns,tns,core,cache\n");
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_4, "cycle,epoc,totalpc,toppc,topaccess,totalaccess,th,tm,coverage,accuracy,chr,cmr,chp,cmp,fs,ts,fns,tns,core,cache\n");
       }
 
       UInt64 epoc = epocHelper->getEpocCounter();
@@ -455,10 +455,10 @@ MemoryManager::coreInitiateMemoryAccess(
          data = std::make_shared<EpocData>(epoc);
          m_cache_cntlrs[(MemComponent::component_t)i]->processEnd(epoc,data);
          
-         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_4, "%ld, %ld, %ld,%ld, %ld,%ld,%ld, %ld,%ld, %ld,%ld, %ld,%ld, %ld,%ld,%ld,%ld,  %d,%s\n", 
+         _LOG_CUSTOM_LOGGER(Log::Warning, Log::LogDst::LP_4, "%ld, %ld, %d,%ld,%ld, %ld,%ld,%ld, %ld,%ld, %ld,%ld, %ld,%ld, %ld,%ld,%ld,%ld,  %d,%s\n", 
             cycle,
             epoc,
-            data->top_pc_count, data->top_pc_access, 
+            data->total_pc_count, data->top_pc_count, data->top_pc_access, 
             data->total_pc_access, data->total_hit, data->total_miss, 
             data->coverage, data->accuracy, 
             data->coverage_hit_res, data->coverage_miss_res,
