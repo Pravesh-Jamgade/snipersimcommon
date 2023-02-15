@@ -281,6 +281,7 @@ Core::initiateMemoryAccess(MemComponent::component_t mem_component,
       IntPtr eip,
       SubsecondTime now)
 {
+   _LOG_CUSTOM_LOGGER(Log::Warning, Log::C0, "%d, %d\n", eip, address);
    MYLOG("access %lx+%u %c%c modeled(%s)", address, data_size, mem_op_type == Core::WRITE ? 'W' : 'R', mem_op_type == Core::READ_EX ? 'X' : ' ', ModeledString(modeled));
 
    if (data_size <= 0)
