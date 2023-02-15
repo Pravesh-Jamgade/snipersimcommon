@@ -432,8 +432,9 @@ MemoryManager::coreInitiateMemoryAccess(
 
    if (mem_component == MemComponent::L1_ICACHE && m_itlb)
       accessTLB(m_itlb, address, true, modeled);
-   else if (mem_component == MemComponent::L1_DCACHE && m_dtlb)
+   else if (mem_component == MemComponent::L1_DCACHE && m_dtlb){
       accessTLB(m_dtlb, address, false, modeled);
+   }
 
    UInt64 cycle = getCore()->getPerformanceModel()->getCycleCount();
    epocHelper->doStatusUpdate(cycle);

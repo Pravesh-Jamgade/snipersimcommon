@@ -351,6 +351,7 @@ CacheCntlr::processMemOpFromCore(
       bool count, IntPtr pc)
 {
    _LOG_CUSTOM_LOGGER(Log::Warning, Log::C0, "%d, %d", pc, ca_address);
+   
    //update
    m_master->m_cache->setCountFlag(count);
 
@@ -364,6 +365,7 @@ CacheCntlr::processMemOpFromCore(
          prediction = LPLookup(pc,predictionFound);
          if(predictionFound==1){
             // use prediciton value
+            m_passthrough=prediction;
          }
       }
       // printf("%d, %d, %s\n", EpocHelper::once, predictionFound, MemComponent::MemComponent2String(m_mem_component).c_str());
@@ -848,6 +850,7 @@ CacheCntlr::processShmemReqFromPrevCache(CacheCntlr* requester, Core::mem_op_t m
          prediction = LPLookup(pc,predictionFound);
          if(predictionFound==1){
             // use prediciton value
+            m_passthrough=prediction;
          }
       }
    }
