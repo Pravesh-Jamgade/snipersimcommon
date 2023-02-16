@@ -676,7 +676,7 @@ namespace ParametricDramDirectoryMSI
             int i=10;
             int j=10;
             for(auto it=bag.rbegin(); it!=bag.rend() && i; it++, i--){
-               double totalAccess = getTotalAccess();
+               double totalAccess = getUniqePCAccessCount(it->second);
                double pcMissCount = (double)getUniqePCMissCount(it->second);
                double missRatio = pcMissCount/totalAccess;
                top_miss_ratio += missRatio;
