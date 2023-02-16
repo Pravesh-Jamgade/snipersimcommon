@@ -416,6 +416,9 @@ namespace ParametricDramDirectoryMSI
       UInt64 getUniqePCMissCount(IntPtr pc)
       {return uniquePCCount[pc].miss;}
 
+      UInt64 getUniqePCAccessCount(IntPtr pc)
+      {return uniquePCCount[pc].count;}
+
       //total pc in current epoc
       int getTotalPCCount()
       {return uniquePCCount.size();}
@@ -714,7 +717,7 @@ namespace ParametricDramDirectoryMSI
                // if(it->first > thresold){
                   // for high PC, set prediciton for these level
                   double missRatio = 0;
-                  double totalAccess = getTotalAccess();
+                  double totalAccess = getUniqePCAccessCount(it->second);
                   double pcMissCount = (double)getUniqePCMissCount(it->second);
                   missRatio=pcMissCount/totalAccess;
 
