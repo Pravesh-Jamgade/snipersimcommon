@@ -284,6 +284,7 @@ namespace ParametricDramDirectoryMSI
    class PCBased{
       public:
       UInt64 count,miss,hit, coverage_miss_pre, coverage_hit_pre, coverage_hit_res, coverage_miss_res;
+      UInt64 positive_feedbackcount, negative_feedbackcount;
 
       PCBased(bool hitflag=true){
          hit=miss=coverage_miss_pre=coverage_hit_pre=coverage_miss_res=coverage_hit_res=0;
@@ -291,6 +292,7 @@ namespace ParametricDramDirectoryMSI
          if(hitflag) 
             hit=1;
          else miss=1;
+         positive_feedbackcount = negative_feedbackcount = 0;
       }      
    };
 
@@ -312,6 +314,14 @@ namespace ParametricDramDirectoryMSI
       bool LPLookup(IntPtr pc, int& foundPCEntry){
          bool pred = getPrediction(pc, foundPCEntry);
          return pred;
+      }
+
+      // add 
+      void feedbackNode(IntPtr pc, bool prediction, bool actual){
+         bool test = ~(prediction ^ actual);
+         if(test)
+            uniquePCCount[pc].positive_feedbackcount++;
+         else uniquePCCount[pc].negative_feedbackcount++;
       }
 
       // count total access
@@ -390,6 +400,16 @@ namespace ParametricDramDirectoryMSI
             cmr+=e.second.coverage_miss_res;
             tmp.push_back({e.second.count, e.first});
          }
+      }
+
+      // get +feedback
+      UInt64 getPositiveFeedback(IntPtr pc){
+         return uniquePCCount[pc].positive_feedbackcount;
+      }
+
+      // get -feedback
+      UInt64 getNegativeFeedback(IntPtr pc){
+         return uniquePCCount[pc].negative_feedbackcount;
       }
 
       //get unique pc miss count
@@ -699,8 +719,12 @@ namespace ParametricDramDirectoryMSI
                   missRatio=pcMissCount/totalAccess;
 
                   bool flag = missRatio > skipThreshold;
-                  _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_3, "%ld,%s,%lf,%lf,%d,%s,%d\n", 
-                     epoc, itostr(it->second).c_str(), missRatio, skipThreshold, flag, getCache()->getName().c_str(), getCache()->core_id);
+                  _LOG_CUSTOM_LOGGER(Log::Warning, Log::LP_3, "%ld,%s,%ld,%ld,%lf,%lf,%d,%s,%d\n", 
+                     epoc, 
+                     itostr(it->second).c_str(), 
+                     getPositiveFeedback(it->second), getNegativeFeedback(it->second),
+                     missRatio, skipThreshold, flag, 
+                     getCache()->getName().c_str(), getCache()->core_id);
 
                   // if missration of pc is more than skipThreshold then skip(=miss) the level
                   if(flag)

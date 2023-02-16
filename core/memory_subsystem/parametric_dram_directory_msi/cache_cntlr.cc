@@ -406,6 +406,11 @@ LOG_ASSERT_ERROR(offset + data_length <= getCacheBlockSize(), "access until %u >
    CacheBlockInfo *cache_block_info;
    bool cache_hit = operationPermissibleinCache(ca_address, mem_op_type, &cache_block_info), prefetch_hit = false;
 
+   if(count && predictionFound)
+   {
+      feedbackNode(pc, prediction, cache_hit);
+   }
+   
    if (!cache_hit && m_perfect)
    {
       cache_hit = true;
@@ -870,6 +875,11 @@ CacheCntlr::processShmemReqFromPrevCache(CacheCntlr* requester, Core::mem_op_t m
    bool first_hit = cache_hit;
    HitWhere::where_t hit_where = HitWhere::MISS;
    SharedCacheBlockInfo* cache_block_info = getCacheBlockInfo(address);
+
+   if(count && predictionFound)
+   {
+      feedbackNode(pc, prediction, cache_hit);
+   }
 
    if (!cache_hit && m_perfect)
    {
