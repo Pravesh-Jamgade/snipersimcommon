@@ -349,9 +349,7 @@ CacheCntlr::processMemOpFromCore(
       Byte* data_buf, UInt32 data_length,
       bool modeled,
       bool count, IntPtr pc)
-{
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::C0, "%d, %d", pc, ca_address);
-   
+{   
    //update
    m_master->m_cache->setCountFlag(count);
 
@@ -360,6 +358,7 @@ CacheCntlr::processMemOpFromCore(
    int predictionFound=1;
    bool prediction=false;
    if(count && m_mem_component==MemComponent::component_t::L1_DCACHE){
+      _LOG_CUSTOM_LOGGER(Log::Warning, Log::C0, "%d, %d", pc, ca_address);
       countAccess();
       if(!EpocHelper::once){
          prediction = LPLookup(pc,predictionFound);
