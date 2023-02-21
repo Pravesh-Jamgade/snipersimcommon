@@ -436,6 +436,7 @@ MemoryManager::coreInitiateMemoryAccess(
       accessTLB(m_dtlb, address, false, modeled);
 
    UInt64 cycle = getCore()->getPerformanceModel()->getCycleCount();
+
    epocHelper->doStatusUpdate(cycle);
    if(epocHelper->getEpocStatus()){
 
@@ -469,13 +470,21 @@ MemoryManager::coreInitiateMemoryAccess(
       }
       epocHelper->reset();//turn off these code block as logging is done for these epoc
    }
-   return m_cache_cntlrs[mem_component]->processMemOpFromCore(
+
+   bool count = modeled == Core::MEM_MODELED_NONE ? false : true;
+
+   HitWhere::where_t return_hit = m_cache_cntlrs[mem_component]->processMemOpFromCore(
          lock_signal,
          mem_op_type,
          address, offset,
          data_buf, data_length,
          modeled == Core::MEM_MODELED_NONE || modeled == Core::MEM_MODELED_COUNT ? false : true,
-         modeled == Core::MEM_MODELED_NONE ? false : true, pc);
+         count, pc);
+   
+   if(mem_component==MemComponent::L1_DCACHE && count)
+      _LOG_CUSTOM_LOGGER(Log::Warning, Log::C0, "%ld, %ld, %ld, %s\n", cycle, pc, address, HitWhereString(return_hit));
+   
+   return return_hit;
 }
 
 void

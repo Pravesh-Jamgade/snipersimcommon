@@ -350,7 +350,6 @@ CacheCntlr::processMemOpFromCore(
       bool modeled,
       bool count, IntPtr pc)
 {
-   _LOG_CUSTOM_LOGGER(Log::Warning, Log::C0, "%d, %d", pc, ca_address);
    //update
    m_master->m_cache->setCountFlag(count);
 
