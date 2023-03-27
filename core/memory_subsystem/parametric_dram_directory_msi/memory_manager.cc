@@ -44,6 +44,8 @@ MemoryManager::MemoryManager(Core* core,
    m_dram_cntlr_present(false),
    m_enabled(false)
 {
+   // 
+   cache_stat = new CacheStat();
    // Read Parameters from the Config file
    std::map<MemComponent::component_t, CacheParameters> cache_parameters;
    std::map<MemComponent::component_t, String> cache_names;
@@ -377,6 +379,7 @@ MemoryManager::MemoryManager(Core* core,
 
 MemoryManager::~MemoryManager()
 {
+   cache_stat->print();
    UInt32 i;
 
    getNetwork()->unregisterCallback(SHARED_MEM_1);
@@ -431,13 +434,17 @@ MemoryManager::coreInitiateMemoryAccess(
    else if (mem_component == MemComponent::L1_DCACHE && m_dtlb)
       accessTLB(m_dtlb, address, false, modeled);
 
-   return m_cache_cntlrs[mem_component]->processMemOpFromCore(
+   HitWhere::where_t hit_res = m_cache_cntlrs[mem_component]->processMemOpFromCore(
          lock_signal,
          mem_op_type,
          address, offset,
          data_buf, data_length,
          modeled == Core::MEM_MODELED_NONE || modeled == Core::MEM_MODELED_COUNT ? false : true,
          modeled == Core::MEM_MODELED_NONE ? false : true);
+   if(hit_res == HitWhere::where_t::L3_OWN){
+      cache_stat->add_addr(address, mem_component);
+   }
+   return hit_res;
 }
 
 void
