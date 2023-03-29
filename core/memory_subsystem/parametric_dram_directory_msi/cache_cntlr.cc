@@ -610,7 +610,7 @@ MYLOG("access done");
 
    MYLOG("returning %s, latency %lu ns", HitWhereString(hit_where), total_latency.getNS());
 
-   if(hit_where == HitWhere::where_t::L3_OWN){
+   if(hit_where == HitWhere::where_t::L3_OWN && count){
       Sim()->getCacheStat()->add_addr(ca_address, mem_component);
    }
 
