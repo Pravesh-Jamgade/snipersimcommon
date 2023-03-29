@@ -199,10 +199,14 @@ void Simulator::start()
    }
 
    m_running = true;
+
+   cache_stat = new CacheStat();
 }
 
 Simulator::~Simulator()
 {
+   //***
+   cache_stat->print();
    // Done with all the Pin stuff, allow using Config::Config again
    m_config_file_allowed = true;
 

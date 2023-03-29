@@ -51,7 +51,7 @@ class CacheStat{
         string s = "llc_unique.out";
         fstream f = FILESTREAM::get_file_stream(s);
         f << "uniq_i, uniq_d\n";
-        f << uniq_d.size() << ',' << uniq_i.size() << '\n';
+        f << uniq_i.size() << ',' << uniq_d.size() << '\n';
     }
 
 

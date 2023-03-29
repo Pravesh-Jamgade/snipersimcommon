@@ -7,6 +7,8 @@
 
 #include <decoder.h>
 
+#include "CacheStat.h"
+
 class _Thread;
 class SyscallServer;
 class SyncServer;
@@ -82,6 +84,8 @@ public:
    // Access to the Decoder library for the simulator run
    void createDecoder();
    dl::Decoder *getDecoder();
+
+   CacheStat* getCacheStat(){return cache_stat;}
    
 private:
    Config m_config;
@@ -106,6 +110,8 @@ private:
    FaultinjectionManager *m_faultinjection_manager;
    RoutineTracer *m_rtn_tracer;
    MemoryTracker *m_memory_tracker;
+
+   CacheStat* cache_stat;
 
    bool m_running;
    bool m_inst_mode_output;

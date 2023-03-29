@@ -154,6 +154,7 @@ CacheCntlr::CacheCntlr(MemComponent::component_t mem_component,
    m_shmem_perf_global(NULL),
    m_shmem_perf_model(shmem_perf_model)
 {
+   
    m_core_id_master = m_core_id - m_core_id % m_shared_cores;
    Sim()->getStatsManager()->logTopology(name, core_id, m_core_id_master);
 
@@ -330,7 +331,8 @@ CacheCntlr::processMemOpFromCore(
       IntPtr ca_address, UInt32 offset,
       Byte* data_buf, UInt32 data_length,
       bool modeled,
-      bool count)
+      bool count,
+      MemComponent::component_t mem_component)
 {
    HitWhere::where_t hit_where = HitWhere::MISS;
 
@@ -607,6 +609,11 @@ MYLOG("access done");
       Sim()->getConfig()->getCacheEfficiencyCallbacks().call_notify_access(cache_block_info->getOwner(), mem_op_type, hit_where);
 
    MYLOG("returning %s, latency %lu ns", HitWhereString(hit_where), total_latency.getNS());
+
+   if(hit_where == HitWhere::where_t::L3_OWN){
+      Sim()->getCacheStat()->add_addr(ca_address, mem_component);
+   }
+
    return hit_where;
 }
 
