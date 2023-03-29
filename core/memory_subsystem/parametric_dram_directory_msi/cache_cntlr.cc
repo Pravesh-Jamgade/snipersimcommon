@@ -611,7 +611,9 @@ MYLOG("access done");
    MYLOG("returning %s, latency %lu ns", HitWhereString(hit_where), total_latency.getNS());
 
    if(hit_where == HitWhere::where_t::L3_OWN && count){
-      Sim()->getCacheStat()->add_addr(ca_address, mem_component);
+      IntPtr tag; UInt32 set;
+      lastLevelCache()->getCache()->splitAddress(ca_address, tag, set);
+      Sim()->getCacheStat()->add_addr(tag, set, mem_component);
    }
 
    return hit_where;

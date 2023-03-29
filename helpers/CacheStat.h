@@ -10,40 +10,70 @@
 #include "fixed_types.h"
 #include "mem_component.h"
 #include "utility.h"
+#include "fixed_types.h"
 
 using namespace std;
 
 class CacheStat{
     private:
-    set<IntPtr> seen_before;
-    set<IntPtr> uniq_d, uniq_i, uniq_inv; 
+    map<IntPtr, set<UInt32>> seen_before_i;
+    map<IntPtr, set<UInt32>> seen_before_d;
+    map<IntPtr, set<UInt32>> uniq_i;
+    map<IntPtr, set<UInt32>> uniq_d;
 
     public:
 
     CacheStat(){}
-    void add_addr(IntPtr addr, MemComponent::component_t pkt_type){
-        if(seen_before.find(addr)!=seen_before.end()) return;
-
+    void add_addr(IntPtr tag, UInt32 set, MemComponent::component_t pkt_type){
+        
         if(pkt_type == MemComponent::component_t::L1_ICACHE){
-            if(uniq_i.find(addr)!=uniq_i.end()){
-                uniq_i.erase(addr);
-                seen_before.insert(addr);
+
+            auto seenTag = seen_before_i.find(tag);
+            if(seenTag!=seen_before_i.end())
+            {
+                auto &sec = seenTag->second;
+                if(sec.find(set)!=sec.end()){
+                    //tag+set seen before
+                    return;
+                }
             }
-            else uniq_i.insert(addr);
+
+            seenTag = uniq_i.find(tag);
+            if(seenTag!=uniq_i.end()){
+                auto &sec = seenTag->second;
+                if(sec.find(set)!=sec.end()){
+                    // erase
+                    sec.erase(set);
+                    seen_before_i[tag].insert(set);
+                }
+            }
+            else uniq_i[tag].insert(set);
         }
         else if(pkt_type == MemComponent::component_t::L1_DCACHE){
-            if(uniq_d.find(addr)!=uniq_d.end()){
-                uniq_d.erase(addr);
-                seen_before.insert(addr);
+            
+            auto seenTag = seen_before_d.find(tag);
+            if(seenTag!=seen_before_d.end())
+            {
+                auto &sec = seenTag->second;
+                if(sec.find(set)!=sec.end()){
+                    //tag+set seen before
+                    return;
+                }
             }
-            else uniq_d.insert(addr);
+
+            seenTag = uniq_d.find(tag);
+            if(seenTag!=uniq_d.end()){
+                auto &sec = seenTag->second;
+                if(sec.find(set)!=sec.end()){
+                    // erase
+                    sec.erase(set);
+                    seen_before_d[tag].insert(set);
+                }
+            }
+            else uniq_d[tag].insert(set);
         }
         else{
-            if(uniq_inv.find(addr)!=uniq_inv.end()){
-                uniq_inv.erase(addr);
-                seen_before.insert(addr);
-            }
-            else uniq_inv.insert(addr);
+            assert(0);
         }
     }
 
@@ -51,7 +81,15 @@ class CacheStat{
         string s = "llc_unique.out";
         fstream f = FILESTREAM::get_file_stream(s);
         f << "uniq_i, uniq_d\n";
-        f << uniq_i.size() << ',' << uniq_d.size() << '\n';
+        int total_i=0;
+        int total_d=0;
+        for(auto tag: uniq_i){
+            total_i += tag.second.size();
+        }
+        for(auto tag: uniq_d){
+            total_d += tag.second.size();
+        }
+        f << total_i << "," << total_d << '\n';
     }
 
 

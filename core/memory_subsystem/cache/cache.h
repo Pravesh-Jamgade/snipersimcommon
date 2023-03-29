@@ -68,6 +68,15 @@ class Cache : public CacheBase
 
       void enable() { m_enabled = true; }
       void disable() { m_enabled = false; }
+      IntPtr get_opt_key(IntPtr addr){
+            IntPtr tag; 
+            UInt32 set;
+            splitAddress(addr, tag, set);
+            IntPtr key = tag << m_log_num_sets|set;
+            int keylen = floorLog2(key);
+            int addrlen = floorLog2(addr);
+            return key;
+      }
 };
 
 template <class T>
