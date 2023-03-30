@@ -567,9 +567,8 @@ MYLOG("access done");
       ScopedLock sl(getLock());
       
       if(hit_where == HitWhere::where_t::L3_OWN && count){
-         IntPtr tag; UInt32 set;
-         lastLevelCache()->getCache()->splitAddress(ca_address, tag, set);
-         Sim()->getCacheStat()->add_addr(tag, set, mem_component);
+         // lastLevelCache()->getCache()->splitAddress(ca_address, tag, set);
+         Sim()->getCacheStat()->add_addr(ca_address, mem_component);
       }
 
       if (! cache_hit && count) {
