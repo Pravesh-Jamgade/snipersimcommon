@@ -565,6 +565,12 @@ MYLOG("access done");
    // From here on downwards: not long anymore, only stats update so blanket cntrl lock
    {
       ScopedLock sl(getLock());
+      
+      if(hit_where == HitWhere::where_t::L3_OWN && count){
+         IntPtr tag; UInt32 set;
+         lastLevelCache()->getCache()->splitAddress(ca_address, tag, set);
+         Sim()->getCacheStat()->add_addr(tag, set, mem_component);
+      }
 
       if (! cache_hit && count) {
          stats.total_latency += total_latency;
@@ -609,12 +615,6 @@ MYLOG("access done");
       Sim()->getConfig()->getCacheEfficiencyCallbacks().call_notify_access(cache_block_info->getOwner(), mem_op_type, hit_where);
 
    MYLOG("returning %s, latency %lu ns", HitWhereString(hit_where), total_latency.getNS());
-
-   if(hit_where == HitWhere::where_t::L3_OWN && count){
-      IntPtr tag; UInt32 set;
-      lastLevelCache()->getCache()->splitAddress(ca_address, tag, set);
-      Sim()->getCacheStat()->add_addr(tag, set, mem_component);
-   }
 
    return hit_where;
 }
