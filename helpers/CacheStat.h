@@ -23,38 +23,41 @@ class CacheStat{
     CacheStat(){}
 
     void add_addr(IntPtr addr, MemComponent::component_t pkt_type){
-        
 
         if(pkt_type == MemComponent::component_t::L1_ICACHE){
             // seen before return
-            auto findU = std::find(seen_before_i.begin(), seen_before_i.end(), addr);
-            if(findU!=seen_before_d.end()){
-                return;
+            for(int i=0; i< seen_before_i.size(); i++){
+                if(addr == seen_before_i[i]){
+                    return;
+                }
             }
-           
-            auto findK = std::find(uniq_i.begin(), uniq_i.end(), addr);
-            if(findK!=uniq_i.end()){
-                uniq_i.erase(findK);
-                seen_before_i.push_back(addr);
-                return;
+
+            for(int i=0; i< uniq_i.size(); i++){
+                if(uniq_i[i] == addr){
+                    uniq_i.erase(uniq_i.begin()+i);
+                    seen_before_i.push_back(addr);
+                    return;
+                }
             }
-            else uniq_i.push_back(addr);
+            uniq_i.push_back(addr);
         }
 
         if(pkt_type == MemComponent::component_t::L1_DCACHE){
             
-            auto findU = std::find(seen_before_d.begin(), seen_before_d.end(), addr);
-            if(findU!=seen_before_d.end()){
-                return;
+            for(int i=0; i< seen_before_d.size(); i++){
+                if(addr == seen_before_d[i]){
+                    return;
+                }
             }
             
-            auto findK = std::find(uniq_d.begin(), uniq_d.end(), addr);
-            if(findK!=uniq_d.end()){
-                uniq_d.erase(findK);
-                seen_before_d.push_back(addr);
-                return;
+            for(int i=0; i< uniq_d.size(); i++){
+                if(uniq_d[i] == addr){
+                    uniq_d.erase(uniq_d.begin()+i);
+                    seen_before_d.push_back(addr);
+                    return;
+                }
             }
-            else uniq_d.push_back(addr);
+            uniq_d.push_back(addr);
         }
     }
 
