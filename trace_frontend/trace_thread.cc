@@ -49,7 +49,6 @@ TraceThread::TraceThread(Thread *thread, SubsecondTime time_start, String tracef
    , m_started(false)
    , m_stopped(false)
 {
-
    m_trace.setHandleInstructionCountFunc(TraceThread::__handleInstructionCountFunc, this);
    m_trace.setHandleCacheOnlyFunc(TraceThread::__handleCacheOnlyFunc, this);
    if (Sim()->getCfg()->getBool("traceinput/mirror_output"))
@@ -698,6 +697,10 @@ void TraceThread::addDetailedMemoryInfo(DynamicInstruction *dynins, Sift::Instru
    bool no_mapping = false;
    UInt64 pa = va2pa(mem_address, is_prefetch ? &no_mapping : NULL);
 
+   // std::cout << " Detail_Mem_Read_Write: Virtual_ADD: 0x" << std::hex << mem_address << "  Physical_ADD: 0x" << pa << std::dec << " Operation: " << op_type << " maping: " << no_mapping << std::endl;  //saurabh when detail
+   Sim()->getTLBSpy()->insert(mem_address, pa);
+
+   // cout << std::hex << mem_address << "," << pa << '\n';
    if (no_mapping)
    {
       dynins->addMemory(

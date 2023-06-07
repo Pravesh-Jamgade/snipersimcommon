@@ -14,6 +14,8 @@
 #include "topology_info.h"
 
 #include <algorithm>
+#include "utility.h"
+#include <fstream>
 
 #if 0
    extern Lock iolock;
@@ -376,7 +378,15 @@ MemoryManager::MemoryManager(Core* core,
 }
 
 MemoryManager::~MemoryManager()
-{
+{  
+   // string name = "addresses.log";
+   // fstream f = FILESTREAM::get_file_stream(name);
+   // for(auto entry: l1daccesses){
+   //    IntPtr sh = entry.first << 6;
+
+   //    f << entry.first << "," << entry.second << '\n';
+   // }
+
    UInt32 i;
 
    getNetwork()->unregisterCallback(SHARED_MEM_1);
@@ -423,13 +433,26 @@ MemoryManager::coreInitiateMemoryAccess(
       Byte* data_buf, UInt32 data_length,
       Core::MemModeled modeled)
 {
+   // if(mem_component == MemComponent::L1_DCACHE && modeled != Core::MEM_MODELED_NONE){
+   //    auto findL1D = l1daccesses.find(address);
+   //    if(findL1D==l1daccesses.end()){
+   //       l1daccesses.insert({address, 1});
+   //    }
+   //    else l1daccesses[address]++;
+   //    // getCore()->first_accesses--;
+   // }
+   
    LOG_ASSERT_ERROR(mem_component <= m_last_level_cache,
       "Error: invalid mem_component (%d) for coreInitiateMemoryAccess", mem_component);
 
+   bool count = modeled == Core::MEM_MODELED_NONE ? false : true;
+
    if (mem_component == MemComponent::L1_ICACHE && m_itlb)
       accessTLB(m_itlb, address, true, modeled);
-   else if (mem_component == MemComponent::L1_DCACHE && m_dtlb)
+   else if (mem_component == MemComponent::L1_DCACHE && m_dtlb){
+      
       accessTLB(m_dtlb, address, false, modeled);
+   }
 
    HitWhere::where_t hit_res = m_cache_cntlrs[mem_component]->processMemOpFromCore(
          lock_signal,
@@ -437,7 +460,7 @@ MemoryManager::coreInitiateMemoryAccess(
          address, offset,
          data_buf, data_length,
          modeled == Core::MEM_MODELED_NONE || modeled == Core::MEM_MODELED_COUNT ? false : true,
-         modeled == Core::MEM_MODELED_NONE ? false : true, mem_component);
+         count, mem_component);
 
    return hit_res;
 }

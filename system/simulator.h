@@ -8,6 +8,7 @@
 #include <decoder.h>
 
 #include "CacheStat.h"
+#include "TLBSpy.h"
 
 class _Thread;
 class SyscallServer;
@@ -86,6 +87,7 @@ public:
    dl::Decoder *getDecoder();
 
    CacheStat* getCacheStat(){return cache_stat;}
+   TLBSpy* getTLBSpy(){return tlbspy;}
    
 private:
    Config m_config;
@@ -112,6 +114,8 @@ private:
    MemoryTracker *m_memory_tracker;
 
    CacheStat* cache_stat;
+   TLBSpy* tlbspy;
+
 
    bool m_running;
    bool m_inst_mode_output;

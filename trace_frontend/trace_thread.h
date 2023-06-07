@@ -12,6 +12,7 @@
 #include <decoder.h>
 
 #include <unordered_map>
+#include <fstream>
 
 #define NUM_PAPI_COUNTERS 6
 
@@ -123,6 +124,7 @@ class TraceThread : public Runnable
       Lock m_lock;
 
    public:
+   
       bool m_stopped;
 
       TraceThread(Thread *thread, SubsecondTime time_start, String tracefile, String responsefile, app_id_t app_id, bool cleanup);

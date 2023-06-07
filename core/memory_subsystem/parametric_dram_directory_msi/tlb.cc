@@ -21,6 +21,7 @@ TLB::TLB(String name, String cfgname, core_id_t core_id, UInt32 num_entries, UIn
 bool
 TLB::lookup(IntPtr address, SubsecondTime now, bool allocate_on_miss)
 {
+   // cout << "TLB 0x"<<std::hex<<address<<'\n';
    bool hit = m_cache.accessSingleLine(address, Cache::LOAD, NULL, 0, now, true);
 
    m_access++;

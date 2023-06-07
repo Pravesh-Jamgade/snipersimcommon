@@ -20,6 +20,8 @@
 
 #include "boost/tuple/tuple.hpp"
 
+#include <set>
+
 class DramCntlrInterface;
 class ATD;
 

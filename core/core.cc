@@ -106,6 +106,15 @@ Core::Core(SInt32 id)
 
 Core::~Core()
 {
+   string name = "addresses.log";
+   fstream f = FILESTREAM::get_file_stream(name);
+   for(auto entry: l1daccesses){
+      IntPtr sh = entry.first << 6;
+
+      f << std::hex << entry.first << ",";
+      f << entry.second << '\n';
+   }
+   
    if (m_cheetah_manager)
       delete m_cheetah_manager;
    delete m_topology_info;
@@ -281,6 +290,15 @@ Core::initiateMemoryAccess(MemComponent::component_t mem_component,
       IntPtr eip,
       SubsecondTime now)
 {
+    if(mem_component == MemComponent::L1_DCACHE && modeled != Core::MEM_MODELED_NONE){
+      auto findL1D = l1daccesses.find(address);
+      if(findL1D==l1daccesses.end()){
+         l1daccesses.insert({address, 1});
+      }
+      else l1daccesses[address]++;
+      // getCore()->first_accesses--;
+   }
+
    MYLOG("access %lx+%u %c%c modeled(%s)", address, data_size, mem_op_type == Core::WRITE ? 'W' : 'R', mem_op_type == Core::READ_EX ? 'X' : ' ', ModeledString(modeled));
 
    if (data_size <= 0)

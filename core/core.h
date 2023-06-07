@@ -20,6 +20,7 @@ class CheetahManager;
 #include "bbv_count.h"
 #include "cpuid.h"
 #include "hit_where.h"
+#include "utility.h"
 
 struct MemoryResult {
    HitWhere::where_t hit_where;
@@ -32,7 +33,8 @@ void applicationMemCopy(void *dest, const void *src, size_t n);
 class Core
 {
    public:
-
+      int first_accesses = 10000;
+      
       enum State
       {
          RUNNING = 0,
@@ -169,6 +171,9 @@ class Core
       UInt64 m_spin_loops;
       UInt64 m_spin_instructions;
       SubsecondTime m_spin_elapsed_time;
+
+      //***
+      map<IntPtr, int> l1daccesses;
 
    protected:
       // Optimized version of countInstruction has direct access to m_instructions and m_instructions_callback
